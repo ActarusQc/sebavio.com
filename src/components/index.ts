@@ -2,4 +2,6 @@
  * Composants partagés.
  * Socle architectural — aucune logique métier.
  */
-export {};
+export * from "./ui";
+export * from "./common";
+export * from "./layout";

@@ -1,0 +1,67 @@
+/**
+ * Design tokens Sebavio (Document 7).
+ * Source unique : couleurs, typo, espacements, rayons, ombres.
+ * Utiliser uniquement via variables CSS / classes Tailwind dérivées.
+ */
+
+:root {
+  /* Palette — vert principal, neutres, accents fonctionnels */
+  --sebavio-green-50: oklch(0.97 0.02 155);
+  --sebavio-green-100: oklch(0.93 0.04 155);
+  --sebavio-green-500: oklch(0.52 0.14 155);
+  --sebavio-green-600: oklch(0.45 0.13 155);
+  --sebavio-green-700: oklch(0.38 0.11 155);
+  --sebavio-green-900: oklch(0.28 0.07 155);
+
+  --sebavio-gray-50: oklch(0.985 0.002 155);
+  --sebavio-gray-100: oklch(0.96 0.004 155);
+  --sebavio-gray-200: oklch(0.92 0.006 155);
+  --sebavio-gray-400: oklch(0.7 0.01 155);
+  --sebavio-gray-500: oklch(0.55 0.012 155);
+  --sebavio-gray-700: oklch(0.37 0.012 155);
+  --sebavio-gray-900: oklch(0.2 0.01 155);
+
+  --sebavio-blue-100: oklch(0.94 0.03 240);
+  --sebavio-blue-500: oklch(0.55 0.14 245);
+  --sebavio-blue-700: oklch(0.42 0.12 245);
+
+  --sebavio-orange-100: oklch(0.95 0.04 65);
+  --sebavio-orange-500: oklch(0.7 0.16 55);
+  --sebavio-orange-700: oklch(0.52 0.14 45);
+
+  --sebavio-red-100: oklch(0.94 0.03 25);
+  --sebavio-red-500: oklch(0.55 0.2 25);
+  --sebavio-red-700: oklch(0.45 0.18 25);
+
+  /* Typographie — base 16 px (Document 7) */
+  --font-size-base: 1rem;
+  --line-height-base: 1.5;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  /* Espacements — grille 8 px */
+  --space-1: 0.5rem; /* 8 */
+  --space-2: 1rem; /* 16 */
+  --space-3: 1.5rem; /* 24 */
+  --space-4: 2rem; /* 32 */
+  --space-5: 2.5rem; /* 40 */
+  --space-6: 3rem; /* 48 */
+
+  /* Rayons — cartes ~16 px */
+  --radius: 1rem;
+  --radius-card: 1rem;
+
+  /* Ombres légères */
+  --shadow-sm: 0 1px 2px oklch(0.2 0.01 155 / 0.06);
+  --shadow-md: 0 4px 12px oklch(0.2 0.01 155 / 0.08);
+  --shadow-lg: 0 12px 28px oklch(0.2 0.01 155 / 0.1);
+
+  /* Contenu max */
+  --content-max-width: 90rem; /* 1440 px */
+
+  /* Transitions Document 7 */
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 250ms;
+}

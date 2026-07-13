@@ -1,5 +1,4 @@
-/**
- * Feature `auth` / components.
- * Socle architectural — aucune logique métier.
- */
-export {};
+export { LoginForm } from "./login-form";
+export { RegisterForm } from "./register-form";
+export { ForgotPasswordForm } from "./forgot-password-form";
+export { ResetPasswordForm } from "./reset-password-form";

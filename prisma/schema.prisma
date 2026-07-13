@@ -1,5 +1,4 @@
-// Sebavio — modèles communs (Partie 3 Document 10)
-// User, Session, Audit — aucun modèle métier.
+// Sebavio — modèles communs + Auth.js (Parties 3–4 Document 10)
 // Docs: https://pris.ly/d/prisma-schema
 
 generator client {
@@ -12,21 +11,46 @@ datasource db {
 
 /// Compte applicatif (Doc 4 §2). Champs Auth.js-compatibles via noms Prisma.
 model User {
-  id              String    @id @default(uuid(4)) @db.Uuid
-  email           String    @unique @db.VarChar(255)
-  passwordHash    String?   @map("password_hash") @db.Text
-  emailVerified   DateTime? @map("email_verified_at") @db.Timestamptz(6)
-  status          String    @db.VarChar(20)
-  role            String    @db.VarChar(20)
-  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz(6)
+  id            String    @id @default(uuid(4)) @db.Uuid
+  email         String    @unique @db.VarChar(255)
+  passwordHash  String?   @map("password_hash") @db.Text
+  emailVerified DateTime? @map("email_verified_at") @db.Timestamptz(6)
+  status        String    @db.VarChar(20)
+  role          String    @db.VarChar(20)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz(6)
 
+  accounts  Account[]
   sessions  Session[]
   auditLogs AuditLog[]
 
   @@index([status])
   @@map("users")
+}
+
+/// Compte OAuth / provider (Auth.js) — Doc 4 snake_case + uuid.
+model Account {
+  id                String   @id @default(uuid(4)) @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
+  type              String   @db.VarChar(50)
+  provider          String   @db.VarChar(100)
+  providerAccountId String   @map("provider_account_id") @db.VarChar(255)
+  refresh_token     String?  @db.Text
+  access_token      String?  @db.Text
+  expires_at        Int?
+  token_type        String?  @db.VarChar(100)
+  scope             String?  @db.Text
+  id_token          String?  @db.Text
+  session_state     String?  @db.Text
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
 }
 
 /// Session Auth.js-compatible (noms Prisma = adaptateur @auth/prisma-adapter).
@@ -43,6 +67,20 @@ model Session {
 
   @@index([userId])
   @@map("sessions")
+}
+
+/// Jetons de vérification courriel / reset MDP (Auth.js + flux métier).
+model VerificationToken {
+  id         String   @id @default(uuid(4)) @db.Uuid
+  identifier String   @db.VarChar(255)
+  token      String   @unique @db.VarChar(255)
+  expires    DateTime @db.Timestamptz(6)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([identifier, token])
+  @@index([identifier])
+  @@map("verification_tokens")
 }
 
 /// Journal d'audit immuable (Doc 4 §11) — pas de updated_at / deleted_at.

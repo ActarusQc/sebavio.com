@@ -35,6 +35,7 @@ const prisma = createPrismaClient();
 async function main(): Promise<void> {
   const password = requireSeedPassword();
   const passwordHash = await hash(password);
+  const emailVerified = new Date();
 
   const accounts = [
     {
@@ -61,6 +62,7 @@ async function main(): Promise<void> {
         passwordHash,
         role: account.role,
         status: account.status,
+        emailVerified,
         deletedAt: null,
       },
       create: {
@@ -68,18 +70,19 @@ async function main(): Promise<void> {
         passwordHash,
         role: account.role,
         status: account.status,
+        emailVerified,
       },
     });
   }
 
   console.log(
-    `Seed OK : ${accounts.length} comptes de développement (super_admin, admin, user).`,
+    `Seed OK : ${accounts.length} comptes de développement (super_admin, admin, user) avec courriel vérifié.`,
   );
 }
 
 main()
   .catch((error: unknown) => {
-    console.error(error instanceof Error ? error.message : error);
+    console.error(error);
     process.exit(1);
   })
   .finally(async () => {

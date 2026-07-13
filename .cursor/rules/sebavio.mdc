@@ -66,13 +66,8 @@ alwaysApply: true
 - Chemins serveur : la racine du projet est `/var/www/sebavio.com` (et non
   `/var/www/travel-app`). Adapter en conséquence tous les chemins des
   Documents 8 et 12 (Nginx, PM2, scripts de déploiement, sauvegardes).
-- Documentation : le projet comporte les Documents 1 à 10 et 12. Il n'existe
-  pas de Document 11; ne jamais en inventer le contenu.
+- Documentation : le projet comporte les Documents 1 à 10 et 12. Il n'existe pas de Document 11; ne jamais en inventer le contenu.
 
-  - PostgreSQL : le serveur utilise la version 16; les mentions de PostgreSQL 17
-  dans les documents sont un objectif futur. Ne jamais tenter de mettre à jour
-  PostgreSQL sans demande explicite (d'autres applications l'utilisent).
-- Prisma 7 : la connexion à la base est configurée dans prisma.config.ts (et
-  non dans schema.prisma comme le suggèrent les documents). Node.js 22 est
-  fourni par nvm (.nvmrc); le Node système (v20) sert aux autres applications
-  et ne doit JAMAIS être modifié.
+  - PostgreSQL : le serveur utilise la version 16; les mentions de PostgreSQL 17 dans les documents sont un objectif futur. Ne jamais tenter de mettre à jour PostgreSQL sans demande explicite (d'autres applications l'utilisent).
+- Prisma 7 : la connexion à la base est configurée dans prisma.config.ts (et non dans schema.prisma comme le suggèrent les documents). Node.js 22 est fourni par nvm (.nvmrc); le Node système (v20) sert aux autres applications et ne doit JAMAIS être modifié.
+- Toute action hors du dossier du projet (PostgreSQL : utilisateurs, droits, mots de passe; Nginx; PM2; système) requiert mon approbation explicite préalable, même en cours d'exécution. En cas d'obstacle, s'arrêter et demander plutôt que contourner.

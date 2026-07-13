@@ -15,7 +15,7 @@ Sebavio est un **monolithe Next.js 16** (App Router, TypeScript strict) déploy�
 | État client | Zustand |
 | ORM | Prisma (PostgreSQL) |
 | Cache | Redis |
-| Auth | Auth.js (à venir, Partie 4) |
+| Auth | Auth.js (JWT 30 min, Credentials, Argon2) |
 | IA | Abstraction multi-fournisseurs (jamais d’appel direct depuis le métier) |
 
 ## 2. Structure des dossiers
@@ -75,7 +75,7 @@ Tous les modules du Document 3 sont couverts. Statuts : **créée** (dossier pr�
 
 | Module Document 3 | Feature projet | Statut | Notes |
 | --- | --- | --- | --- |
-| Authentification | `auth` | créée | Auth.js — Partie 4 |
+| Authentification | `auth` | active | Auth.js JWT, pages login/register, rate-limit Redis |
 | Gestion des utilisateurs | `users` | créée | CRUD, préférences, rôles |
 | Profils voyageurs | `users` | créée (hébergé) | Peut devenir une feature dédiée plus tard |
 | Familles | `users` | créée (hébergé) | Peut devenir une feature dédiée plus tard |
@@ -129,6 +129,28 @@ app/  →  features/*  →  services/ | lib/ | types/
 Scripts : `lint`, `typecheck`, `test:run`, `build`, `quality`.  
 Husky + lint-staged sur les commits. TypeScript `strict: true`.
 
-## 7. Hors scope de cette phase
+## 7. Authentification (Partie 4)
 
-Aucune logique métier, aucun modèle Prisma métier, pas d’Auth.js ni Design System complet (parties suivantes du Document 10).
+- **Auth.js** (`next-auth` v5) : stratégie JWT, `maxAge` 30 min, relecture `status` en base ≤ 60 s.
+- **Modèles** : `User`, `Session`, `Account`, `VerificationToken`, `AuditLog`.
+- **Feature** : `src/features/auth` (schemas Zod, services, actions, formulaires).
+- **Routes API** : `/api/auth/[...nextauth]` + `/api/v1/auth/*` (register, login, logout, me, verify-email, forgot/reset-password, refresh).
+- **Pages** : `/login`, `/register`, `/forgot-password`, `/reset-password`, `/verify-email`, `/dashboard`, `/admin`.
+- **Proxy** (`src/proxy.ts`, ex-middleware Next.js 16) : protection `/dashboard` et `/admin` (rôles) ; claim JWT `status === active`.
+- **Révocation** : `requireActiveUser()` / `requireAdminUser()` re-vérifient le statut en base pour layouts dashboard/admin et mutations sensibles.
+- **Rate-limit login** : Redis ; si Redis indisponible → **échec fermé** (refus générique).
+- **Emails** : stub ; en `NODE_ENV !== production` uniquement, lien loggé en console serveur.
+
+## 8. Design System (Partie 5)
+
+- **Tokens** : `src/styles/tokens.css` + thème clair/sombre dans `src/app/globals.css` (vert principal, accents bleu/orange/rouge, grille 8 px).
+- **Typo** : Inter via `next/font` (`--font-sans`).
+- **UI** : shadcn (`src/components/ui`) — button, card, input, label, select, textarea, dialog, table, badge, sonner, skeleton, tabs, separator, checkbox, switch, dropdown-menu.
+- **Communs** : `FormField`, `ThemeToggle`, `StatusBadge`, `EmptyState`, `LoadingState`, `PageHeader`, `FadeIn`.
+- **Layout (coquilles)** : `AppShell`, `Header`, `Sidebar`, `Footer`, `Breadcrumbs` — navigation câblée en Partie 6.
+- **Vitrine** : `/design-system` (404 si `NODE_ENV === production`).
+- **Thème** : `next-themes` + Toaster Sonner dans le layout racine.
+
+## 9. Hors scope immédiat
+
+Modules métier, OAuth Google, MFA réel, SMTP production, layout applicatif complet (Partie 6).

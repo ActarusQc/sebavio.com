@@ -1,5 +1,11 @@
 /**
- * Feature `auth` / hooks.
- * Socle architectural — aucune logique métier.
+ * Feature `auth` — hooks (MFA stub / futurs hooks client).
  */
-export {};
+
+export type UseMfaStub = {
+  enabled: false;
+};
+
+export function getMfaStub(): UseMfaStub {
+  return { enabled: false };
+}
