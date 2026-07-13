@@ -31,12 +31,16 @@ Le Node.js système (`/usr/bin/node`, v20) n'est pas utilisé pour ce projet.
 
 ## Architecture
 
-Structure feature-first sous `src/` : `app`, `features`, `components`, `lib`, `services`, `hooks`, `types`, `prisma`, `tests`.
+Structure feature-first sous `src/` : `app`, `features`, `components`, `lib`, `services`, `hooks`, `types`, `stores`, `config`, `styles`.
 
-Source de vérité : dossier `docs/` (Documents 1 à 10 et 12).
+Documentation :
+
+- [Architecture applicative](docs/ARCHITECTURE.md) — dossiers, barrels, correspondance Document 3 ↔ features
+- [Guide de contribution](docs/CONTRIBUTING.md) — conventions et qualité
+- Source de vérité produit : dossier `docs/` (Documents 1 à 10 et 12)
 
 ## Interdictions
 
 - Pas de Docker / conteneurisation
 - Pas de secrets dans Git (`.env` exclu)
-- Pas de code métier dans cette phase fondations
+- Pas de code métier dans les phases fondations / architecture (Parties 1–2)

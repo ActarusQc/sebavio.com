@@ -68,3 +68,11 @@ alwaysApply: true
   Documents 8 et 12 (Nginx, PM2, scripts de déploiement, sauvegardes).
 - Documentation : le projet comporte les Documents 1 à 10 et 12. Il n'existe
   pas de Document 11; ne jamais en inventer le contenu.
+
+  - PostgreSQL : le serveur utilise la version 16; les mentions de PostgreSQL 17
+  dans les documents sont un objectif futur. Ne jamais tenter de mettre à jour
+  PostgreSQL sans demande explicite (d'autres applications l'utilisent).
+- Prisma 7 : la connexion à la base est configurée dans prisma.config.ts (et
+  non dans schema.prisma comme le suggèrent les documents). Node.js 22 est
+  fourni par nvm (.nvmrc); le Node système (v20) sert aux autres applications
+  et ne doit JAMAIS être modifié.
