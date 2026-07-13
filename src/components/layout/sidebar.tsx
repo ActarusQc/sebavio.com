@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 export type SidebarItem = {
@@ -18,7 +19,7 @@ export type SidebarProps = {
 };
 
 /**
- * Sidebar repliable — coquille Partie 5 (liens câblés en Partie 6).
+ * Sidebar repliable — coquille Partie 5, navigation câblée Partie 6.
  */
 export function Sidebar({
   items = [],
@@ -41,7 +42,7 @@ export function Sidebar({
         {children
           ? children
           : items.map((item) => (
-              <a
+              <Link
                 key={item.href}
                 href={item.href}
                 aria-current={item.active ? "page" : undefined}
@@ -57,7 +58,7 @@ export function Sidebar({
                 {collapsed ? (
                   <span className="sr-only">{item.label}</span>
                 ) : null}
-              </a>
+              </Link>
             ))}
       </nav>
       {footer ? (

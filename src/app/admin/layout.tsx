@@ -1,18 +1,18 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
-import { requireActiveUser } from "@/features/auth";
+import { requireAdminUser } from "@/features/auth";
 import { DashboardShell } from "@/components/layout";
 
-export default async function DashboardLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: ReactNode;
 }) {
   let user;
   try {
-    user = await requireActiveUser();
+    user = await requireAdminUser();
   } catch {
-    redirect("/login");
+    redirect("/dashboard");
   }
 
   return (

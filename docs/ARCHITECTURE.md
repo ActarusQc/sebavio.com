@@ -135,7 +135,7 @@ Husky + lint-staged sur les commits. TypeScript `strict: true`.
 - **Modèles** : `User`, `Session`, `Account`, `VerificationToken`, `AuditLog`.
 - **Feature** : `src/features/auth` (schemas Zod, services, actions, formulaires).
 - **Routes API** : `/api/auth/[...nextauth]` + `/api/v1/auth/*` (register, login, logout, me, verify-email, forgot/reset-password, refresh).
-- **Pages** : `/login`, `/register`, `/forgot-password`, `/reset-password`, `/verify-email`, `/dashboard`, `/admin`.
+- **Pages** : `/login`, `/register`, `/forgot-password`, `/reset-password`, `/verify-email`, `/dashboard/*`, `/admin`.
 - **Proxy** (`src/proxy.ts`, ex-middleware Next.js 16) : protection `/dashboard` et `/admin` (rôles) ; claim JWT `status === active`.
 - **Révocation** : `requireActiveUser()` / `requireAdminUser()` re-vérifient le statut en base pour layouts dashboard/admin et mutations sensibles.
 - **Rate-limit login** : Redis ; si Redis indisponible → **échec fermé** (refus générique).
@@ -147,10 +147,18 @@ Husky + lint-staged sur les commits. TypeScript `strict: true`.
 - **Typo** : Inter via `next/font` (`--font-sans`).
 - **UI** : shadcn (`src/components/ui`) — button, card, input, label, select, textarea, dialog, table, badge, sonner, skeleton, tabs, separator, checkbox, switch, dropdown-menu.
 - **Communs** : `FormField`, `ThemeToggle`, `StatusBadge`, `EmptyState`, `LoadingState`, `PageHeader`, `FadeIn`.
-- **Layout (coquilles)** : `AppShell`, `Header`, `Sidebar`, `Footer`, `Breadcrumbs` — navigation câblée en Partie 6.
+- **Layout (coquilles)** : `AppShell`, `Header`, `Sidebar`, `Footer`, `Breadcrumbs`.
 - **Vitrine** : `/design-system` (404 si `NODE_ENV === production`).
 - **Thème** : `next-themes` + Toaster Sonner dans le layout racine.
 
-## 9. Hors scope immédiat
+## 9. Layout et navigation (Partie 6)
 
-Modules métier, OAuth Google, MFA réel, SMTP production, layout applicatif complet (Partie 6).
+- **Shell** : `DashboardShell` câble `AppShell` + sidebar + header + breadcrumbs + footer pour `(dashboard)` et `/admin`.
+- **Config** : `src/components/layout/navigation.ts` — menus, filtrage rôles (`admin` / `super_admin`), breadcrumbs.
+- **Routes placeholder** : `/dashboard`, `/dashboard/trips`, `/dashboard/vehicles`, `/dashboard/catalog`, `/dashboard/maintenance`, `/dashboard/finance`, `/dashboard/ai`, `/dashboard/notifications`, `/dashboard/subscription`, `/dashboard/settings`, `/admin`.
+- **Responsive** : sidebar desktop repliable ; menu mobile (Dialog) ; recherche header désactivée (« Recherche — à venir »).
+- **Hors menu** : météo, carburant, campings, activités, cartes → sections internes Voyages (commentaire dans `navigation.ts`).
+
+## 10. Hors scope immédiat
+
+Modules métier, OAuth Google, MFA réel, SMTP production.

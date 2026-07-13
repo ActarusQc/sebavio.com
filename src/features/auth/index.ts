@@ -29,6 +29,7 @@ export {
   assertUserActive,
   requireActiveUser,
   requireAdminUser,
+  isAdminRole,
   hashPassword,
   verifyPassword,
 } from "./services";

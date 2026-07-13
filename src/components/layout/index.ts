@@ -11,3 +11,20 @@ export {
   type BreadcrumbsProps,
   type BreadcrumbItem,
 } from "./breadcrumbs";
+export {
+  MAIN_NAV_ITEMS,
+  getVisibleNavItems,
+  isNavItemActive,
+  buildBreadcrumbs,
+  type NavItemConfig,
+  type NavIconName,
+} from "./navigation";
+export { DashboardShell, type DashboardShellProps } from "./dashboard-shell";
+export {
+  ModulePlaceholder,
+  type ModulePlaceholderProps,
+} from "./module-placeholder";
+export { HeaderSearch } from "./header-search";
+export { UserMenu, type UserMenuProps } from "./user-menu";
+export { MobileNav, type MobileNavProps } from "./mobile-nav";
+export { AppSidebar, type AppSidebarProps } from "./app-sidebar";
