@@ -1,4 +1,5 @@
-// Sebavio — Prisma schema (socle uniquement, aucun modèle métier à cette étape)
+// Sebavio — modèles communs (Partie 3 Document 10)
+// User, Session, Audit — aucun modèle métier.
 // Docs: https://pris.ly/d/prisma-schema
 
 generator client {
@@ -7,4 +8,59 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+/// Compte applicatif (Doc 4 §2). Champs Auth.js-compatibles via noms Prisma.
+model User {
+  id              String    @id @default(uuid(4)) @db.Uuid
+  email           String    @unique @db.VarChar(255)
+  passwordHash    String?   @map("password_hash") @db.Text
+  emailVerified   DateTime? @map("email_verified_at") @db.Timestamptz(6)
+  status          String    @db.VarChar(20)
+  role            String    @db.VarChar(20)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  sessions  Session[]
+  auditLogs AuditLog[]
+
+  @@index([status])
+  @@map("users")
+}
+
+/// Session Auth.js-compatible (noms Prisma = adaptateur @auth/prisma-adapter).
+model Session {
+  id           String    @id @default(uuid(4)) @db.Uuid
+  sessionToken String    @unique @map("session_token") @db.VarChar(255)
+  userId       String    @map("user_id") @db.Uuid
+  expires      DateTime  @map("expires_at") @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+/// Journal d'audit immuable (Doc 4 §11) — pas de updated_at / deleted_at.
+model AuditLog {
+  id        String   @id @default(uuid(4)) @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid
+  entity    String   @db.VarChar(100)
+  entityId  String?  @map("entity_id") @db.Uuid
+  action    String   @db.VarChar(50)
+  oldValue  Json?    @map("old_value") @db.JsonB
+  newValue  Json?    @map("new_value") @db.JsonB
+  ipAddress String?  @map("ip_address") @db.VarChar(64)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([entity, entityId])
+  @@map("audit_logs")
 }
