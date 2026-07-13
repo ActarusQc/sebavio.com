@@ -1,0 +1,70 @@
+---
+description: Règles globales du projet Sebavio (compagnon de voyage intelligent)
+alwaysApply: true
+---
+
+# Règles globales — Projet Sebavio
+
+## Source de vérité
+- Les documents du dossier `docs/` (01 à 12) sont la source de vérité de ce projet.
+- En cas de contradiction entre documents, l'ordre de priorité est : ces règles > Document 8 > Document 12 > autres documents.
+- Ne jamais inventer une exigence absente de la documentation. En cas de doute, demander.
+
+## Interdiction ferme : pas de Docker
+- N'utilise JAMAIS Docker, Docker Compose, Podman ni aucune forme de conteneurisation.
+- Ne crée aucun `Dockerfile`, `docker-compose.yml`, `.dockerignore` ni script faisant référence à des conteneurs.
+- Le déploiement se fait directement sur le serveur : Node.js 22 LTS + PM2 + Nginx sur Ubuntu Server LTS (VPS Contabo).
+- Cette règle a priorité sur toute mention contraire dans la documentation.
+
+## Pile technique imposée
+- Next.js 16, TypeScript strict, App Router.
+- Gestionnaire de paquets : npm.
+- UI : Tailwind CSS + shadcn/ui, conforme au Design System (Document 7).
+- Base de données : PostgreSQL 17 via Prisma ORM. Migrations uniquement via Prisma Migrate.
+- Cache : Redis.
+- Validation : Zod.
+- Tests : Vitest (unitaires) et tests E2E automatisés.
+- IA : couche d'abstraction multi-fournisseurs (OpenAI, Claude, Gemini) — jamais d'appel direct à un fournisseur depuis le code métier.
+
+## Architecture
+- Architecture feature-first : dossiers `app`, `features`, `components`, `lib`, `services`, `hooks`, `types`, `prisma`, `tests`.
+- Aucune duplication de logique métier. Les calculs métier se font côté serveur, jamais dans l'IA ni le client.
+- Base de données : snake_case, UUID v4 en clé primaire, `created_at` / `updated_at` partout, `deleted_at` pour la suppression logique (Document 4).
+
+## Environnement de développement
+- Le développement se fait dans l'environnement « développement » du serveur Contabo (pas en local).
+- PostgreSQL et Redis tournent sur ce même serveur : utiliser les variables d'environnement (`.env`) pour `DATABASE_URL` et `REDIS_URL`; ne jamais coder d'identifiants en dur.
+- Trois environnements distincts : développement, préproduction, production. Ne jamais toucher à la production directement.
+
+## Méthode de travail
+- Exécution séquentielle : une étape à la fois, dans l'ordre des Documents 9 et 10.
+- Après chaque étape : le projet doit compiler (`npm run build`), les tests doivent passer, puis préparer un commit Git.
+- Ne jamais passer à l'étape suivante avec un build cassé ou des tests en échec.
+- Prompts idempotents : réexécuter une étape ne doit pas casser l'existant.
+- Mettre à jour la documentation à chaque changement significatif.
+
+## Sécurité
+- HTTPS obligatoire, JWT sécurisés, secrets uniquement dans les variables d'environnement du serveur.
+- Aucune donnée sensible en clair dans la base ni dans le dépôt Git.
+- Journaliser les opérations critiques dans `audit_logs`.
+
+## Arbitrages officiels (en cas de contradiction entre documents)
+- Identifiants : UUID v4 partout (le Document 8 partie 3 mentionnant v7 est caduc).
+- Lieu de développement : environnement « développement » du serveur Contabo
+  (toute mention de développement local dans le Document 8 est caduque).
+- Environnements : exactement trois — développement, préproduction (staging),
+  production. L'environnement « test » du Document 12 n'existe pas.
+- Authentification : Auth.js uniquement (pas de Supabase Auth).
+- Reverse proxy : Nginx uniquement (pas d'Apache).
+- Architecture applicative : monolithe Next.js (frontend et API dans le même
+  projet). Toute séparation frontend/backend du Document 12 est à interpréter
+  comme des couches du même projet Next.js.
+- Structure des dossiers : la liste des règles (app, features, components, lib,
+  services, hooks, types, prisma, tests) est le socle obligatoire; les dossiers
+  complémentaires du Document 8 (stores, config, styles, public) sont permis
+  en plus, sans contredire ce socle. Le tout sous `src/` conformément au Document 8.
+- Chemins serveur : la racine du projet est `/var/www/sebavio.com` (et non
+  `/var/www/travel-app`). Adapter en conséquence tous les chemins des
+  Documents 8 et 12 (Nginx, PM2, scripts de déploiement, sauvegardes).
+- Documentation : le projet comporte les Documents 1 à 10 et 12. Il n'existe
+  pas de Document 11; ne jamais en inventer le contenu.

@@ -1,0 +1,10 @@
+// Sebavio — Prisma schema (socle uniquement, aucun modèle métier à cette étape)
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
