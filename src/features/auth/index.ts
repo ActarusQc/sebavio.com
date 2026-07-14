@@ -3,6 +3,7 @@ export {
   loginAction,
   logoutAction,
   forgotPasswordAction,
+  resendVerificationAction,
   resetPasswordAction,
   verifyEmailAction,
   type ActionResult,
@@ -20,6 +21,7 @@ export {
   loginSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  resendVerificationSchema,
   verifyEmailSchema,
 } from "./schemas";
 

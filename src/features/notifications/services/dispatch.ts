@@ -6,8 +6,30 @@ import {
   TRIP_UPCOMING_DAYS,
 } from "@/features/notifications/constants";
 import { createInAppNotification } from "@/features/notifications/services/create";
+import { dispatchEmailChannel } from "@/features/notifications/services/email-channel";
 import { invalidateUnreadCache } from "@/features/notifications/services/badge";
 import type { DispatchReport } from "@/features/notifications/types";
+
+function recordEmailResult(
+  report: DispatchReport,
+  result: Awaited<ReturnType<typeof dispatchEmailChannel>>,
+): void {
+  switch (result) {
+    case "sent":
+      report.emailSent += 1;
+      break;
+    case "skipped_prefs":
+      report.emailSkippedPrefs += 1;
+      break;
+    case "exists":
+      report.emailAlreadySent += 1;
+      break;
+    case "failed":
+    case "no_user_email":
+      report.emailFailed += 1;
+      break;
+  }
+}
 
 function addDaysUtc(base: Date, days: number): Date {
   const d = new Date(base);
@@ -90,6 +112,20 @@ export async function dispatchMaintenanceNotifications(
           data: { sent: true },
         });
       });
+
+      // Email hors transaction in-app : échec SMTP ne bloque jamais sent=true.
+      const emailResult = await dispatchEmailChannel({
+        userId,
+        type: "maintenance",
+        title: "Entretien à venir",
+        body: `${templateName} — ${vehicleLabel} (échéance autour du ${dueLabel}).`,
+        priority: "high",
+        dedupeKey: maintenanceDedupeKey(row.scheduleId),
+        sourceEntity: "maintenance_notifications",
+        sourceId: row.id,
+        href: "/dashboard/maintenance",
+      });
+      recordEmailResult(report, emailResult);
     } catch {
       // Échec transaction : sent reste false → retry au prochain dispatch.
     }
@@ -179,6 +215,16 @@ export async function dispatchTripUpcomingNotifications(
         where: { id: notif.id },
         data: { deletedAt: now },
       });
+      // Soft-delete canal email associé (même dedupe_key).
+      await prisma.notification.updateMany({
+        where: {
+          userId: notif.userId,
+          channel: "email",
+          dedupeKey: notif.dedupeKey,
+          deletedAt: null,
+        },
+        data: { deletedAt: now },
+      });
       report.tripObsoleteSoftDeleted += 1;
       touchedUsers.add(notif.userId);
     }
@@ -224,6 +270,21 @@ export async function dispatchTripUpcomingNotifications(
     } else {
       report.tripSkippedPrefs += 1;
     }
+
+    if (result.status === "created" || result.status === "exists") {
+      const emailResult = await dispatchEmailChannel({
+        userId: trip.userId,
+        type: "trip",
+        title: "Voyage à venir",
+        body: `« ${trip.title} » commence le ${dateKey}.`,
+        priority: "normal",
+        dedupeKey,
+        sourceEntity: "trips",
+        sourceId: trip.id,
+        href: `/dashboard/trips/${trip.id}`,
+      });
+      recordEmailResult(report, emailResult);
+    }
   }
 
   for (const userId of touchedUsers) {
@@ -243,6 +304,10 @@ export async function dispatchNotifications(
     tripCreated: 0,
     tripAlreadyPresent: 0,
     tripSkippedPrefs: 0,
+    emailSent: 0,
+    emailSkippedPrefs: 0,
+    emailAlreadySent: 0,
+    emailFailed: 0,
   };
 
   await dispatchMaintenanceNotifications(report);

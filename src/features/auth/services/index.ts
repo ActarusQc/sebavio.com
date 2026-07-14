@@ -7,9 +7,11 @@ import { isAdminRole } from "./roles";
 import { registerUser } from "./register";
 import {
   requestPasswordReset,
+  resendVerificationEmail,
   resetPassword,
   verifyEmail,
 } from "./password-reset";
+import { assertEmailAuthRateLimit } from "./email-rate-limit";
 import { authorizeCredentials } from "./authorize";
 import {
   requireActiveUser,
@@ -24,12 +26,14 @@ export {
   consumeVerificationToken,
   assertLoginRateLimit,
   clearLoginRateLimit,
+  assertEmailAuthRateLimit,
   writeAuditLog,
   assertUserActive,
   getUserStatusSnapshot,
   isAdminRole,
   registerUser,
   requestPasswordReset,
+  resendVerificationEmail,
   resetPassword,
   verifyEmail,
   authorizeCredentials,

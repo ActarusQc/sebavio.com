@@ -91,7 +91,7 @@ Tous les modules du Document 3 sont couverts. Statuts : **créée** (dossier pr�
 | Points d'intérêt | `activities` | active | Unifiés dans `activities.kind=poi` (écart Doc 4 table séparée) |
 | Météo | `weather` | active | Open-Meteo (écart Doc 3) ; cache Redis ; fiche voyage |
 | Assistant IA | `ai` | créée | Abstraction multi-fournisseurs |
-| Notifications | `notifications` | active | Centre in-app, prefs, dispatcher ; email/push structurés hors envoi |
+| Notifications | `notifications` | active | Centre in-app + canal email (SMTP) ; push structuré hors envoi |
 | Administration | `admin` | active | Dashboard, users, audit, nav campings/activités ; stats Redis TTL 90 s |
 | Abonnements | `subscriptions` | créée | Stripe / plans d’abonnement |
 | Journalisation | `travel-journal` | **future** | Journal de voyage — dossier non créé ; audit technique → `audit_logs` (infra) |
@@ -134,12 +134,12 @@ Husky + lint-staged sur les commits. TypeScript `strict: true`.
 - **Auth.js** (`next-auth` v5) : stratégie JWT, `maxAge` 30 min, relecture `status` en base ≤ 60 s.
 - **Modèles** : `User`, `Session`, `Account`, `VerificationToken`, `AuditLog`, `UserProfile`, `UserPreference`.
 - **Feature** : `src/features/auth` (schemas Zod, services, actions, formulaires).
-- **Routes API** : `/api/auth/[...nextauth]` + `/api/v1/auth/*` (register, login, logout, me, verify-email, forgot/reset-password, refresh).
+- **Routes API** : `/api/auth/[...nextauth]` + `/api/v1/auth/*` (register, login, logout, me, verify-email, resend-verification, forgot/reset-password, refresh).
 - **Pages** : `/login`, `/register`, `/forgot-password`, `/reset-password`, `/verify-email`, `/dashboard/*`, `/admin`.
 - **Proxy** (`src/proxy.ts`, ex-middleware Next.js 16) : protection `/dashboard` et `/admin` (rôles) ; claim JWT `status === active`.
 - **Révocation** : `requireActiveUser()` / `requireAdminUser()` re-vérifient le statut en base pour layouts dashboard/admin et mutations sensibles.
 - **Rate-limit login** : Redis ; si Redis indisponible → **échec fermé** (refus générique).
-- **Emails** : stub ; en `NODE_ENV !== production` uniquement, lien loggé en console serveur.
+- **Emails** : `src/services/email` — `EMAIL_PROVIDER=console|smtp` (console par défaut en dev, smtp en prod). SMTP via nodemailer/SMTP2GO. Soft-fail ; alerte CRITICAL si prod sans SMTP. Auth : verify / reset / resend-verification (`POST /api/v1/auth/resend-verification`, rate-limit 3/15 min).
 
 ## 7bis. Utilisateurs — profils et préférences (Partie 7)
 
@@ -400,12 +400,12 @@ Fournisseur API externe, carte dédiée riche, cache Redis recherche, recommanda
 
 Stripe / `subscriptions` / `payments`, OCR reçus, exports PDF/Excel/CSV.
 
-## 18. Module Notifications (Partie 18) — in-app
+## 18. Module Notifications (Partie 18) — in-app + email
 
 ### Tables
 
-- `notifications` : centre in-app (UUID, `user_id`, `type`, `channel`, `title`, `body`, `priority`, `dedupe_key`, `source_*`, `href`, `read_at`, soft-delete). Unique partielle `(user_id, channel, dedupe_key) WHERE deleted_at IS NULL`.
-- `notification_preferences` : drapeaux in_app / email / push par type — seuls `in_app_*` honorés ; email/push structurés pour phases SMTP/Push.
+- `notifications` : centre in-app + canal email (UUID, `user_id`, `type`, `channel`, `title`, `body`, `priority`, `dedupe_key`, `source_*`, `href`, `read_at`, soft-delete). Unique partielle `(user_id, channel, dedupe_key) WHERE deleted_at IS NULL`. Ligne `channel=email` créée après envoi SMTP réussi.
+- `notification_preferences` : drapeaux in_app / email / push par type — `in_app_*` et `email_*` honorés ; `push_*` réservés.
 - Interrupteur global : `user_preferences.notifications_enabled`.
 
 ### Canaux Doc 10
@@ -413,7 +413,7 @@ Stripe / `subscriptions` / `payments`, OCR reçus, exports PDF/Excel/CSV.
 | Canal | Statut |
 |-------|--------|
 | In-app | Actif |
-| Courriel (SMTP) | Structure `channel` + prefs — pas d’envoi |
+| Courriel (SMTP) | Actif via `src/services/email` + prefs `email_*` (pas de digest) |
 | Web Push | Structure — pas d’envoi |
 | Broadcast admin / temps réel | Reporté |
 
@@ -435,7 +435,7 @@ Stripe / `subscriptions` / `payments`, OCR reçus, exports PDF/Excel/CSV.
 
 ### Hors scope immédiat
 
-SMTP, Push, broadcast, SSE, générateurs météo/carburant/IA.
+Push, broadcast, SSE, digest/groupage courriel, générateurs météo/carburant/IA.
 
 ## 19. Administration (Partie 20)
 
@@ -446,4 +446,4 @@ SMTP, Push, broadcast, SSE, générateurs météo/carburant/IA.
 
 ## 20. Hors scope immédiat
 
-Modules métier restants, OAuth Google, MFA réel, SMTP production, envoi email/push notifications.
+Modules métier restants, OAuth Google, MFA réel, Push notifications.

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/features/auth/schemas";
+import { EmailUnverifiedError } from "@/features/auth/errors";
 import { verifyPassword } from "./password";
 import { assertLoginRateLimit, clearLoginRateLimit } from "./rate-limit";
 import { writeAuditLog } from "./audit";
@@ -98,7 +99,7 @@ export async function authorizeCredentials(
       newValue: { reason: "email_unverified" },
       ipAddress: ip,
     });
-    return null;
+    throw new EmailUnverifiedError();
   }
 
   await clearLoginRateLimit(ip, email);

@@ -9,6 +9,7 @@ import {
   createInAppNotification,
   softDeleteByDedupeKey,
 } from "@/features/notifications/services/create";
+import { dispatchEmailChannel } from "@/features/notifications/services/email-channel";
 
 /**
  * Cycle de vie budget dépassé :
@@ -53,16 +54,33 @@ export async function syncBudgetExceededNotification(
   }
 
   const overAmount = toMoney(variance!).abs().toFixed(2);
+  const title = "Budget dépassé";
+  const body = `Le voyage « ${trip.title} » dépasse le budget prévu de ${overAmount} ${trip.budget.currency}.`;
+  const href = `/dashboard/finance/trips/${tripId}`;
+
   const result = await createInAppNotification({
     userId,
     type: "budget",
-    title: "Budget dépassé",
-    body: `Le voyage « ${trip.title} » dépasse le budget prévu de ${overAmount} ${trip.budget.currency}.`,
+    title,
+    body,
     priority: "high",
     dedupeKey,
     sourceEntity: "trips",
     sourceId: tripId,
-    href: `/dashboard/finance/trips/${tripId}`,
+    href,
+  });
+
+  // Canal email indépendant (prefs email_budget) — soft-fail.
+  await dispatchEmailChannel({
+    userId,
+    type: "budget",
+    title,
+    body,
+    priority: "high",
+    dedupeKey,
+    sourceEntity: "trips",
+    sourceId: tripId,
+    href,
   });
 
   if (result.status === "created") return "created";

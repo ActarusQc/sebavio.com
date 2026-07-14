@@ -922,7 +922,7 @@ model Notification {
   userId       String    @map("user_id") @db.Uuid
   /// maintenance | trip | budget | weather | fuel
   type         String    @db.VarChar(30)
-  /// in_app | email | push — phase actuelle : in_app uniquement
+  /// in_app | email | push — in_app + email honorés ; push réservé
   channel      String    @default("in_app") @db.VarChar(20)
   title        String    @db.VarChar(200)
   body         String    @db.Text
@@ -947,7 +947,7 @@ model Notification {
 }
 
 /// Préférences de canaux/types — Doc 6 notification-preferences.
-/// email_* / push_* stockés pour SMTP/Push futurs ; seuls in_app_* honorés.
+/// in_app_* + email_* honorés ; push_* réservés pour phase Push.
 model NotificationPreference {
   userId            String   @id @map("user_id") @db.Uuid
   inAppMaintenance  Boolean  @default(true) @map("in_app_maintenance")

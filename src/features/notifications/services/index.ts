@@ -22,4 +22,6 @@ export {
   dispatchMaintenanceNotifications,
   dispatchTripUpcomingNotifications,
 } from "./dispatch";
+export { dispatchEmailChannel } from "./email-channel";
+export { isEmailTypeAllowed } from "./preferences";
 export { toNotificationDto, toPreferencesDto } from "./mappers";

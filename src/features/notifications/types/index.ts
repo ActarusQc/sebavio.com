@@ -74,4 +74,8 @@ export type DispatchReport = {
   tripCreated: number;
   tripAlreadyPresent: number;
   tripSkippedPrefs: number;
+  emailSent: number;
+  emailSkippedPrefs: number;
+  emailAlreadySent: number;
+  emailFailed: number;
 };

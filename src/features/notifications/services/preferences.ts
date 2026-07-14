@@ -93,16 +93,25 @@ export async function updateNotificationPreferences(
   return toPreferencesDto(updated);
 }
 
-/** true si l’utilisateur accepte ce type en in-app. */
-export async function isInAppTypeAllowed(
+async function isNotificationsGloballyEnabled(
   userId: string,
-  type: NotificationType,
 ): Promise<boolean> {
   const global = await prisma.userPreference.findUnique({
     where: { userId },
     select: { notificationsEnabled: true },
   });
   if (global && !global.notificationsEnabled) {
+    return false;
+  }
+  return true;
+}
+
+/** true si l’utilisateur accepte ce type en in-app. */
+export async function isInAppTypeAllowed(
+  userId: string,
+  type: NotificationType,
+): Promise<boolean> {
+  if (!(await isNotificationsGloballyEnabled(userId))) {
     return false;
   }
 
@@ -118,6 +127,32 @@ export async function isInAppTypeAllowed(
       return prefs.inAppWeather;
     case "fuel":
       return prefs.inAppFuel;
+    default:
+      return false;
+  }
+}
+
+/** true si l’utilisateur accepte ce type par courriel. */
+export async function isEmailTypeAllowed(
+  userId: string,
+  type: NotificationType,
+): Promise<boolean> {
+  if (!(await isNotificationsGloballyEnabled(userId))) {
+    return false;
+  }
+
+  const prefs = await ensureNotificationPreferences(userId);
+  switch (type) {
+    case "maintenance":
+      return prefs.emailMaintenance;
+    case "trip":
+      return prefs.emailTrip;
+    case "budget":
+      return prefs.emailBudget;
+    case "weather":
+      return prefs.emailWeather;
+    case "fuel":
+      return prefs.emailFuel;
     default:
       return false;
   }

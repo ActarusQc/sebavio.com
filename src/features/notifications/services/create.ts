@@ -17,7 +17,7 @@ export type CreateInAppResult =
 
 /**
  * Crée une notification in-app si absente (anti-doublon dedupe_key).
- * Ne crée jamais email/push dans cette phase.
+ * Canal in-app uniquement — le canal email est géré par dispatchEmailChannel.
  */
 export async function createInAppNotification(
   input: CreateInAppInput,
@@ -91,18 +91,19 @@ export async function createInAppNotification(
 
 /**
  * Soft-delete des notifications actives correspondant à un dedupe_key.
+ * Sans `channel`, soft-delete tous les canaux (in_app + email).
  */
 export async function softDeleteByDedupeKey(
   userId: string,
   dedupeKey: string,
-  channel: "in_app" = "in_app",
+  channel?: "in_app" | "email" | "push",
 ): Promise<number> {
   const result = await prisma.notification.updateMany({
     where: {
       userId,
-      channel,
       dedupeKey,
       deletedAt: null,
+      ...(channel ? { channel } : {}),
     },
     data: { deletedAt: new Date() },
   });

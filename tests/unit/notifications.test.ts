@@ -70,6 +70,11 @@ describe("syncBudgetExceededNotification cycle", () => {
       inAppBudget: true,
       inAppWeather: true,
       inAppFuel: true,
+      emailMaintenance: false,
+      emailTrip: false,
+      emailBudget: false,
+      emailWeather: false,
+      emailFuel: false,
     });
     updateManyNotif.mockResolvedValue({ count: 1 });
   });

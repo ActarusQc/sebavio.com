@@ -1,5 +1,6 @@
 import { AuthError } from "next-auth";
 import { auth, signIn } from "@/lib/auth";
+import { EmailUnverifiedError } from "@/features/auth/errors";
 import { loginSchema } from "@/features/auth/schemas";
 import {
   handleRouteError,
@@ -22,6 +23,18 @@ export async function POST(request: Request) {
         redirect: false,
       });
     } catch (error) {
+      if (
+        error instanceof EmailUnverifiedError ||
+        (error instanceof AuthError &&
+          "code" in error &&
+          error.code === "AUTH_004")
+      ) {
+        return jsonFail(
+          "AUTH_004",
+          "Courriel non vérifié. Demandez un nouveau lien de vérification.",
+          403,
+        );
+      }
       if (error instanceof AuthError) {
         return jsonFail("AUTH_002", "Identifiants invalides", 401);
       }

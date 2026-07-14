@@ -10,6 +10,7 @@ import {
   type UserRole,
   type UserStatus,
 } from "@/lib/constants";
+import { EmailUnverifiedError } from "@/features/auth/errors";
 import { authorizeCredentials } from "@/features/auth/services/authorize";
 import { getUserStatusSnapshot } from "@/features/auth/services/user-status";
 import { authConfig } from "@/lib/auth.config";
@@ -70,22 +71,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           request?.headers?.get("x-real-ip") ||
           "unknown";
 
-        const user = await authorizeCredentials(
-          credentials?.email,
-          credentials?.password,
-          ip,
-        );
+        try {
+          const user = await authorizeCredentials(
+            credentials?.email,
+            credentials?.password,
+            ip,
+          );
 
-        if (!user) {
-          return null;
+          if (!user) {
+            return null;
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            role: user.role as UserRole,
+            status: user.status as UserStatus,
+          };
+        } catch (error) {
+          if (error instanceof EmailUnverifiedError) {
+            throw error;
+          }
+          throw error;
         }
-
-        return {
-          id: user.id,
-          email: user.email,
-          role: user.role as UserRole,
-          status: user.status as UserStatus,
-        };
       },
     }),
   ],

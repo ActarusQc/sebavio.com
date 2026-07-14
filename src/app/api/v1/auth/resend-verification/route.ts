@@ -1,6 +1,6 @@
 import {
-  GENERIC_RESET_MESSAGE,
-  requestPasswordReset,
+  GENERIC_RESEND_MESSAGE,
+  resendVerificationEmail,
 } from "@/features/auth/services/password-reset";
 import {
   clientIp,
@@ -11,10 +11,8 @@ import {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as unknown;
-    await requestPasswordReset(body as { email: string }, clientIp(request));
-    return jsonOk({
-      message: GENERIC_RESET_MESSAGE,
-    });
+    await resendVerificationEmail(body as { email: string }, clientIp(request));
+    return jsonOk({ message: GENERIC_RESEND_MESSAGE });
   } catch (error) {
     return handleRouteError(error);
   }

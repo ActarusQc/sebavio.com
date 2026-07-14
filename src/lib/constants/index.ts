@@ -14,6 +14,10 @@ export const AUTH_JWT_UPDATE_AGE_SECONDS = 60;
 export const LOGIN_RATE_LIMIT_MAX = 5;
 export const LOGIN_RATE_LIMIT_WINDOW_SECONDS = 60;
 
+/** Rate-limit forgot-password / resend-verification (anti-abus SMTP). */
+export const EMAIL_AUTH_RATE_LIMIT_MAX = 3;
+export const EMAIL_AUTH_RATE_LIMIT_WINDOW_SECONDS = 15 * 60;
+
 /** Rate-limit appels cartographiques externes (géocodage / itinéraire) par utilisateur. */
 export const MAPS_RATE_LIMIT_MAX = 30;
 export const MAPS_RATE_LIMIT_WINDOW_SECONDS = 60 * 60;

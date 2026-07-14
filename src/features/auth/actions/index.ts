@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { AuthError } from "next-auth";
 import { signIn, signOut } from "@/lib/auth";
 import {
@@ -7,18 +8,48 @@ import {
   loginSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  resendVerificationSchema,
   verifyEmailSchema,
 } from "@/features/auth/schemas";
+import { EmailUnverifiedError } from "@/features/auth/errors";
 import { registerUser } from "@/features/auth/services/register";
 import {
+  GENERIC_RESEND_MESSAGE,
+  GENERIC_RESET_MESSAGE,
   requestPasswordReset,
+  resendVerificationEmail,
   resetPassword,
   verifyEmail,
 } from "@/features/auth/services/password-reset";
 import { isAppError } from "@/lib/errors";
 
 export type ActionResult =
-  { ok: true; message?: string } | { ok: false; message: string };
+  | { ok: true; message?: string }
+  | {
+      ok: false;
+      message: string;
+      code?: string;
+      email?: string;
+    };
+
+async function actionClientIp(): Promise<string> {
+  const h = await headers();
+  return (
+    h.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    h.get("x-real-ip") ||
+    "unknown"
+  );
+}
+
+function isEmailUnverifiedError(error: unknown): boolean {
+  if (error instanceof EmailUnverifiedError) {
+    return true;
+  }
+  if (error instanceof AuthError && "code" in error) {
+    return error.code === "AUTH_004";
+  }
+  return false;
+}
 
 export async function registerAction(
   _prev: ActionResult | undefined,
@@ -40,8 +71,7 @@ export async function registerAction(
     await registerUser(parsed.data);
     return {
       ok: true,
-      message:
-        "Compte créé. Vérifiez votre courriel (lien en console serveur en dev).",
+      message: "Compte créé. Vérifiez votre courriel pour activer le compte.",
     };
   } catch (error) {
     if (isAppError(error)) {
@@ -72,6 +102,15 @@ export async function loginAction(
     });
     return { ok: true };
   } catch (error) {
+    if (isEmailUnverifiedError(error)) {
+      return {
+        ok: false,
+        code: "AUTH_004",
+        email: parsed.data.email,
+        message:
+          "Courriel non vérifié. Utilisez le lien ci-dessous pour recevoir un nouveau courriel de vérification.",
+      };
+    }
     if (error instanceof AuthError) {
       return { ok: false, message: "Identifiants invalides" };
     }
@@ -99,12 +138,47 @@ export async function forgotPasswordAction(
     };
   }
 
-  await requestPasswordReset(parsed.data);
-  return {
-    ok: true,
-    message:
-      "Si un compte existe, un lien a été envoyé (console serveur en développement).",
-  };
+  try {
+    await requestPasswordReset(parsed.data, await actionClientIp());
+    return {
+      ok: true,
+      message: GENERIC_RESET_MESSAGE,
+    };
+  } catch (error) {
+    if (isAppError(error)) {
+      return { ok: false, message: error.message };
+    }
+    return { ok: false, message: "Demande impossible" };
+  }
+}
+
+export async function resendVerificationAction(
+  _prev: ActionResult | undefined,
+  formData: FormData,
+): Promise<ActionResult> {
+  const parsed = resendVerificationSchema.safeParse({
+    email: formData.get("email"),
+  });
+
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: parsed.error.issues[0]?.message ?? "Courriel invalide",
+    };
+  }
+
+  try {
+    await resendVerificationEmail(parsed.data, await actionClientIp());
+    return {
+      ok: true,
+      message: GENERIC_RESEND_MESSAGE,
+    };
+  } catch (error) {
+    if (isAppError(error)) {
+      return { ok: false, message: error.message };
+    }
+    return { ok: false, message: "Demande impossible" };
+  }
 }
 
 export async function resetPasswordAction(
