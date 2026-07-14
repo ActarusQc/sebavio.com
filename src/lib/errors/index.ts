@@ -65,6 +65,11 @@ export type AppErrorCode =
   | "NOTIF_003"
   | "NOTIF_004"
   | "NOTIF_005"
+  | "ADM_001"
+  | "ADM_002"
+  | "ADM_003"
+  | "ADM_004"
+  | "ADM_005"
   | "VALIDATION_ERROR"
   | "INTERNAL_ERROR";
 

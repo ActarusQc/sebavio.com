@@ -33,3 +33,7 @@ export const WEATHER_CACHE_TTL_SECONDS = 60 * 60 * 2;
 export const WEATHER_FORECAST_HORIZON_DAYS = 16;
 
 export const PASSWORD_MIN_LENGTH = 8;
+
+/** TTL cache Redis — stats dashboard admin (secondes). */
+export const ADMIN_DASHBOARD_CACHE_TTL_SECONDS = 90;
+export const ADMIN_DASHBOARD_CACHE_KEY = "admin:dashboard:stats";

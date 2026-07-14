@@ -29,6 +29,7 @@ export {
   assertUserActive,
   requireActiveUser,
   requireAdminUser,
+  requireSuperAdminUser,
   isAdminRole,
   hashPassword,
   verifyPassword,

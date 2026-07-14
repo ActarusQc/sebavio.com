@@ -20,3 +20,11 @@ export async function requireAdminUser(): Promise<AuthUser> {
   }
   return user;
 }
+
+export async function requireSuperAdminUser(): Promise<AuthUser> {
+  const user = await requireActiveUser();
+  if (user.role !== "super_admin") {
+    throw new AppError("ADM_001", "Accès refusé", 403);
+  }
+  return user;
+}

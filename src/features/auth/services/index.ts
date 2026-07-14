@@ -11,7 +11,11 @@ import {
   verifyEmail,
 } from "./password-reset";
 import { authorizeCredentials } from "./authorize";
-import { requireActiveUser, requireAdminUser } from "./session";
+import {
+  requireActiveUser,
+  requireAdminUser,
+  requireSuperAdminUser,
+} from "./session";
 
 export {
   hashPassword,
@@ -31,4 +35,5 @@ export {
   authorizeCredentials,
   requireActiveUser,
   requireAdminUser,
+  requireSuperAdminUser,
 };

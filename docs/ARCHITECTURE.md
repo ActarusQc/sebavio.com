@@ -92,7 +92,7 @@ Tous les modules du Document 3 sont couverts. Statuts : **créée** (dossier pr�
 | Météo | `weather` | active | Open-Meteo (écart Doc 3) ; cache Redis ; fiche voyage |
 | Assistant IA | `ai` | créée | Abstraction multi-fournisseurs |
 | Notifications | `notifications` | active | Centre in-app, prefs, dispatcher ; email/push structurés hors envoi |
-| Administration | `admin` | créée | Portail d’administration |
+| Administration | `admin` | active | Dashboard, users, audit, nav campings/activités ; stats Redis TTL 90 s |
 | Abonnements | `subscriptions` | créée | Stripe / plans d’abonnement |
 | Journalisation | `travel-journal` | **future** | Journal de voyage — dossier non créé ; audit technique → `audit_logs` (infra) |
 
@@ -147,7 +147,7 @@ Husky + lint-staged sur les commits. TypeScript `strict: true`.
 - **Feature** : `src/features/users` (schemas Zod, services, Server Actions, formulaires Paramètres).
 - **API** : `GET/PATCH /api/v1/users/me`, `GET/PUT /api/v1/users/preferences` (codes `USR_*`).
 - **UI** : `/dashboard/settings` — profil + préférences (unités, notifications, IA).
-- **Hors scope immédiat** : travel-groups, devices, admin CRUD utilisateurs.
+- **Hors scope immédiat** : devices. Admin CRUD utilisateurs → feature `admin` (Partie 20).
 
 ## 8. Design System (Partie 5)
 
@@ -163,7 +163,8 @@ Husky + lint-staged sur les commits. TypeScript `strict: true`.
 
 - **Shell** : `DashboardShell` câble `AppShell` + sidebar + header + breadcrumbs + footer pour `(dashboard)` et `/admin`.
 - **Config** : `src/components/layout/navigation.ts` — menus, filtrage rôles (`admin` / `super_admin`), breadcrumbs.
-- **Routes placeholder** : `/dashboard`, `/dashboard/ai`, `/dashboard/subscription`, `/admin`.
+- **Routes placeholder** : `/dashboard`, `/dashboard/ai`, `/dashboard/subscription`.
+- **Admin** : `/admin` (dashboard), `/admin/utilisateurs`, `/admin/utilisateurs/[id]`, `/admin/audit`, `/admin/campings`, `/admin/activites` — nav fédérée + `requireAdminUser` / `requireSuperAdminUser`.
 - **Notifications** : `/dashboard/notifications` (centre in-app — Partie 18).
 - **Finances** : `/dashboard/finance` (+ trips/[tripId]).
 - **Véhicules** : `/dashboard/vehicles` (+ new / [id] / edit).
@@ -436,6 +437,13 @@ Stripe / `subscriptions` / `payments`, OCR reçus, exports PDF/Excel/CSV.
 
 SMTP, Push, broadcast, SSE, générateurs météo/carburant/IA.
 
-## 19. Hors scope immédiat
+## 19. Administration (Partie 20)
+
+- **Feature** : `src/features/admin` — dashboard (stats + cache Redis 90 s), utilisateurs, audit lecture seule.
+- **API** : `GET /api/v1/admin/dashboard|statistics`, `GET/PATCH /api/v1/admin/users/{id}`, `POST …/suspend|reactivate`, `GET /api/v1/admin/audit`.
+- **Rôles** : admin agit sur `user` uniquement ; `super_admin` gère rôles et comptes admin. Anti-verrouillage atomique (`SELECT … FOR UPDATE` + COUNT dans la même transaction) pour suspension **et** rétrogradation du dernier `super_admin` actif. Indicateur UI « dernier super_admin actif ».
+- **Hors scope** : settings/cache clear, anonymisation RGPD, UI catalogue/gabarits/fuel dédiées (liens nav uniquement).
+
+## 20. Hors scope immédiat
 
 Modules métier restants, OAuth Google, MFA réel, SMTP production, envoi email/push notifications.

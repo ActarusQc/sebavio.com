@@ -13,7 +13,7 @@ export default async function AdminCampingsPage() {
   });
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
+    <div className="flex w-full flex-col gap-8">
       <PageHeader
         title="Campings"
         description="Répertoire local — seed-dev / saisie admin."

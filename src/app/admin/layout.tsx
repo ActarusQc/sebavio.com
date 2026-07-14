@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { requireAdminUser } from "@/features/auth";
 import { DashboardShell } from "@/components/layout";
 import { getUnreadCount } from "@/features/notifications/services";
+import { AdminNav } from "@/features/admin/components";
 
 export default async function AdminLayout({
   children,
@@ -24,7 +25,10 @@ export default async function AdminLayout({
       role={user.role}
       unreadNotificationCount={unreadNotificationCount}
     >
-      {children}
+      <div className="mx-auto w-full max-w-5xl">
+        <AdminNav />
+        {children}
+      </div>
     </DashboardShell>
   );
 }

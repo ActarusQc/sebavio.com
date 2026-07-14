@@ -1,20 +1,17 @@
-import { ModulePlaceholder } from "@/components/layout";
-import Link from "next/link";
-import { Button } from "@/components/ui";
+import { PageHeader } from "@/components/common";
+import { DashboardStats } from "@/features/admin/components";
+import { getAdminDashboardStats } from "@/features/admin/services";
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  const stats = await getAdminDashboardStats();
+
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-      <ModulePlaceholder
+    <div className="flex flex-col gap-6">
+      <PageHeader
         title="Administration"
-        description="Zone réservée admin / super_admin — status re-vérifié en base."
+        description="Vue d'ensemble du système — indicateurs agrégés (cache Redis court)."
       />
-      <Button render={<Link href="/admin/campings" />}>
-        Gérer les campings
-      </Button>
-      <Button render={<Link href="/admin/activites" />}>
-        Gérer les activités
-      </Button>
+      <DashboardStats stats={stats} />
     </div>
   );
 }

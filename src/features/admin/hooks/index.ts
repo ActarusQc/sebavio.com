@@ -1,5 +1,4 @@
 /**
- * Feature `admin` / hooks.
- * Socle architectural — aucune logique métier.
+ * Hooks feature admin — réservé aux hooks client futurs.
  */
 export {};
