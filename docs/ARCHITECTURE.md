@@ -84,7 +84,7 @@ Tous les modules du Document 3 sont couverts. Statuts : **créée** (dossier pr�
 | Voyages | `trips` | créée | Planification et suivi |
 | Optimisation carburant | `fuel` | créée | Prix, arrêts, optimisation |
 | Entretien | `maintenance` | créée | Rappels, historique, factures |
-| Budget | `finance` | créée | Budgets, dépenses, rapports |
+| Budget | `finance` | active | Budgets voyage, dépenses, dashboard (Stripe/OCR/exports hors scope) |
 | Activités | `activities` | active | Répertoire local, recherche, favoris, lien étapes N:N |
 | Campings | `campings` | active | Répertoire local, recherche, favoris, lien étapes |
 | Stations-service | `fuel` | créée | Même feature que l’optimisation carburant |
@@ -186,7 +186,7 @@ Husky + lint-staged sur les commits. TypeScript `strict: true`.
 - **Statuts** : `planned` → `in_progress` → `completed` ; `planned|in_progress` → `cancelled` (terminal, lecture seule, `TRIP_005`). Soft-delete inchangé.
 - **API** : `/api/v1/trips` CRUD + stops + summary + complete + cancel ; `optimize` (itinéraires) ; `stops/:stopId/geocode`.
 - **Règles** : véhicule obligatoire et appartenant au même user (`TRIP_003` 404) ; isolation voyages (`TRIP_001` 404) ; voyage terminé en lecture seule (`TRIP_005`).
-- **Hors scope** : budget/dépenses (17), journal/médias.
+- **Hors scope** : journal/médias. Budget/dépenses → Partie 17 (finance).
 
 ## 11bis. Cartographie (Partie 12)
 
@@ -367,6 +367,36 @@ Recherche Haversine (`src/lib/geo`) près d’une étape. Si distance étape↔a
 
 Fournisseur API externe, carte dédiée riche, cache Redis recherche, recommandations IA.
 
-## 17. Hors scope immédiat
+## 17. Module Finances (Partie 17)
+
+### Source de vérité budget
+
+- Table `trip_budgets` = **source de vérité** du budget prévu.
+- `trips.planned_budget` est un **miroir** synchronisé uniquement via `upsertTripBudgetAmount` (`src/features/finance/services/budget.ts`).
+- Chemins d’écriture : création voyage avec budget, `updateTrip` (champ `plannedBudget`), `PUT /api/v1/budgets/{tripId}`.
+
+### Ledger dépenses (approche A)
+
+- Totaux / écart budget = `SUM(expenses)` uniquement.
+- `fuel_logs` et `maintenance_history` restent hors totaux (section Référence UI).
+- Import plein → `POST /api/v1/expenses/import-fuel` crée une expense `fuel` avec `source_fuel_log_id` unique (anti-double-ajout). Soft-delete libère le lien.
+
+### Devise
+
+- Montants `NUMERIC(10,2)`, devise ISO-4217 (défaut CAD). Conversion multi-devises **hors scope**.
+
+### API / UI
+
+- `GET/PUT /api/v1/budgets/{tripId}`
+- `GET/POST /api/v1/expenses`, `GET/PATCH/DELETE /api/v1/expenses/{id}`, `POST …/receipt`
+- `POST /api/v1/expenses/import-fuel`
+- `GET /api/v1/finance/summary`, `GET /api/v1/finance/trips/{tripId}`
+- UI : `/dashboard/finance`, `/dashboard/finance/trips/[tripId]`
+
+### Hors scope (reporté)
+
+Stripe / `subscriptions` / `payments`, OCR reçus, exports PDF/Excel/CSV.
+
+## 18. Hors scope immédiat
 
 Modules métier restants, OAuth Google, MFA réel, SMTP production, envoi notifications.

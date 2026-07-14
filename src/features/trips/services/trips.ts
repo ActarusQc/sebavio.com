@@ -44,6 +44,7 @@ import type {
 import { computeWaypointsHash } from "@/services/maps/cache";
 import { getMapsService } from "@/services/maps";
 import type { LatLng } from "@/services/maps/types";
+import { upsertTripBudgetAmount } from "@/features/finance/services/budget";
 
 const vehicleInclude = {
   model: { include: { manufacturer: { select: { name: true } } } },
@@ -315,12 +316,21 @@ export async function createTrip(
         returnDate: input.returnDate ?? null,
         origin: input.origin,
         destination: input.destination,
-        plannedBudget: decimalOrUndefined(input.plannedBudget) ?? null,
+        // planned_budget uniquement via upsertTripBudgetAmount (finance).
+        plannedBudget: null,
         route: { create: {} },
       },
       include: tripDetailInclude,
     });
-    return created;
+
+    if (input.plannedBudget != null) {
+      await upsertTripBudgetAmount(tx, created.id, input.plannedBudget);
+    }
+
+    return tx.trip.findUniqueOrThrow({
+      where: { id: created.id },
+      include: tripDetailInclude,
+    });
   });
 
   await writeAuditLog({
@@ -384,30 +394,45 @@ export async function updateTrip(
     throw new AppError("TRIP_002", "Destination invalide", 400);
   }
 
-  const updated = await prisma.trip.update({
-    where: { id: tripId },
-    data: {
-      ...(input.vehicleId !== undefined ? { vehicleId: input.vehicleId } : {}),
-      ...(input.travelGroupId !== undefined
-        ? { travelGroupId: input.travelGroupId }
-        : {}),
-      ...(input.title !== undefined ? { title: input.title } : {}),
-      ...(input.origin !== undefined ? { origin: input.origin } : {}),
-      ...(input.destination !== undefined
-        ? { destination: input.destination }
-        : {}),
-      ...(input.departureDate !== undefined
-        ? { departureDate: input.departureDate }
-        : {}),
-      ...(input.returnDate !== undefined
-        ? { returnDate: input.returnDate }
-        : {}),
-      ...(input.plannedBudget !== undefined
-        ? { plannedBudget: decimalOrUndefined(input.plannedBudget) }
-        : {}),
-      ...(input.status !== undefined ? { status: input.status } : {}),
-    },
-    include: tripDetailInclude,
+  const updated = await prisma.$transaction(async (tx) => {
+    await tx.trip.update({
+      where: { id: tripId },
+      data: {
+        ...(input.vehicleId !== undefined
+          ? { vehicleId: input.vehicleId }
+          : {}),
+        ...(input.travelGroupId !== undefined
+          ? { travelGroupId: input.travelGroupId }
+          : {}),
+        ...(input.title !== undefined ? { title: input.title } : {}),
+        ...(input.origin !== undefined ? { origin: input.origin } : {}),
+        ...(input.destination !== undefined
+          ? { destination: input.destination }
+          : {}),
+        ...(input.departureDate !== undefined
+          ? { departureDate: input.departureDate }
+          : {}),
+        ...(input.returnDate !== undefined
+          ? { returnDate: input.returnDate }
+          : {}),
+        ...(input.status !== undefined ? { status: input.status } : {}),
+      },
+    });
+
+    if (input.plannedBudget !== undefined) {
+      await upsertTripBudgetAmount(
+        tx,
+        tripId,
+        input.plannedBudget === null
+          ? null
+          : (decimalOrUndefined(input.plannedBudget) ?? null),
+      );
+    }
+
+    return tx.trip.findUniqueOrThrow({
+      where: { id: tripId },
+      include: tripDetailInclude,
+    });
   });
 
   await writeAuditLog({

@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useActionState } from "react";
 import {
   addStopAction,
@@ -141,7 +142,23 @@ export function TripDetailPanels({
           </div>
           <div>
             <dt className="text-muted-foreground">Budget prévu</dt>
-            <dd>{trip.plannedBudget ? `${trip.plannedBudget} CAD` : "—"}</dd>
+            <dd>
+              {trip.plannedBudget ? (
+                <Link
+                  href={`/dashboard/finance/trips/${trip.id}`}
+                  className="underline-offset-4 hover:underline"
+                >
+                  {trip.plannedBudget} CAD
+                </Link>
+              ) : (
+                <Link
+                  href={`/dashboard/finance/trips/${trip.id}`}
+                  className="text-muted-foreground underline-offset-4 hover:underline"
+                >
+                  Définir le budget
+                </Link>
+              )}
+            </dd>
           </div>
           <div>
             <dt className="text-muted-foreground">Distance estimée</dt>

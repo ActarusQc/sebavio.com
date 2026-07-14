@@ -1,5 +1,5 @@
 /**
  * Feature `finance` / hooks.
- * Socle architectural — aucune logique métier.
+ * Socle — pas de hooks client dédiés pour l'instant.
  */
 export {};

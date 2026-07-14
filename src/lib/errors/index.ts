@@ -55,6 +55,11 @@ export type AppErrorCode =
   | "ACT_002"
   | "ACT_003"
   | "ACT_004"
+  | "FIN_001"
+  | "FIN_002"
+  | "FIN_003"
+  | "FIN_004"
+  | "FIN_005"
   | "VALIDATION_ERROR"
   | "INTERNAL_ERROR";
 

@@ -50,6 +50,12 @@ export default async function TripDetailPage({ params }: PageProps) {
                 Modifier
               </Button>
             ) : null}
+            <Button
+              variant="outline"
+              render={<Link href={`/dashboard/finance/trips/${trip.id}`} />}
+            >
+              Finances
+            </Button>
           </div>
         }
       />

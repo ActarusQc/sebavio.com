@@ -9,25 +9,41 @@ import {
   CardTitle,
   Button,
 } from "@/components/ui";
+import { FinanceDashboard } from "@/features/finance/components";
+import { getFinanceDashboard } from "@/features/finance/services";
 import { listVehicles } from "@/features/vehicles/services";
 
 export default async function FinancePage() {
   const user = await requireActiveUser();
-  const vehicles = await listVehicles(user.id, { pageSize: "50" });
+  const [dashboard, vehicles] = await Promise.all([
+    getFinanceDashboard(user.id),
+    listVehicles(user.id, { pageSize: "50" }),
+  ]);
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
       <PageHeader
         title="Finances"
-        description="Budget, dépenses et suivi carburant."
+        description="Budgets de voyage, dépenses et références carburant."
       />
 
       <Card>
         <CardHeader>
-          <CardTitle>Carburant</CardTitle>
+          <CardTitle>Tableau de bord</CardTitle>
           <CardDescription>
-            Accès au suivi des pleins par véhicule. Le module budget complet
-            arrivera plus tard.
+            Totaux basés uniquement sur les dépenses saisies (approche ledger).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <FinanceDashboard dashboard={dashboard} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Carburant (véhicules)</CardTitle>
+          <CardDescription>
+            Suivi des pleins — à importer dans un voyage pour compter au budget.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -42,12 +58,7 @@ export default async function FinancePage() {
                   key={v.id}
                   className="flex flex-wrap items-center justify-between gap-2 text-sm"
                 >
-                  <span>
-                    {v.displayName}
-                    {v.realAvgConsumption
-                      ? ` · ${v.realAvgConsumption} L/100 km`
-                      : ""}
-                  </span>
+                  <span>{v.displayName}</span>
                   <Button
                     variant="outline"
                     size="sm"
