@@ -1,5 +1,2 @@
-/**
- * Feature `trips` / hooks.
- * Socle architectural — aucune logique métier.
- */
+/** Hooks feature trips — réservés pour mutations client ultérieures. */
 export {};

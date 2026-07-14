@@ -27,6 +27,7 @@ model User {
   profile     UserProfile?
   preferences UserPreference?
   vehicles    UserVehicle[]
+  trips       Trip[]
 
   @@index([status])
   @@map("users")
@@ -278,6 +279,7 @@ model UserVehicle {
   maintenanceSchedules    MaintenanceSchedule[]
   maintenanceHistories    MaintenanceHistory[]
   maintenanceNotifications MaintenanceNotification[]
+  trips                   Trip[]
 
   @@unique([userId, vin])
   @@index([userId])
@@ -448,4 +450,73 @@ model VehicleSettings {
   vehicle UserVehicle @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
 
   @@map("vehicle_settings")
+}
+
+/// Voyage utilisateur (Doc 4 §7) — travel_group_id reporté Partie 11bis.
+model Trip {
+  id             String    @id @default(uuid(4)) @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  vehicleId      String    @map("vehicle_id") @db.Uuid
+  title          String    @db.VarChar(150)
+  /// planned | in_progress | completed | cancelled
+  status         String    @default("planned") @db.VarChar(20)
+  departureDate  DateTime  @map("departure_date") @db.Timestamptz(6)
+  returnDate     DateTime? @map("return_date") @db.Timestamptz(6)
+  origin         String    @db.Text
+  destination    String    @db.Text
+  plannedBudget  Decimal?  @map("planned_budget") @db.Decimal(10, 2)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  user    User       @relation(fields: [userId], references: [id], onDelete: Restrict)
+  vehicle UserVehicle @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  stops   TripStop[]
+  route   TripRoute?
+
+  @@index([userId, status])
+  @@index([vehicleId])
+  @@index([departureDate])
+  @@index([deletedAt])
+  @@map("trips")
+}
+
+/// Étape d'itinéraire — adresse texte ; lat/lng nullable (cartes = Partie 12).
+model TripStop {
+  id            String    @id @default(uuid(4)) @db.Uuid
+  tripId        String    @map("trip_id") @db.Uuid
+  sequence      Int
+  name          String    @db.VarChar(200)
+  /// Lieu / adresse en texte (pas de géocodage à cette étape).
+  address       String?   @db.Text
+  latitude      Decimal?  @db.Decimal(10, 7)
+  longitude     Decimal?  @db.Decimal(10, 7)
+  arrivalTime   DateTime? @map("arrival_time") @db.Timestamptz(6)
+  departureTime DateTime? @map("departure_time") @db.Timestamptz(6)
+  stopType      String    @default("stop") @map("stop_type") @db.VarChar(50)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Restrict)
+
+  @@unique([tripId, sequence])
+  @@index([tripId, sequence])
+  @@map("trip_stops")
+}
+
+/// Tracé / estimations 1:1 — champs prêts pour Google Maps / carburant (Parties 12–13).
+model TripRoute {
+  id                   String   @id @default(uuid(4)) @db.Uuid
+  tripId               String   @unique @map("trip_id") @db.Uuid
+  provider             String?  @db.VarChar(50)
+  distanceKm           Decimal? @map("distance_km") @db.Decimal(10, 2)
+  estimatedDurationMin Int?     @map("estimated_duration_min")
+  estimatedFuelCost    Decimal? @map("estimated_fuel_cost") @db.Decimal(10, 2)
+  polyline             String?  @db.Text
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Restrict)
+
+  @@map("trip_routes")
 }

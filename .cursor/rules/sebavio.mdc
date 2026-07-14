@@ -78,3 +78,5 @@ alwaysApply: true
 - URL de développement : http://localhost:3050. Toute variable d'environnement
   d'URL (AUTH_URL, NEXT_PUBLIC_APP_URL, etc.) doit pointer vers le port 3050
   en développement; signaler toute nouvelle variable d'URL ajoutée au .env.example.
+
+  - Statuts de voyage : planned, in_progress, completed, cancelled. Le statut cancelled est un ajout délibéré au Document 4 (transitions depuis planned et in_progress, irréversible).

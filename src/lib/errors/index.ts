@@ -31,6 +31,11 @@ export type AppErrorCode =
   | "MNT_003"
   | "MNT_004"
   | "MNT_005"
+  | "TRIP_001"
+  | "TRIP_002"
+  | "TRIP_003"
+  | "TRIP_004"
+  | "TRIP_005"
   | "VALIDATION_ERROR"
   | "INTERNAL_ERROR";
 

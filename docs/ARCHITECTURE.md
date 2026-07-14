@@ -163,10 +163,11 @@ Husky + lint-staged sur les commits. TypeScript `strict: true`.
 
 - **Shell** : `DashboardShell` câble `AppShell` + sidebar + header + breadcrumbs + footer pour `(dashboard)` et `/admin`.
 - **Config** : `src/components/layout/navigation.ts` — menus, filtrage rôles (`admin` / `super_admin`), breadcrumbs.
-- **Routes placeholder** : `/dashboard`, `/dashboard/trips`, `/dashboard/finance`, `/dashboard/ai`, `/dashboard/notifications`, `/dashboard/subscription`, `/admin`.
+- **Routes placeholder** : `/dashboard`, `/dashboard/finance`, `/dashboard/ai`, `/dashboard/notifications`, `/dashboard/subscription`, `/admin`.
 - **Véhicules** : `/dashboard/vehicles` (+ new / [id] / edit).
 - **Catalogue** : `/dashboard/catalog` (+ [id]).
 - **Entretien (Partie 10)** : `/dashboard/maintenance` (+ calendar / history / new / [id]).
+- **Voyages (Partie 11)** : `/dashboard/trips` (+ new / [id] / edit).
 - **Paramètres** : `/dashboard/settings` (profil + préférences — feature `users`).
 - **Responsive** : sidebar desktop repliable ; menu mobile (Dialog) ; recherche header désactivée (« Recherche — à venir »).
 - **Hors menu** : météo, carburant, campings, activités, cartes → sections internes Voyages (commentaire dans `navigation.ts`).
@@ -179,6 +180,14 @@ Husky + lint-staged sur les commits. TypeScript `strict: true`.
 - **Notifications** : table `maintenance_notifications` prête ; **pas de génération en masse** à chaque recalcul — lignes créées seulement à l’approche (14 j / 500 km), `sent=false`. L’envoi réel appartient au **module Notifications**.
 - **Odomètre** : champ `user_vehicles.odometer_updated_at` ; invite discrète sur le dashboard entretien si > 30 jours.
 
-## 11. Hors scope immédiat
+## 11. Module Voyages (Partie 11)
+
+- **Tables** : `trips` (soft delete), `trip_stops` (adresse texte + lat/lng nullable), `trip_routes` (stub cartes/carburant).
+- **Statuts** : `planned` → `in_progress` → `completed` ; `planned|in_progress` → `cancelled` (terminal, lecture seule, `TRIP_005`). Soft-delete inchangé.
+- **API** : `/api/v1/trips` CRUD + stops + summary + complete + cancel ; `optimize` → `TRIP_004` (cartes = Partie 12).
+- **Règles** : véhicule obligatoire et appartenant au même user (`TRIP_003` 404) ; isolation voyages (`TRIP_001` 404) ; voyage terminé en lecture seule (`TRIP_005`).
+- **Hors scope** : `travel_groups` (Partie 11bis), cartes (12), budget/dépenses (17), journal/médias.
+
+## 12. Hors scope immédiat
 
 Modules métier restants, OAuth Google, MFA réel, SMTP production, envoi notifications.
