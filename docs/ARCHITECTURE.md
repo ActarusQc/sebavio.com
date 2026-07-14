@@ -80,7 +80,7 @@ Tous les modules du Document 3 sont couverts. Statuts : **créée** (dossier pr�
 | Profils voyageurs | `users` | créée (hébergé) | Peut devenir une feature dédiée plus tard |
 | Familles | `users` | créée (hébergé) | Peut devenir une feature dédiée plus tard |
 | Véhicules | `vehicles` | créée | Véhicules des utilisateurs |
-| Constructeurs et modèles | `vehicle-catalog` | créée | Catalogue de référence |
+| Constructeurs et modèles | `vehicle-catalog` | active | Prisma + API lecture/écriture admin + dashboard `/dashboard/catalog` |
 | Voyages | `trips` | créée | Planification et suivi |
 | Optimisation carburant | `fuel` | créée | Prix, arrêts, optimisation |
 | Entretien | `maintenance` | créée | Rappels, historique, factures |
@@ -132,7 +132,7 @@ Husky + lint-staged sur les commits. TypeScript `strict: true`.
 ## 7. Authentification (Partie 4)
 
 - **Auth.js** (`next-auth` v5) : stratégie JWT, `maxAge` 30 min, relecture `status` en base ≤ 60 s.
-- **Modèles** : `User`, `Session`, `Account`, `VerificationToken`, `AuditLog`.
+- **Modèles** : `User`, `Session`, `Account`, `VerificationToken`, `AuditLog`, `UserProfile`, `UserPreference`.
 - **Feature** : `src/features/auth` (schemas Zod, services, actions, formulaires).
 - **Routes API** : `/api/auth/[...nextauth]` + `/api/v1/auth/*` (register, login, logout, me, verify-email, forgot/reset-password, refresh).
 - **Pages** : `/login`, `/register`, `/forgot-password`, `/reset-password`, `/verify-email`, `/dashboard/*`, `/admin`.
@@ -140,6 +140,14 @@ Husky + lint-staged sur les commits. TypeScript `strict: true`.
 - **Révocation** : `requireActiveUser()` / `requireAdminUser()` re-vérifient le statut en base pour layouts dashboard/admin et mutations sensibles.
 - **Rate-limit login** : Redis ; si Redis indisponible → **échec fermé** (refus générique).
 - **Emails** : stub ; en `NODE_ENV !== production` uniquement, lien loggé en console serveur.
+
+## 7bis. Utilisateurs — profils et préférences (Partie 7)
+
+- **Modèles** : `user_profiles` (1:1), `user_preferences` (1:1) — créés à l'inscription.
+- **Feature** : `src/features/users` (schemas Zod, services, Server Actions, formulaires Paramètres).
+- **API** : `GET/PATCH /api/v1/users/me`, `GET/PUT /api/v1/users/preferences` (codes `USR_*`).
+- **UI** : `/dashboard/settings` — profil + préférences (unités, notifications, IA).
+- **Hors scope immédiat** : travel-groups, devices, admin CRUD utilisateurs.
 
 ## 8. Design System (Partie 5)
 
@@ -155,7 +163,8 @@ Husky + lint-staged sur les commits. TypeScript `strict: true`.
 
 - **Shell** : `DashboardShell` câble `AppShell` + sidebar + header + breadcrumbs + footer pour `(dashboard)` et `/admin`.
 - **Config** : `src/components/layout/navigation.ts` — menus, filtrage rôles (`admin` / `super_admin`), breadcrumbs.
-- **Routes placeholder** : `/dashboard`, `/dashboard/trips`, `/dashboard/vehicles`, `/dashboard/catalog`, `/dashboard/maintenance`, `/dashboard/finance`, `/dashboard/ai`, `/dashboard/notifications`, `/dashboard/subscription`, `/dashboard/settings`, `/admin`.
+- **Routes placeholder** : `/dashboard`, `/dashboard/trips`, `/dashboard/vehicles`, `/dashboard/catalog`, `/dashboard/maintenance`, `/dashboard/finance`, `/dashboard/ai`, `/dashboard/notifications`, `/dashboard/subscription`, `/admin`.
+- **Paramètres** : `/dashboard/settings` (profil + préférences — feature `users`).
 - **Responsive** : sidebar desktop repliable ; menu mobile (Dialog) ; recherche header désactivée (« Recherche — à venir »).
 - **Hors menu** : météo, carburant, campings, activités, cartes → sections internes Voyages (commentaire dans `navigation.ts`).
 

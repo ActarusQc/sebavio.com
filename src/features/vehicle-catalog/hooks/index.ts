@@ -1,5 +1,5 @@
 /**
  * Feature `vehicle-catalog` / hooks.
- * Socle architectural — aucune logique métier.
+ * Socle — hooks client éventuels (React Query) pour évolutions ultérieures.
  */
 export {};

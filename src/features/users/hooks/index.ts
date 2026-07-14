@@ -1,5 +1,4 @@
 /**
- * Feature `users` / hooks.
- * Socle architectural — aucune logique métier.
+ * Feature `users` — hooks (réservé).
  */
 export {};

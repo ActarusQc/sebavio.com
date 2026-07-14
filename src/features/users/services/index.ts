@@ -1,5 +1,19 @@
-/**
- * Feature `users` / services.
- * Socle architectural — aucune logique métier.
- */
-export {};
+export {
+  currencyForCountry,
+  defaultProfileData,
+  defaultPreferencesData,
+  DEFAULT_LANGUAGE,
+  DEFAULT_COUNTRY,
+  DEFAULT_CURRENCY,
+  DEFAULT_TIMEZONE,
+} from "./defaults";
+export {
+  ensureProfile,
+  getCurrentUserWithProfile,
+  updateProfile,
+} from "./profile";
+export {
+  ensurePreferences,
+  getPreferences,
+  updatePreferences,
+} from "./preferences";

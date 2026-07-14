@@ -7,6 +7,7 @@ import {
   Button,
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -29,14 +30,16 @@ export function UserMenu({ email, role }: UserMenuProps) {
         <UserRound />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-56">
-        <DropdownMenuLabel>
-          <span className="text-foreground block truncate font-medium">
-            {email}
-          </span>
-          <span className="text-muted-foreground block text-xs font-normal">
-            {role}
-          </span>
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>
+            <span className="text-foreground block truncate font-medium">
+              {email}
+            </span>
+            <span className="text-muted-foreground block text-xs font-normal">
+              {role}
+            </span>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem render={<Link href="/dashboard/settings" />}>
           Paramètres

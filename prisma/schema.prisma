@@ -21,12 +21,152 @@ model User {
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt     DateTime? @map("deleted_at") @db.Timestamptz(6)
 
-  accounts  Account[]
-  sessions  Session[]
-  auditLogs AuditLog[]
+  accounts    Account[]
+  sessions    Session[]
+  auditLogs   AuditLog[]
+  profile     UserProfile?
+  preferences UserPreference?
+  vehicles    UserVehicle[]
 
   @@index([status])
   @@map("users")
+}
+
+/// Constructeur (Doc 4 §4 catalogue). `source` marque la provenance (ex. seed-dev).
+model Manufacturer {
+  id          String   @id @default(uuid(4)) @db.Uuid
+  name        String   @unique @db.VarChar(150)
+  countryCode String?  @map("country_code") @db.Char(2)
+  website     String?  @db.VarChar(255)
+  supportUrl  String?  @map("support_url") @db.VarChar(255)
+  logoUrl     String?  @map("logo_url") @db.Text
+  active      Boolean  @default(true)
+  /// Provenance des données : "manual" | "import" | "seed-dev" (jamais en prod).
+  source      String   @default("manual") @db.VarChar(50)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  models VehicleModel[]
+
+  @@index([name])
+  @@index([active])
+  @@index([source])
+  @@map("manufacturers")
+}
+
+/// Modèle / version catalogue (année + trim = version). Specs inline (Doc 4 §4).
+model VehicleModel {
+  id                String   @id @default(uuid(4)) @db.Uuid
+  manufacturerId    String   @map("manufacturer_id") @db.Uuid
+  category          String   @db.VarChar(30)
+  modelName         String   @map("model_name") @db.VarChar(150)
+  trim              String   @default("") @db.VarChar(150)
+  year              Int
+  engine            String?  @db.VarChar(150)
+  transmission      String?  @db.VarChar(100)
+  driveType         String?  @map("drive_type") @db.VarChar(30)
+  fuelType          String?  @map("fuel_type") @db.VarChar(30)
+  fuelCapacityL     Decimal? @map("fuel_capacity_l") @db.Decimal(6, 2)
+  avgConsumption    Decimal? @map("avg_consumption") @db.Decimal(6, 2)
+  lengthM           Decimal? @map("length_m") @db.Decimal(6, 2)
+  widthM            Decimal? @map("width_m") @db.Decimal(6, 2)
+  heightM           Decimal? @map("height_m") @db.Decimal(6, 2)
+  gvwrKg            Int?     @map("gvwr_kg")
+  sleepingCapacity  Int?     @map("sleeping_capacity")
+  freshWaterL       Int?     @map("fresh_water_l")
+  greyWaterL        Int?     @map("grey_water_l")
+  blackWaterL       Int?     @map("black_water_l")
+  /// Provenance : "manual" | "import" | "seed-dev" (jamais en prod).
+  source            String   @default("manual") @db.VarChar(50)
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  manufacturer Manufacturer      @relation(fields: [manufacturerId], references: [id], onDelete: Restrict)
+  documents    VehicleDocument[]
+  knownIssues  KnownIssue[]
+  userVehicles UserVehicle[]
+
+  @@unique([manufacturerId, year, trim, modelName])
+  @@index([manufacturerId, year])
+  @@index([category])
+  @@index([modelName])
+  @@index([fuelType])
+  @@index([source])
+  @@map("vehicle_models")
+}
+
+/// Document catalogue (manuel, brochure…). file_url = URL saisie uniquement.
+/// Pas de téléversement de fichiers à cette étape — stockage fichier = phase storage ultérieure.
+model VehicleDocument {
+  id           String   @id @default(uuid(4)) @db.Uuid
+  modelId      String   @map("model_id") @db.Uuid
+  documentType String   @map("document_type") @db.VarChar(50)
+  title        String   @db.VarChar(200)
+  /// URL absolue saisie manuellement / import — aucun upload fichier ici.
+  fileUrl      String   @map("file_url") @db.Text
+  language     String   @db.Char(2)
+  version      String?  @db.VarChar(20)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  model VehicleModel @relation(fields: [modelId], references: [id], onDelete: Restrict)
+
+  @@index([modelId, language])
+  @@map("vehicle_documents")
+}
+
+/// Problème connu lié à un modèle catalogue (Doc 4 §4).
+model KnownIssue {
+  id          String   @id @default(uuid(4)) @db.Uuid
+  modelId     String   @map("model_id") @db.Uuid
+  title       String   @db.VarChar(200)
+  description String   @db.Text
+  severity    String   @db.VarChar(20)
+  source      String   @db.VarChar(200)
+  verified    Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  model VehicleModel @relation(fields: [modelId], references: [id], onDelete: Restrict)
+
+  @@index([modelId])
+  @@map("known_issues")
+}
+
+/// Profil utilisateur 1:1 (Doc 4 §2).
+model UserProfile {
+  userId       String   @id @map("user_id") @db.Uuid
+  firstName    String   @default("") @map("first_name") @db.VarChar(100)
+  lastName     String   @default("") @map("last_name") @db.VarChar(100)
+  language     String   @default("fr") @db.Char(2)
+  country      String   @default("CA") @db.Char(2)
+  currency     String   @default("CAD") @db.Char(3)
+  timezone     String   @default("America/Toronto") @db.VarChar(100)
+  travelStyle  String?  @map("travel_style") @db.VarChar(50)
+  budgetLevel  String?  @map("budget_level") @db.VarChar(30)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([country])
+  @@map("user_profiles")
+}
+
+/// Préférences utilisateur 1:1 (Doc 4 §2).
+model UserPreference {
+  userId                String   @id @map("user_id") @db.Uuid
+  distanceUnit          String   @default("km") @map("distance_unit") @db.VarChar(10)
+  temperatureUnit       String   @default("C") @map("temperature_unit") @db.VarChar(5)
+  fuelUnit              String   @default("L/100") @map("fuel_unit") @db.VarChar(20)
+  notificationsEnabled  Boolean  @default(true) @map("notifications_enabled")
+  aiProactive           Boolean  @default(false) @map("ai_proactive")
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@map("user_preferences")
 }
 
 /// Compte OAuth / provider (Auth.js) — Doc 4 snake_case + uuid.
@@ -101,4 +241,92 @@ model AuditLog {
   @@index([createdAt])
   @@index([entity, entityId])
   @@map("audit_logs")
+}
+
+/// Véhicule utilisateur (Doc 4 §5) — model_id nullable + saisie manuelle.
+model UserVehicle {
+  id                       String    @id @default(uuid(4)) @db.Uuid
+  userId                   String    @map("user_id") @db.Uuid
+  modelId                  String?   @map("model_id") @db.Uuid
+  isManualEntry            Boolean   @default(false) @map("is_manual_entry")
+  manualManufacturerName   String?   @map("manual_manufacturer_name") @db.VarChar(150)
+  manualModelName          String?   @map("manual_model_name") @db.VarChar(150)
+  manualYear               Int?      @map("manual_year")
+  manualCategory           String?   @map("manual_category") @db.VarChar(30)
+  manualTrim               String?   @map("manual_trim") @db.VarChar(150)
+  nickname                 String?   @db.VarChar(100)
+  vin                      String?   @db.VarChar(17)
+  licensePlate             String?   @map("license_plate") @db.VarChar(20)
+  purchaseDate             DateTime? @map("purchase_date") @db.Date
+  purchasePrice            Decimal?  @map("purchase_price") @db.Decimal(12, 2)
+  currentOdometer          Int       @map("current_odometer")
+  realAvgConsumption       Decimal?  @map("real_avg_consumption") @db.Decimal(5, 2)
+  tankCapacityOverride     Decimal?  @map("tank_capacity_override") @db.Decimal(6, 2)
+  primaryVehicle           Boolean   @default(false) @map("primary_vehicle")
+  createdAt                DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt                DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  user     User                   @relation(fields: [userId], references: [id], onDelete: Restrict)
+  model    VehicleModel?          @relation(fields: [modelId], references: [id], onDelete: Restrict)
+  documents UserVehicleDocument[]
+  photos   VehiclePhoto[]
+  settings VehicleSettings?
+
+  @@unique([userId, vin])
+  @@index([userId])
+  @@index([modelId])
+  @@index([vin])
+  @@index([userId, primaryVehicle])
+  @@index([deletedAt])
+  @@map("user_vehicles")
+}
+
+/// Document véhicule utilisateur (URL saisie — pas d'upload). Table distincte du catalogue.
+model UserVehicleDocument {
+  id         String    @id @default(uuid(4)) @db.Uuid
+  vehicleId  String    @map("vehicle_id") @db.Uuid
+  type       String    @db.VarChar(50)
+  title      String    @db.VarChar(150)
+  fileUrl    String    @map("file_url") @db.Text
+  expiryDate DateTime? @map("expiry_date") @db.Date
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  vehicle UserVehicle @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+
+  @@index([vehicleId])
+  @@index([expiryDate])
+  @@map("user_vehicle_documents")
+}
+
+/// Photo véhicule utilisateur (URL saisie).
+model VehiclePhoto {
+  id           String   @id @default(uuid(4)) @db.Uuid
+  vehicleId    String   @map("vehicle_id") @db.Uuid
+  photoUrl     String   @map("photo_url") @db.Text
+  caption      String?  @db.VarChar(200)
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  vehicle UserVehicle @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+
+  @@index([vehicleId])
+  @@map("vehicle_photos")
+}
+
+/// Préférences 1:1 d'un véhicule utilisateur.
+model VehicleSettings {
+  vehicleId           String   @id @map("vehicle_id") @db.Uuid
+  preferredFuelType   String?  @map("preferred_fuel_type") @db.VarChar(30)
+  winterMode          Boolean  @default(false) @map("winter_mode")
+  avoidUnpavedRoads   Boolean  @default(false) @map("avoid_unpaved_roads")
+  tollPreference      String?  @map("toll_preference") @db.VarChar(20)
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  vehicle UserVehicle @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+
+  @@map("vehicle_settings")
 }

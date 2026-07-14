@@ -5,6 +5,10 @@ import { hashPassword } from "./password";
 import { issueVerificationToken } from "./tokens";
 import { writeAuditLog } from "./audit";
 import { sendAuthEmail } from "@/services/email";
+import {
+  defaultProfileData,
+  defaultPreferencesData,
+} from "@/features/users/services/defaults";
 
 function appBaseUrl(): string {
   return (
@@ -31,14 +35,26 @@ export async function registerUser(
 
   const passwordHash = await hashPassword(input.password);
 
-  const user = await prisma.user.create({
-    data: {
-      email: input.email,
-      passwordHash,
-      status: "active",
-      role: "user",
-    },
-    select: { id: true, email: true },
+  const user = await prisma.$transaction(async (tx) => {
+    const created = await tx.user.create({
+      data: {
+        email: input.email,
+        passwordHash,
+        status: "active",
+        role: "user",
+      },
+      select: { id: true, email: true },
+    });
+
+    await tx.userProfile.create({
+      data: defaultProfileData(created.id),
+    });
+
+    await tx.userPreference.create({
+      data: defaultPreferencesData(created.id),
+    });
+
+    return created;
   });
 
   const { token } = await issueVerificationToken("verify-email", user.email);

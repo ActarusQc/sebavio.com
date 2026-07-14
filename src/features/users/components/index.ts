@@ -1,5 +1,2 @@
-/**
- * Feature `users` / components.
- * Socle architectural — aucune logique métier.
- */
-export {};
+export { ProfileForm } from "./profile-form";
+export { PreferencesForm } from "./preferences-form";

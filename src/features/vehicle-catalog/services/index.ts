@@ -1,5 +1,19 @@
-/**
- * Feature `vehicle-catalog` / services.
- * Socle architectural — aucune logique métier.
- */
-export {};
+export {
+  listManufacturers,
+  getManufacturerById,
+  createManufacturer,
+  updateManufacturer,
+} from "./manufacturers";
+
+export {
+  listModels,
+  getModelById,
+  getModelSpecifications,
+  getModelDocuments,
+  getModelKnownIssues,
+  getModelMaintenance,
+  createModel,
+  updateModel,
+} from "./models";
+
+export { importCatalog, syncCatalog } from "./import";
