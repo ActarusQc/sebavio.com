@@ -1,5 +1,4 @@
 /**
- * Feature `maintenance` / hooks.
- * Socle architectural — aucune logique métier.
+ * Feature `maintenance` / hooks — réservé (pas de hooks client pour l’instant).
  */
 export {};

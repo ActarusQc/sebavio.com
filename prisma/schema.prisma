@@ -81,10 +81,11 @@ model VehicleModel {
   createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  manufacturer Manufacturer      @relation(fields: [manufacturerId], references: [id], onDelete: Restrict)
-  documents    VehicleDocument[]
-  knownIssues  KnownIssue[]
-  userVehicles UserVehicle[]
+  manufacturer         Manufacturer          @relation(fields: [manufacturerId], references: [id], onDelete: Restrict)
+  documents            VehicleDocument[]
+  knownIssues          KnownIssue[]
+  userVehicles         UserVehicle[]
+  maintenanceTemplates MaintenanceTemplate[]
 
   @@unique([manufacturerId, year, trim, modelName])
   @@index([manufacturerId, year])
@@ -260,6 +261,8 @@ model UserVehicle {
   purchaseDate             DateTime? @map("purchase_date") @db.Date
   purchasePrice            Decimal?  @map("purchase_price") @db.Decimal(12, 2)
   currentOdometer          Int       @map("current_odometer")
+  /// Dernière mise à jour explicite de l'odomètre (création / PATCH odometer / entretien).
+  odometerUpdatedAt        DateTime  @default(now()) @map("odometer_updated_at") @db.Timestamptz(6)
   realAvgConsumption       Decimal?  @map("real_avg_consumption") @db.Decimal(5, 2)
   tankCapacityOverride     Decimal?  @map("tank_capacity_override") @db.Decimal(6, 2)
   primaryVehicle           Boolean   @default(false) @map("primary_vehicle")
@@ -267,11 +270,14 @@ model UserVehicle {
   updatedAt                DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt                DateTime? @map("deleted_at") @db.Timestamptz(6)
 
-  user     User                   @relation(fields: [userId], references: [id], onDelete: Restrict)
-  model    VehicleModel?          @relation(fields: [modelId], references: [id], onDelete: Restrict)
-  documents UserVehicleDocument[]
-  photos   VehiclePhoto[]
-  settings VehicleSettings?
+  user                    User                      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  model                   VehicleModel?             @relation(fields: [modelId], references: [id], onDelete: Restrict)
+  documents               UserVehicleDocument[]
+  photos                  VehiclePhoto[]
+  settings                VehicleSettings?
+  maintenanceSchedules    MaintenanceSchedule[]
+  maintenanceHistories    MaintenanceHistory[]
+  maintenanceNotifications MaintenanceNotification[]
 
   @@unique([userId, vin])
   @@index([userId])
@@ -279,7 +285,120 @@ model UserVehicle {
   @@index([vin])
   @@index([userId, primaryVehicle])
   @@index([deletedAt])
+  @@index([odometerUpdatedAt])
   @@map("user_vehicles")
+}
+
+/// Gabarit d'entretien constructeur (catalogue) — Doc 4 §6.
+model MaintenanceTemplate {
+  id                  String   @id @default(uuid(4)) @db.Uuid
+  modelId             String   @map("model_id") @db.Uuid
+  title               String   @db.VarChar(150)
+  category            String   @db.VarChar(50)
+  intervalKm          Int?     @map("interval_km")
+  intervalMonths      Int?     @map("interval_months")
+  priority            String   @default("normal") @db.VarChar(20)
+  description         String?  @db.Text
+  manufacturerSource  String?  @map("manufacturer_source") @db.Text
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  model     VehicleModel          @relation(fields: [modelId], references: [id], onDelete: Restrict)
+  schedules MaintenanceSchedule[]
+  histories MaintenanceHistory[]
+
+  @@index([modelId])
+  @@index([category])
+  @@index([priority])
+  @@map("maintenance_templates")
+}
+
+/// Échéance planifiée pour un véhicule utilisateur — Doc 4 §6.
+model MaintenanceSchedule {
+  id               String    @id @default(uuid(4)) @db.Uuid
+  vehicleId        String    @map("vehicle_id") @db.Uuid
+  templateId       String?   @map("template_id") @db.Uuid
+  nextDueDate      DateTime? @map("next_due_date") @db.Date
+  nextDueOdometer  Int?      @map("next_due_odometer")
+  status           String    @default("upcoming") @db.VarChar(20)
+  lastCalculatedAt DateTime  @default(now()) @map("last_calculated_at") @db.Timestamptz(6)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  vehicle       UserVehicle               @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  template      MaintenanceTemplate?      @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  notifications MaintenanceNotification[]
+
+  @@index([vehicleId])
+  @@index([templateId])
+  @@index([status])
+  @@index([vehicleId, status])
+  @@map("maintenance_schedule")
+}
+
+/// Entretien réalisé (historique) — Doc 4 §6. Soft delete via deleted_at.
+model MaintenanceHistory {
+  id                 String    @id @default(uuid(4)) @db.Uuid
+  vehicleId          String    @map("vehicle_id") @db.Uuid
+  templateId         String?   @map("template_id") @db.Uuid
+  performedDate      DateTime  @map("performed_date") @db.Date
+  performedOdometer  Int       @map("performed_odometer")
+  provider           String?   @db.VarChar(200)
+  cost               Decimal?  @db.Decimal(10, 2)
+  currency           String?   @db.Char(3)
+  notes              String?   @db.Text
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt          DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  vehicle   UserVehicle            @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  template  MaintenanceTemplate?   @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  documents MaintenanceDocument[]
+
+  @@index([vehicleId])
+  @@index([templateId])
+  @@index([vehicleId, performedDate])
+  @@index([vehicleId, performedOdometer])
+  @@index([deletedAt])
+  @@map("maintenance_history")
+}
+
+/// Document lié à un entretien réalisé (URL saisie — pas d'upload).
+model MaintenanceDocument {
+  id           String   @id @default(uuid(4)) @db.Uuid
+  historyId    String   @map("history_id") @db.Uuid
+  documentType String   @map("document_type") @db.VarChar(50)
+  fileUrl      String   @map("file_url") @db.Text
+  uploadedAt   DateTime @default(now()) @map("uploaded_at") @db.Timestamptz(6)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  history MaintenanceHistory @relation(fields: [historyId], references: [id], onDelete: Restrict)
+
+  @@index([historyId])
+  @@map("maintenance_documents")
+}
+
+/// Structure rappels entretien — pas d'envoi réel (module Notifications).
+/// Choix Partie 10 : pas de génération en masse à chaque recalcul ;
+/// lignes créées uniquement à l'approche de l'échéance (voir docs).
+model MaintenanceNotification {
+  id               String   @id @default(uuid(4)) @db.Uuid
+  vehicleId        String   @map("vehicle_id") @db.Uuid
+  scheduleId       String   @map("schedule_id") @db.Uuid
+  notificationDate DateTime @map("notification_date") @db.Timestamptz(6)
+  type             String   @db.VarChar(30)
+  sent             Boolean  @default(false)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  vehicle  UserVehicle         @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  schedule MaintenanceSchedule @relation(fields: [scheduleId], references: [id], onDelete: Restrict)
+
+  @@index([vehicleId])
+  @@index([scheduleId])
+  @@index([sent, notificationDate])
+  @@map("maintenance_notifications")
 }
 
 /// Document véhicule utilisateur (URL saisie — pas d'upload). Table distincte du catalogue.

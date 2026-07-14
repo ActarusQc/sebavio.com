@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui";
 import { ModelEditForm } from "@/features/vehicle-catalog/components";
+import { TemplateCreateForm } from "@/features/maintenance/components";
 import {
   getModelById,
   getModelDocuments,
@@ -18,6 +19,7 @@ import {
   getModelSpecifications,
   listManufacturers,
 } from "@/features/vehicle-catalog/services";
+import { listTemplatesForModel } from "@/features/maintenance/services";
 import { isAppError } from "@/lib/errors";
 import { MAX_PAGE_SIZE } from "@/features/vehicle-catalog/constants";
 
@@ -38,12 +40,14 @@ export default async function CatalogModelPage({ params }: PageProps) {
     throw error;
   }
 
-  const [specs, documents, knownIssues, manufacturers] = await Promise.all([
-    getModelSpecifications(id),
-    getModelDocuments(id),
-    getModelKnownIssues(id),
-    listManufacturers({ pageSize: String(MAX_PAGE_SIZE), active: "true" }),
-  ]);
+  const [specs, documents, knownIssues, manufacturers, templates] =
+    await Promise.all([
+      getModelSpecifications(id),
+      getModelDocuments(id),
+      getModelKnownIssues(id),
+      listManufacturers({ pageSize: String(MAX_PAGE_SIZE), active: "true" }),
+      listTemplatesForModel(id),
+    ]);
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8">
@@ -100,6 +104,40 @@ export default async function CatalogModelPage({ params }: PageProps) {
               </div>
             ))}
           </dl>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Programme d’entretien constructeur</CardTitle>
+          <CardDescription>
+            Gabarits maintenance_templates (lecture pour tous, écriture admin).
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {templates.length === 0 ? (
+            <p className="text-muted-foreground text-sm">
+              Aucun gabarit pour ce modèle.
+            </p>
+          ) : (
+            <ul className="divide-border divide-y text-sm">
+              {templates.map((t) => (
+                <li key={t.id} className="py-3">
+                  <p className="font-medium">
+                    {t.title} <Badge variant="outline">{t.priority}</Badge>
+                  </p>
+                  <p className="text-muted-foreground">
+                    {t.category}
+                    {t.intervalKm != null ? ` · ${t.intervalKm} km` : ""}
+                    {t.intervalMonths != null
+                      ? ` · ${t.intervalMonths} mois`
+                      : ""}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+          {isAdmin ? <TemplateCreateForm modelId={id} /> : null}
         </CardContent>
       </Card>
 

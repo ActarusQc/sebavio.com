@@ -189,16 +189,11 @@ export async function getModelKnownIssues(
   return rows.map(toKnownIssueDto);
 }
 
-/** Stub Partie 8 — programme d'entretien constructeur = module maintenance ultérieur. */
-export async function getModelMaintenance(id: string): Promise<unknown[]> {
-  const model = await prisma.vehicleModel.findUnique({
-    where: { id },
-    select: { id: true },
-  });
-  if (!model) {
-    throw new AppError("CAT_002", "Modèle introuvable", 404);
-  }
-  return [];
+/** Programme d'entretien constructeur (délègue au module maintenance). */
+export async function getModelMaintenance(id: string) {
+  const { listTemplatesForModel } =
+    await import("@/features/maintenance/services/templates");
+  return listTemplatesForModel(id);
 }
 
 function toDecimalInput(value: number | null | undefined) {

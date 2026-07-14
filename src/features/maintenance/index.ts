@@ -1,5 +1,5 @@
 /**
- * Feature `maintenance` — API publique du module.
- * Socle architectural — aucune logique métier.
+ * Feature `maintenance` — entretiens véhicules + gabarits catalogue.
  */
-export {};
+export * from "./types";
+export * from "./constants";

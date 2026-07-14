@@ -163,11 +163,22 @@ Husky + lint-staged sur les commits. TypeScript `strict: true`.
 
 - **Shell** : `DashboardShell` câble `AppShell` + sidebar + header + breadcrumbs + footer pour `(dashboard)` et `/admin`.
 - **Config** : `src/components/layout/navigation.ts` — menus, filtrage rôles (`admin` / `super_admin`), breadcrumbs.
-- **Routes placeholder** : `/dashboard`, `/dashboard/trips`, `/dashboard/vehicles`, `/dashboard/catalog`, `/dashboard/maintenance`, `/dashboard/finance`, `/dashboard/ai`, `/dashboard/notifications`, `/dashboard/subscription`, `/admin`.
+- **Routes placeholder** : `/dashboard`, `/dashboard/trips`, `/dashboard/finance`, `/dashboard/ai`, `/dashboard/notifications`, `/dashboard/subscription`, `/admin`.
+- **Véhicules** : `/dashboard/vehicles` (+ new / [id] / edit).
+- **Catalogue** : `/dashboard/catalog` (+ [id]).
+- **Entretien (Partie 10)** : `/dashboard/maintenance` (+ calendar / history / new / [id]).
 - **Paramètres** : `/dashboard/settings` (profil + préférences — feature `users`).
 - **Responsive** : sidebar desktop repliable ; menu mobile (Dialog) ; recherche header désactivée (« Recherche — à venir »).
 - **Hors menu** : météo, carburant, campings, activités, cartes → sections internes Voyages (commentaire dans `navigation.ts`).
 
-## 10. Hors scope immédiat
+## 10. Module Entretien (Partie 10)
 
-Modules métier, OAuth Google, MFA réel, SMTP production.
+- **Gabarits** (`maintenance_templates`) : lecture authentifiée via `GET /api/v1/models/{id}/maintenance` ; écriture admin via `/api/v1/admin/maintenance-templates`.
+- **Entretiens utilisateur** : `maintenance_history` (soft delete), `maintenance_schedule`, `maintenance_documents`, isolation propriétaire (404).
+- **Échéances** : calculées uniquement côté serveur (`schedule-calc` + `recalculate`).
+- **Notifications** : table `maintenance_notifications` prête ; **pas de génération en masse** à chaque recalcul — lignes créées seulement à l’approche (14 j / 500 km), `sent=false`. L’envoi réel appartient au **module Notifications**.
+- **Odomètre** : champ `user_vehicles.odometer_updated_at` ; invite discrète sur le dashboard entretien si > 30 jours.
+
+## 11. Hors scope immédiat
+
+Modules métier restants, OAuth Google, MFA réel, SMTP production, envoi notifications.

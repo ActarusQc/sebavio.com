@@ -221,6 +221,7 @@ export async function createVehicle(
           purchaseDate: input.purchaseDate ?? null,
           purchasePrice: input.purchasePrice ?? null,
           currentOdometer: input.currentOdometer,
+          odometerUpdatedAt: new Date(),
           realAvgConsumption: input.realAvgConsumption ?? null,
           tankCapacityOverride: input.tankCapacityOverride ?? null,
           primaryVehicle: makePrimary || count === 0,
@@ -358,7 +359,10 @@ export async function updateVehicle(
             ? { purchasePrice: input.purchasePrice }
             : {}),
           ...(input.currentOdometer !== undefined
-            ? { currentOdometer: input.currentOdometer }
+            ? {
+                currentOdometer: input.currentOdometer,
+                odometerUpdatedAt: new Date(),
+              }
             : {}),
           ...(input.realAvgConsumption !== undefined
             ? { realAvgConsumption: input.realAvgConsumption }
@@ -451,7 +455,10 @@ export async function updateOdometer(
 
   const updated = await prisma.userVehicle.update({
     where: { id: vehicleId },
-    data: { currentOdometer: input.currentOdometer },
+    data: {
+      currentOdometer: input.currentOdometer,
+      odometerUpdatedAt: new Date(),
+    },
     include: vehicleListInclude,
   });
 
@@ -570,13 +577,14 @@ export async function addVehicleDocument(
   return toDocumentDto(doc);
 }
 
-/** Stub Partie 10 — historique entretien. */
+/** Historique d'entretien du véhicule (délègue au module maintenance). */
 export async function listVehicleMaintenance(
   userId: string,
   vehicleId: string,
-): Promise<{ items: [] }> {
-  await getOwnedVehicleOrThrow(userId, vehicleId);
-  return { items: [] };
+) {
+  const { listVehicleHistory } =
+    await import("@/features/maintenance/services/history");
+  return listVehicleHistory(userId, vehicleId);
 }
 
 export type { VehicleCreateInput, VehicleUpdateInput };

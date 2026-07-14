@@ -26,6 +26,11 @@ export type AppErrorCode =
   | "VEH_003"
   | "VEH_004"
   | "VEH_005"
+  | "MNT_001"
+  | "MNT_002"
+  | "MNT_003"
+  | "MNT_004"
+  | "MNT_005"
   | "VALIDATION_ERROR"
   | "INTERNAL_ERROR";
 
