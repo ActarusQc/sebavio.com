@@ -21,3 +21,5 @@ export {
   buildDisplayName,
   estimateRangeKm,
 } from "./mappers";
+
+export { assertOdometerNotDecreasing, bumpOdometerIfHigher } from "./odometer";

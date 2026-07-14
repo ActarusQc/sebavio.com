@@ -11,6 +11,7 @@ export {
   cancelTrip,
   getTripSummary,
   optimizeTrip,
+  geocodeStop,
   addStop,
   updateStop,
   deleteStop,
@@ -25,6 +26,8 @@ export {
   startTripAction,
   addStopAction,
   deleteStopAction,
+  geocodeStopAction,
+  optimizeTripAction,
 } from "@/features/trips/actions";
 
 export {
@@ -37,5 +40,6 @@ export type {
   TripDto,
   TripDetailDto,
   TripStopDto,
+  TripRouteDto,
   PaginatedTrips,
-} from "@/features/trips/types";
+} from "./types";

@@ -11,13 +11,15 @@ import {
 } from "@/components/ui";
 import { TripForm } from "@/features/trips/components";
 import { listVehicles } from "@/features/vehicles/services";
+import { listTravelGroups } from "@/features/travel-groups/services";
 import { MAX_PAGE_SIZE } from "@/features/vehicles/constants";
 
 export default async function NewTripPage() {
   const user = await requireActiveUser();
-  const vehicles = await listVehicles(user.id, {
-    pageSize: String(MAX_PAGE_SIZE),
-  });
+  const [vehicles, groups] = await Promise.all([
+    listVehicles(user.id, { pageSize: String(MAX_PAGE_SIZE) }),
+    listTravelGroups(user.id, { pageSize: String(MAX_PAGE_SIZE) }),
+  ]);
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
@@ -35,7 +37,7 @@ export default async function NewTripPage() {
         <CardHeader>
           <CardTitle>Informations</CardTitle>
           <CardDescription>
-            Statut initial : planifié. Groupe de voyageurs = Partie 11bis.
+            Statut initial : planifié. Groupe de voyageurs optionnel.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -43,6 +45,10 @@ export default async function NewTripPage() {
             vehicles={vehicles.items.map((v) => ({
               id: v.id,
               displayName: v.displayName,
+            }))}
+            groups={groups.items.map((g) => ({
+              id: g.id,
+              name: g.name,
             }))}
           />
         </CardContent>

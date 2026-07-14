@@ -1,5 +1,1 @@
-/**
- * Feature `weather` / components.
- * Socle architectural — aucune logique métier.
- */
-export {};
+export { TripWeatherPanel } from "./trip-weather-panel";

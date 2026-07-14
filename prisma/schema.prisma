@@ -26,8 +26,9 @@ model User {
   auditLogs   AuditLog[]
   profile     UserProfile?
   preferences UserPreference?
-  vehicles    UserVehicle[]
-  trips       Trip[]
+  vehicles     UserVehicle[]
+  trips        Trip[]
+  travelGroups TravelGroup[]
 
   @@index([status])
   @@map("users")
@@ -279,6 +280,7 @@ model UserVehicle {
   maintenanceSchedules    MaintenanceSchedule[]
   maintenanceHistories    MaintenanceHistory[]
   maintenanceNotifications MaintenanceNotification[]
+  fuelLogs                FuelLog[]
   trips                   Trip[]
 
   @@unique([userId, vin])
@@ -289,6 +291,97 @@ model UserVehicle {
   @@index([deletedAt])
   @@index([odometerUpdatedAt])
   @@map("user_vehicles")
+}
+
+/// Plein carburant (suivi conso réelle) — Partie 13 / Doc 4 §5 (dérivé).
+model FuelLog {
+  id            String    @id @default(uuid(4)) @db.Uuid
+  vehicleId     String    @map("vehicle_id") @db.Uuid
+  filledAt      DateTime  @map("filled_at") @db.Date
+  odometerKm    Int       @map("odometer_km")
+  liters        Decimal   @db.Decimal(8, 3)
+  pricePerLiter Decimal   @map("price_per_liter") @db.Decimal(8, 3)
+  /// Montant réellement payé (facture) — peut différer de liters×prix de quelques cents.
+  totalCost     Decimal   @map("total_cost") @db.Decimal(10, 2)
+  isFull        Boolean   @default(true) @map("is_full")
+  fuelType      String?   @map("fuel_type") @db.VarChar(30)
+  stationName   String?   @map("station_name") @db.VarChar(200)
+  notes         String?   @db.Text
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  vehicle UserVehicle @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+
+  @@index([vehicleId])
+  @@index([vehicleId, filledAt])
+  @@index([vehicleId, odometerKm])
+  @@index([deletedAt])
+  @@map("fuel_logs")
+}
+
+/// Station-service (Régie Essence Québec) — Partie 13bis.
+model FuelStation {
+  id            String    @id @default(uuid(4)) @db.Uuid
+  /// Clé naturelle stable (hash nom+adresse, sinon lat/lng).
+  externalKey   String    @unique @map("external_key") @db.VarChar(64)
+  name          String    @db.VarChar(200)
+  banner        String?   @db.VarChar(120)
+  address       String    @db.VarChar(300)
+  region        String?   @db.VarChar(120)
+  postalCode    String?   @map("postal_code") @db.VarChar(20)
+  latitude      Decimal?  @db.Decimal(10, 7)
+  longitude     Decimal?  @db.Decimal(10, 7)
+  countryCode   String    @default("CA") @map("country_code") @db.Char(2)
+  /// Ingestions consécutives sans apparition (soft-delete à ≥ 3).
+  missingStreak Int       @default(0) @map("missing_streak")
+  lastSeenAt    DateTime  @map("last_seen_at") @db.Timestamptz(6)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  prices FuelPrice[]
+
+  @@index([region])
+  @@index([latitude, longitude])
+  @@index([deletedAt])
+  @@index([lastSeenAt])
+  @@map("fuel_stations")
+}
+
+/// Historique des prix carburant par station (jamais écrasé) — Partie 13bis / Doc 4.
+model FuelPrice {
+  id          String   @id @default(uuid(4)) @db.Uuid
+  stationId   String   @map("station_id") @db.Uuid
+  /// regular | premium | diesel
+  fuelType    String   @map("fuel_type") @db.VarChar(30)
+  /// Prix en dollars canadiens par litre.
+  price       Decimal  @db.Decimal(8, 3)
+  capturedAt  DateTime @map("captured_at") @db.Timestamptz(6)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  station FuelStation @relation(fields: [stationId], references: [id], onDelete: Restrict)
+
+  @@index([stationId, fuelType, capturedAt(sort: Desc)])
+  @@index([fuelType, capturedAt])
+  @@index([capturedAt])
+  @@map("fuel_prices")
+}
+
+/// Journal des ingestions Régie (rate-limit + rapport).
+model FuelIngestion {
+  id         String    @id @default(uuid(4)) @db.Uuid
+  /// success | refused | failed
+  status     String    @db.VarChar(20)
+  sourceUrl  String?   @map("source_url") @db.Text
+  startedAt  DateTime  @map("started_at") @db.Timestamptz(6)
+  finishedAt DateTime? @map("finished_at") @db.Timestamptz(6)
+  report     Json?
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([createdAt])
+  @@index([status, createdAt])
+  @@map("fuel_ingestions")
 }
 
 /// Gabarit d'entretien constructeur (catalogue) — Doc 4 §6.
@@ -452,11 +545,94 @@ model VehicleSettings {
   @@map("vehicle_settings")
 }
 
-/// Voyage utilisateur (Doc 4 §7) — travel_group_id reporté Partie 11bis.
+/// Groupe de voyageurs (Doc 4 §3) — fiches descriptives, pas de comptes invités.
+model TravelGroup {
+  id           String    @id @default(uuid(4)) @db.Uuid
+  ownerUserId  String    @map("owner_user_id") @db.Uuid
+  name         String    @db.VarChar(150)
+  defaultGroup Boolean   @default(false) @map("default_group")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  owner       User                @relation(fields: [ownerUserId], references: [id], onDelete: Restrict)
+  members     TravelMember[]
+  pets        Pet[]
+  preferences TravelPreferences?
+  trips       Trip[]
+
+  @@index([ownerUserId])
+  @@index([ownerUserId, defaultGroup])
+  @@index([deletedAt])
+  @@map("travel_groups")
+}
+
+/// Membre du groupe — fiche descriptive du propriétaire (pas un User).
+/// Hard-delete OK tant qu'aucune autre table ne référence ce membre.
+/// Si une future table (ex. réservations par membre) les référence → migrer vers soft-delete.
+model TravelMember {
+  id            String    @id @default(uuid(4)) @db.Uuid
+  groupId       String    @map("group_id") @db.Uuid
+  firstName     String    @map("first_name") @db.VarChar(100)
+  birthDate     DateTime? @map("birth_date") @db.Date
+  relationship  String?   @db.VarChar(30)
+  mobilityLevel String?   @map("mobility_level") @db.VarChar(30)
+  specialNeeds  String?   @map("special_needs") @db.Text
+  notes         String?   @db.Text
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  group TravelGroup @relation(fields: [groupId], references: [id], onDelete: Restrict)
+
+  @@index([groupId])
+  @@map("travel_members")
+}
+
+/// Animal du groupe.
+/// Hard-delete OK tant qu'aucune autre table ne référence cet animal.
+/// Si une future table les référence → migrer vers soft-delete.
+model Pet {
+  id        String   @id @default(uuid(4)) @db.Uuid
+  groupId   String   @map("group_id") @db.Uuid
+  name      String   @db.VarChar(100)
+  species   String?  @db.VarChar(50)
+  breed     String?  @db.VarChar(100)
+  weightKg  Decimal? @map("weight_kg") @db.Decimal(5, 2)
+  notes     String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  group TravelGroup @relation(fields: [groupId], references: [id], onDelete: Restrict)
+
+  @@index([groupId])
+  @@map("pets")
+}
+
+/// Préférences 1:1 d'un groupe de voyage (Doc 4 §3).
+model TravelPreferences {
+  groupId                 String   @id @map("group_id") @db.Uuid
+  maxDriveHours           Decimal? @map("max_drive_hours") @db.Decimal(4, 1)
+  dailyBudget             Decimal? @map("daily_budget") @db.Decimal(10, 2)
+  preferredCampgroundType String?  @map("preferred_campground_type") @db.VarChar(50)
+  avoidTolls              Boolean  @default(false) @map("avoid_tolls")
+  avoidFerries            Boolean  @default(false) @map("avoid_ferries")
+  preferredActivityTypes  Json?    @map("preferred_activity_types")
+  foodPreferences         Json?    @map("food_preferences")
+  accessibilityRequired   Boolean  @default(false) @map("accessibility_required")
+  createdAt               DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt               DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  group TravelGroup @relation(fields: [groupId], references: [id], onDelete: Restrict)
+
+  @@map("travel_preferences")
+}
+
+/// Voyage utilisateur (Doc 4 §7) — travel_group_id optionnel (Partie 11bis).
 model Trip {
   id             String    @id @default(uuid(4)) @db.Uuid
   userId         String    @map("user_id") @db.Uuid
   vehicleId      String    @map("vehicle_id") @db.Uuid
+  travelGroupId  String?   @map("travel_group_id") @db.Uuid
   title          String    @db.VarChar(150)
   /// planned | in_progress | completed | cancelled
   status         String    @default("planned") @db.VarChar(20)
@@ -469,13 +645,15 @@ model Trip {
   updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(6)
 
-  user    User       @relation(fields: [userId], references: [id], onDelete: Restrict)
-  vehicle UserVehicle @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
-  stops   TripStop[]
-  route   TripRoute?
+  user         User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  vehicle      UserVehicle  @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  travelGroup  TravelGroup? @relation(fields: [travelGroupId], references: [id], onDelete: Restrict)
+  stops        TripStop[]
+  route        TripRoute?
 
   @@index([userId, status])
   @@index([vehicleId])
+  @@index([travelGroupId])
   @@index([departureDate])
   @@index([deletedAt])
   @@map("trips")
@@ -504,7 +682,7 @@ model TripStop {
   @@map("trip_stops")
 }
 
-/// Tracé / estimations 1:1 — champs prêts pour Google Maps / carburant (Parties 12–13).
+/// Tracé / estimations 1:1 — Google Maps (Partie 12) / carburant (Partie 13).
 model TripRoute {
   id                   String   @id @default(uuid(4)) @db.Uuid
   tripId               String   @unique @map("trip_id") @db.Uuid
@@ -513,6 +691,8 @@ model TripRoute {
   estimatedDurationMin Int?     @map("estimated_duration_min")
   estimatedFuelCost    Decimal? @map("estimated_fuel_cost") @db.Decimal(10, 2)
   polyline             String?  @db.Text
+  /// Hash des waypoints au moment du calcul — périmé si les étapes changent.
+  waypointsHash        String?  @map("waypoints_hash") @db.VarChar(64)
   createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 

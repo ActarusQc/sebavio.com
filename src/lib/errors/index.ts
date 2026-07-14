@@ -36,6 +36,17 @@ export type AppErrorCode =
   | "TRIP_003"
   | "TRIP_004"
   | "TRIP_005"
+  | "FUEL_001"
+  | "FUEL_002"
+  | "FUEL_003"
+  | "FUEL_004"
+  | "FUEL_005"
+  | "EXT_001"
+  | "EXT_002"
+  | "EXT_003"
+  | "EXT_004"
+  | "EXT_005"
+  | "EXT_RATE_LIMIT"
   | "VALIDATION_ERROR"
   | "INTERNAL_ERROR";
 

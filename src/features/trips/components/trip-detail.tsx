@@ -1,11 +1,14 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useActionState } from "react";
 import {
   addStopAction,
   cancelTripAction,
   completeTripAction,
   deleteStopAction,
+  geocodeStopAction,
+  optimizeTripAction,
   startTripAction,
   type TripsActionResult,
 } from "@/features/trips/actions";
@@ -13,6 +16,19 @@ import { STOP_TYPES, TRIP_STATUS_LABELS } from "@/features/trips/constants";
 import type { TripDetailDto } from "@/features/trips/types";
 import { FormField } from "@/components/common";
 import { Badge, Button, Input } from "@/components/ui";
+import { TripFuelEstimatePanel } from "@/features/fuel/components";
+import { TripWeatherPanel } from "@/features/weather/components";
+import type { TripWeatherDto } from "@/features/weather/types";
+
+const TripMap = dynamic(
+  () => import("@/features/maps").then((m) => m.TripMap),
+  {
+    ssr: false,
+    loading: () => (
+      <p className="text-muted-foreground text-sm">Chargement de la carte…</p>
+    ),
+  },
+);
 
 const initial: TripsActionResult | undefined = undefined;
 
@@ -21,9 +37,13 @@ const selectClassName =
 
 type TripDetailPanelsProps = {
   trip: TripDetailDto;
+  weather?: TripWeatherDto | null;
 };
 
-export function TripDetailPanels({ trip }: TripDetailPanelsProps) {
+export function TripDetailPanels({
+  trip,
+  weather = null,
+}: TripDetailPanelsProps) {
   const readonly = trip.status === "completed" || trip.status === "cancelled";
   const [startState, startAction, startPending] = useActionState(
     startTripAction,
@@ -45,6 +65,14 @@ export function TripDetailPanels({ trip }: TripDetailPanelsProps) {
     deleteStopAction,
     initial,
   );
+  const [geocodeState, geocodeAction, geocodePending] = useActionState(
+    geocodeStopAction,
+    initial,
+  );
+  const [optimizeState, optimizeAction, optimizePending] = useActionState(
+    optimizeTripAction,
+    initial,
+  );
 
   const feedback =
     (startState?.ok === false && startState.message) ||
@@ -52,6 +80,8 @@ export function TripDetailPanels({ trip }: TripDetailPanelsProps) {
     (cancelState?.ok === false && cancelState.message) ||
     (addState?.ok === false && addState.message) ||
     (delState?.ok === false && delState.message) ||
+    (geocodeState?.ok === false && geocodeState.message) ||
+    (optimizeState?.ok === false && optimizeState.message) ||
     null;
 
   const success =
@@ -60,7 +90,12 @@ export function TripDetailPanels({ trip }: TripDetailPanelsProps) {
     (cancelState?.ok && cancelState.message) ||
     (addState?.ok && addState.message) ||
     (delState?.ok && delState.message) ||
+    (geocodeState?.ok && geocodeState.message) ||
+    (optimizeState?.ok && optimizeState.message) ||
     null;
+
+  const routeFresh = trip.route && !trip.route.isStale;
+  const routeStale = Boolean(trip.route?.isStale);
 
   return (
     <div className="flex flex-col gap-8">
@@ -81,6 +116,16 @@ export function TripDetailPanels({ trip }: TripDetailPanelsProps) {
             <dd>{trip.vehicle?.displayName ?? "—"}</dd>
           </div>
           <div>
+            <dt className="text-muted-foreground">Groupe</dt>
+            <dd>
+              {trip.travelGroup
+                ? trip.travelGroup.archived
+                  ? "Groupe archivé"
+                  : trip.travelGroup.name
+                : "—"}
+            </dd>
+          </div>
+          <div>
             <dt className="text-muted-foreground">Départ</dt>
             <dd>{new Date(trip.departureDate).toLocaleDateString("fr-CA")}</dd>
           </div>
@@ -99,9 +144,17 @@ export function TripDetailPanels({ trip }: TripDetailPanelsProps) {
           <div>
             <dt className="text-muted-foreground">Distance estimée</dt>
             <dd>
-              {trip.route?.distanceKm
+              {routeFresh && trip.route?.distanceKm
                 ? `${trip.route.distanceKm} km`
-                : "— (cartes à venir)"}
+                : "—"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Durée estimée</dt>
+            <dd>
+              {routeFresh && trip.route?.estimatedDurationMin != null
+                ? `${trip.route.estimatedDurationMin} min`
+                : "—"}
             </dd>
           </div>
         </dl>
@@ -162,11 +215,52 @@ export function TripDetailPanels({ trip }: TripDetailPanelsProps) {
       )}
 
       <section className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="font-medium">Carte</h3>
+          {!readonly ? (
+            <form action={optimizeAction}>
+              <input type="hidden" name="id" value={trip.id} />
+              <Button
+                type="submit"
+                variant="outline"
+                disabled={optimizePending}
+              >
+                {routeStale || !trip.route
+                  ? "Calculer l'itinéraire"
+                  : "Recalculer l'itinéraire"}
+              </Button>
+            </form>
+          ) : null}
+        </div>
+        {routeStale ? (
+          <p
+            className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"
+            role="status"
+          >
+            Itinéraire à recalculer — les étapes ont changé depuis le dernier
+            calcul.
+          </p>
+        ) : null}
+        <TripMap stops={trip.stops} route={trip.route} />
+      </section>
+
+      <TripFuelEstimatePanel
+        tripId={trip.id}
+        distanceKm={routeFresh ? (trip.route?.distanceKm ?? null) : null}
+        estimatedFuelCost={
+          routeFresh ? (trip.route?.estimatedFuelCost ?? null) : null
+        }
+        routeFresh={Boolean(routeFresh)}
+      />
+
+      <TripWeatherPanel weather={weather} />
+
+      <section className="space-y-3">
         <h3 className="font-medium">Étapes ({trip.stops.length})</h3>
         {trip.stops.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            Aucune étape. Ajoutez des lieux en texte (sans carte pour
-            l’instant).
+            Aucune étape. Ajoutez des lieux (géocodage à la sauvegarde si le
+            service cartes est configuré).
           </p>
         ) : (
           <ol className="divide-border divide-y rounded-lg border">
@@ -181,21 +275,40 @@ export function TripDetailPanels({ trip }: TripDetailPanelsProps) {
                   </p>
                   <p className="text-muted-foreground text-sm">
                     {stop.address ?? "Adresse non renseignée"} · {stop.stopType}
+                    {stop.latitude && stop.longitude
+                      ? ` · ${stop.latitude}, ${stop.longitude}`
+                      : " · non géocodé"}
                   </p>
                 </div>
                 {!readonly ? (
-                  <form action={delAction}>
-                    <input type="hidden" name="tripId" value={trip.id} />
-                    <input type="hidden" name="stopId" value={stop.id} />
-                    <Button
-                      type="submit"
-                      variant="ghost"
-                      size="sm"
-                      disabled={delPending}
-                    >
-                      Retirer
-                    </Button>
-                  </form>
+                  <div className="flex flex-wrap gap-1">
+                    {stop.address && (!stop.latitude || !stop.longitude) ? (
+                      <form action={geocodeAction}>
+                        <input type="hidden" name="tripId" value={trip.id} />
+                        <input type="hidden" name="stopId" value={stop.id} />
+                        <Button
+                          type="submit"
+                          variant="outline"
+                          size="sm"
+                          disabled={geocodePending}
+                        >
+                          Géocoder
+                        </Button>
+                      </form>
+                    ) : null}
+                    <form action={delAction}>
+                      <input type="hidden" name="tripId" value={trip.id} />
+                      <input type="hidden" name="stopId" value={stop.id} />
+                      <Button
+                        type="submit"
+                        variant="ghost"
+                        size="sm"
+                        disabled={delPending}
+                      >
+                        Retirer
+                      </Button>
+                    </form>
+                  </div>
                 ) : null}
               </li>
             ))}
@@ -233,7 +346,7 @@ export function TripDetailPanels({ trip }: TripDetailPanelsProps) {
               <Input
                 id="stop-address"
                 name="address"
-                placeholder="Texte libre — géocodage plus tard"
+                placeholder="Ex. 123 rue Principale, Québec"
               />
             </FormField>
             <div className="sm:col-span-2">

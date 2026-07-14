@@ -1,5 +1,5 @@
 /**
- * Feature `maps` — API publique du module.
- * Socle architectural — aucune logique métier.
+ * Feature `maps` — infrastructure cartographique (affichage).
+ * Les appels Geocoding / Directions passent par `@/services/maps`.
  */
-export {};
+export { TripMap } from "./components";

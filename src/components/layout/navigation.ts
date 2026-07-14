@@ -26,6 +26,7 @@ export type NavItemConfig = {
 export type NavIconName =
   | "layout-dashboard"
   | "map"
+  | "users"
   | "car"
   | "book-open"
   | "wrench"
@@ -48,6 +49,12 @@ export const MAIN_NAV_ITEMS: readonly NavItemConfig[] = [
     label: "Voyages",
     icon: "map",
     feature: "trips",
+  },
+  {
+    href: "/dashboard/travel-groups",
+    label: "Groupes",
+    icon: "users",
+    feature: "travel-groups",
   },
   {
     href: "/dashboard/vehicles",

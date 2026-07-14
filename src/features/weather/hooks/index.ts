@@ -1,5 +1,5 @@
 /**
  * Feature `weather` / hooks.
- * Socle architectural — aucune logique métier.
+ * Socle — pas de hook client pour la Partie 14 (données serveur).
  */
 export {};

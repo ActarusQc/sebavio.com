@@ -21,6 +21,10 @@ import {
   recalculateInTx,
 } from "@/features/maintenance/services/schedule";
 import { MAX_PAGE_SIZE } from "@/features/maintenance/constants";
+import {
+  assertOdometerNotDecreasing,
+  bumpOdometerIfHigher,
+} from "@/features/vehicles/services/odometer";
 import type {
   MaintenanceDocumentDto,
   MaintenanceHistoryDto,
@@ -138,9 +142,11 @@ export async function createHistory(
 
   const vehicle = await getOwnedVehicleForMaintenance(userId, input.vehicleId);
 
-  if (input.performedOdometer < vehicle.currentOdometer) {
-    throw new AppError("MNT_002", "Kilométrage invalide", 400);
-  }
+  assertOdometerNotDecreasing(
+    vehicle.currentOdometer,
+    input.performedOdometer,
+    "MNT_002",
+  );
 
   if (input.templateId) {
     const template = await prisma.maintenanceTemplate.findUnique({
@@ -173,15 +179,12 @@ export async function createHistory(
       include: historyInclude,
     });
 
-    if (input.performedOdometer > vehicle.currentOdometer) {
-      await tx.userVehicle.update({
-        where: { id: vehicle.id },
-        data: {
-          currentOdometer: input.performedOdometer,
-          odometerUpdatedAt: new Date(),
-        },
-      });
-    }
+    await bumpOdometerIfHigher(
+      tx,
+      vehicle.id,
+      vehicle.currentOdometer,
+      input.performedOdometer,
+    );
 
     // Marquer l'échéance ouverte du gabarit comme complétée avant recalcul.
     if (input.templateId) {

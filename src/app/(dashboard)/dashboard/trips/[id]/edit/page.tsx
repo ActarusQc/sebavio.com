@@ -13,6 +13,7 @@ import {
 import { TripForm } from "@/features/trips/components";
 import { getTripById } from "@/features/trips/services";
 import { listVehicles } from "@/features/vehicles/services";
+import { listTravelGroups } from "@/features/travel-groups/services";
 import { MAX_PAGE_SIZE } from "@/features/vehicles/constants";
 import { isAppError } from "@/lib/errors";
 
@@ -36,9 +37,10 @@ export default async function EditTripPage({ params }: PageProps) {
     notFound();
   }
 
-  const vehicles = await listVehicles(user.id, {
-    pageSize: String(MAX_PAGE_SIZE),
-  });
+  const [vehicles, groups] = await Promise.all([
+    listVehicles(user.id, { pageSize: String(MAX_PAGE_SIZE) }),
+    listTravelGroups(user.id, { pageSize: String(MAX_PAGE_SIZE) }),
+  ]);
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
@@ -58,7 +60,9 @@ export default async function EditTripPage({ params }: PageProps) {
       <Card>
         <CardHeader>
           <CardTitle>Informations</CardTitle>
-          <CardDescription>Le véhicule doit vous appartenir.</CardDescription>
+          <CardDescription>
+            Le véhicule et le groupe (optionnel) doivent vous appartenir.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <TripForm
@@ -66,6 +70,10 @@ export default async function EditTripPage({ params }: PageProps) {
             vehicles={vehicles.items.map((v) => ({
               id: v.id,
               displayName: v.displayName,
+            }))}
+            groups={groups.items.map((g) => ({
+              id: g.id,
+              name: g.name,
             }))}
           />
         </CardContent>

@@ -80,3 +80,21 @@ alwaysApply: true
   en développement; signaler toute nouvelle variable d'URL ajoutée au .env.example.
 
   - Statuts de voyage : planned, in_progress, completed, cancelled. Le statut cancelled est un ajout délibéré au Document 4 (transitions depuis planned et in_progress, irréversible).
+
+  - Prix du carburant : source officielle Régie Essence Québec (fichier public),  ingérée périodiquement dans les tables locales fuel_stations/fuel_prices  (2 tables normalisées — écart assumé au modèle plat du Document 4, justifié  par la structure réelle du fichier; voir ARCHITECTURE.md). Chaîne de repli :
+  Régie (données < 48 h) → prix moyen personnel → valeur par défaut.
+  Bibliothèque de parsing : xlsx (SheetJS). Couverture Québec uniquement.
+- Ingestion des prix : npm run ingest:fuel-prices, à planifier (cron/PM2)
+  au déploiement, toutes les 2 à 4 heures. Jamais de vidage de table;
+  soft-delete des stations après 3 absences consécutives seulement.
+
+  - Météo : Open-Meteo (écart assumé au Document 3 qui prescrivait
+  OpenWeather) — zéro clé en développement, horizon 16 jours. AVANT tout
+  lancement commercial : souscrire l'offre commerciale Open-Meteo (clé
+  OPEN_METEO_API_KEY) ou basculer via WEATHER_PROVIDER. Abstraction dans
+  src/services/weather.
+- Prix du carburant : source officielle Régie Essence Québec, ingérée dans
+  fuel_stations/fuel_prices (2 tables — écart assumé au modèle plat du
+  Document 4). Chaîne de repli : Régie (< 48 h) → prix moyen personnel →
+  défaut. Ingestion npm run ingest:fuel-prices à planifier au déploiement
+  (2-4 h). Jamais de vidage de table.

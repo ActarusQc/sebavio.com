@@ -13,6 +13,8 @@ import {
 import { VehicleDetailPanels } from "@/features/vehicles/components";
 import { getVehicleById } from "@/features/vehicles/services";
 import { isAppError } from "@/lib/errors";
+import { getVehicleFuelStats } from "@/features/fuel/services";
+import { VehicleFuelStatsSummary } from "@/features/fuel/components";
 
 type PageProps = { params: Promise<{ id: string }> };
 
@@ -30,6 +32,8 @@ export default async function VehicleDetailPage({ params }: PageProps) {
     throw error;
   }
 
+  const fuelStats = await getVehicleFuelStats(user.id, id);
+
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
       <PageHeader
@@ -42,6 +46,12 @@ export default async function VehicleDetailPage({ params }: PageProps) {
               render={<Link href="/dashboard/vehicles" />}
             >
               Liste
+            </Button>
+            <Button
+              variant="outline"
+              render={<Link href={`/dashboard/vehicles/${vehicle.id}/fuel`} />}
+            >
+              Carburant
             </Button>
             <Button
               render={<Link href={`/dashboard/vehicles/${vehicle.id}/edit`} />}
@@ -62,8 +72,9 @@ export default async function VehicleDetailPage({ params }: PageProps) {
             {vehicle.stats.documentCount > 1 ? "s" : ""}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-8">
           <VehicleDetailPanels vehicle={vehicle} />
+          <VehicleFuelStatsSummary vehicleId={vehicle.id} stats={fuelStats} />
         </CardContent>
       </Card>
     </div>

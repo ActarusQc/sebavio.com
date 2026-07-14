@@ -9,6 +9,7 @@ import {
   Settings,
   Shield,
   Sparkles,
+  Users,
   Wallet,
   Wrench,
 } from "lucide-react";
@@ -17,6 +18,7 @@ import type { NavIconName } from "./navigation";
 export const NAV_ICONS: Record<NavIconName, LucideIcon> = {
   "layout-dashboard": LayoutDashboard,
   map: Map,
+  users: Users,
   car: Car,
   "book-open": BookOpen,
   wrench: Wrench,

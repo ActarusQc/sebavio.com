@@ -1,5 +1,1 @@
-/**
- * Feature `maps` / components.
- * Socle architectural — aucune logique métier.
- */
-export {};
+export { TripMap } from "./trip-map";

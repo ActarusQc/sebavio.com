@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import { prisma } from "@/lib/prisma";
 import { AppError } from "@/lib/errors";
 import { writeAuditLog } from "@/features/auth/services/audit";
+import { assertOwnedTravelGroup } from "@/features/travel-groups/services";
 import { MAX_PAGE_SIZE } from "@/features/trips/constants";
 import {
   stopCreateSchema,
@@ -36,21 +37,31 @@ import type {
   PaginatedTrips,
   TripDetailDto,
   TripDto,
+  TripRouteDto,
   TripStopDto,
   TripSummaryDto,
 } from "@/features/trips/types";
+import { computeWaypointsHash } from "@/services/maps/cache";
+import { getMapsService } from "@/services/maps";
+import type { LatLng } from "@/services/maps/types";
 
 const vehicleInclude = {
   model: { include: { manufacturer: { select: { name: true } } } },
 } as const;
 
+const travelGroupInclude = {
+  select: { id: true, name: true, deletedAt: true },
+} as const;
+
 const tripListInclude = {
   vehicle: { include: vehicleInclude },
+  travelGroup: travelGroupInclude,
   _count: { select: { stops: true } },
 } as const;
 
 const tripDetailInclude = {
   vehicle: { include: vehicleInclude },
+  travelGroup: travelGroupInclude,
   stops: { orderBy: { sequence: "asc" as const } },
   route: true,
 } as const;
@@ -76,6 +87,42 @@ function decimalOrUndefined(
   if (value === undefined) return undefined;
   if (value === null) return null;
   return new Prisma.Decimal(value);
+}
+
+function toLatLng(
+  latitude: { toString(): string } | null,
+  longitude: { toString(): string } | null,
+): LatLng | null {
+  if (latitude == null || longitude == null) return null;
+  const lat = Number(latitude.toString());
+  const lng = Number(longitude.toString());
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  return { lat, lng };
+}
+
+/**
+ * Géocode une adresse si possible. Échec silencieux (mode dégradé) pour les sauvegardes.
+ */
+async function tryGeocodeAddress(
+  userId: string,
+  address: string | null | undefined,
+): Promise<LatLng | null> {
+  if (!address?.trim()) return null;
+  try {
+    const result = await getMapsService().geocode(userId, address);
+    return { lat: result.lat, lng: result.lng };
+  } catch {
+    return null;
+  }
+}
+
+async function resolvePoint(
+  userId: string,
+  label: string,
+  existing?: LatLng | null,
+): Promise<LatLng> {
+  if (existing) return existing;
+  return getMapsService().geocode(userId, label);
 }
 
 /** Véhicule du même propriétaire — 404 si absent ou hors périmètre. */
@@ -218,11 +265,16 @@ export async function createTrip(
 
   await assertOwnedVehicle(userId, input.vehicleId);
 
+  if (input.travelGroupId) {
+    await assertOwnedTravelGroup(userId, input.travelGroupId);
+  }
+
   const trip = await prisma.$transaction(async (tx) => {
     const created = await tx.trip.create({
       data: {
         userId,
         vehicleId: input.vehicleId,
+        travelGroupId: input.travelGroupId ?? null,
         title: input.title,
         status: "planned",
         departureDate: input.departureDate,
@@ -245,6 +297,7 @@ export async function createTrip(
     newValue: {
       title: trip.title,
       vehicleId: trip.vehicleId,
+      travelGroupId: trip.travelGroupId,
       status: trip.status,
     },
     ipAddress,
@@ -269,6 +322,10 @@ export async function updateTrip(
 
   if (input.vehicleId) {
     await assertOwnedVehicle(userId, input.vehicleId);
+  }
+
+  if (input.travelGroupId) {
+    await assertOwnedTravelGroup(userId, input.travelGroupId);
   }
 
   if (input.status === "in_progress") {
@@ -297,6 +354,9 @@ export async function updateTrip(
     where: { id: tripId },
     data: {
       ...(input.vehicleId !== undefined ? { vehicleId: input.vehicleId } : {}),
+      ...(input.travelGroupId !== undefined
+        ? { travelGroupId: input.travelGroupId }
+        : {}),
       ...(input.title !== undefined ? { title: input.title } : {}),
       ...(input.origin !== undefined ? { origin: input.origin } : {}),
       ...(input.destination !== undefined
@@ -321,8 +381,16 @@ export async function updateTrip(
     entity: "trips",
     entityId: tripId,
     action: "update",
-    oldValue: { status: existing.status, vehicleId: existing.vehicleId },
-    newValue: { status: updated.status, vehicleId: updated.vehicleId },
+    oldValue: {
+      status: existing.status,
+      vehicleId: existing.vehicleId,
+      travelGroupId: existing.travelGroupId,
+    },
+    newValue: {
+      status: updated.status,
+      vehicleId: updated.vehicleId,
+      travelGroupId: updated.travelGroupId,
+    },
     ipAddress,
   });
 
@@ -416,13 +484,153 @@ export async function getTripSummary(
 export async function optimizeTrip(
   userId: string,
   tripId: string,
-): Promise<never> {
-  await getOwnedTripOrThrow(userId, tripId);
-  throw new AppError(
-    "TRIP_004",
-    "Impossible d'optimiser l'itinéraire (cartographie non configurée)",
-    400,
+  ipAddress?: string | null,
+): Promise<TripDetailDto> {
+  const trip = await getOwnedTripOrThrow(userId, tripId);
+  assertWritableStatus(trip.status);
+
+  const maps = getMapsService();
+  const origin = await resolvePoint(userId, trip.origin);
+  const destination = await resolvePoint(userId, trip.destination);
+
+  const waypoints: LatLng[] = [];
+  for (const stop of trip.stops) {
+    const existing = toLatLng(stop.latitude, stop.longitude);
+    if (existing) {
+      waypoints.push(existing);
+      continue;
+    }
+    if (!stop.address?.trim()) {
+      throw new AppError(
+        "EXT_002",
+        `Étape « ${stop.name} » sans coordonnées ni adresse`,
+        400,
+      );
+    }
+    const geocoded = await maps.geocode(userId, stop.address);
+    await prisma.tripStop.update({
+      where: { id: stop.id },
+      data: {
+        latitude: new Prisma.Decimal(geocoded.lat),
+        longitude: new Prisma.Decimal(geocoded.lng),
+      },
+    });
+    waypoints.push({ lat: geocoded.lat, lng: geocoded.lng });
+  }
+
+  const directions = await maps.directions(
+    userId,
+    origin,
+    destination,
+    waypoints,
   );
+
+  const refreshedStops = await prisma.tripStop.findMany({
+    where: { tripId },
+    orderBy: { sequence: "asc" },
+  });
+
+  const waypointsHash = computeWaypointsHash({
+    origin: trip.origin,
+    destination: trip.destination,
+    stops: refreshedStops.map((s) => ({
+      sequence: s.sequence,
+      address: s.address,
+      latitude: s.latitude?.toString() ?? null,
+      longitude: s.longitude?.toString() ?? null,
+    })),
+  });
+
+  await prisma.tripRoute.upsert({
+    where: { tripId },
+    create: {
+      tripId,
+      provider: directions.provider,
+      distanceKm: new Prisma.Decimal(directions.distanceKm),
+      estimatedDurationMin: directions.durationMin,
+      polyline: directions.polyline,
+      waypointsHash,
+    },
+    update: {
+      provider: directions.provider,
+      distanceKm: new Prisma.Decimal(directions.distanceKm),
+      estimatedDurationMin: directions.durationMin,
+      polyline: directions.polyline,
+      waypointsHash,
+    },
+  });
+
+  await writeAuditLog({
+    userId,
+    entity: "trip_routes",
+    entityId: tripId,
+    action: "optimize",
+    newValue: {
+      distanceKm: directions.distanceKm,
+      durationMin: directions.durationMin,
+      waypointsHash,
+    },
+    ipAddress,
+  });
+
+  return getTripById(userId, tripId);
+}
+
+export async function geocodeStop(
+  userId: string,
+  tripId: string,
+  stopId: string,
+  ipAddress?: string | null,
+): Promise<TripStopDto> {
+  const trip = await getOwnedTripOrThrow(userId, tripId);
+  assertWritableStatus(trip.status);
+
+  const existing = trip.stops.find((s) => s.id === stopId);
+  if (!existing) {
+    throw new AppError("TRIP_001", "Voyage introuvable", 404);
+  }
+  if (!existing.address?.trim()) {
+    throw new AppError("EXT_002", "Position invalide ou introuvable", 400);
+  }
+
+  const result = await getMapsService().geocode(userId, existing.address);
+  const updated = await prisma.tripStop.update({
+    where: { id: stopId },
+    data: {
+      latitude: new Prisma.Decimal(result.lat),
+      longitude: new Prisma.Decimal(result.lng),
+    },
+  });
+
+  await writeAuditLog({
+    userId,
+    entity: "trip_stops",
+    entityId: stopId,
+    action: "geocode",
+    newValue: { lat: result.lat, lng: result.lng },
+    ipAddress,
+  });
+
+  return toStopDto(updated);
+}
+
+/** Exposé pour tests / lecture route périmée. */
+export function isRouteStale(
+  route: Pick<TripRouteDto, "waypointsHash"> | null,
+  trip: {
+    origin: string;
+    destination: string;
+    stops: Array<{
+      sequence: number;
+      address: string | null;
+      latitude: string | null;
+      longitude: string | null;
+    }>;
+  },
+): boolean {
+  if (!route?.waypointsHash) return Boolean(route);
+  const current = computeWaypointsHash(trip);
+  return route.waypointsHash !== current;
 }
 
 export async function addStop(
@@ -482,6 +690,20 @@ export async function addStop(
     ipAddress,
   });
 
+  if (stop.address && (stop.latitude == null || stop.longitude == null)) {
+    const coords = await tryGeocodeAddress(userId, stop.address);
+    if (coords) {
+      const geocoded = await prisma.tripStop.update({
+        where: { id: stop.id },
+        data: {
+          latitude: new Prisma.Decimal(coords.lat),
+          longitude: new Prisma.Decimal(coords.lng),
+        },
+      });
+      return toStopDto(geocoded);
+    }
+  }
+
   return toStopDto(stop);
 }
 
@@ -524,17 +746,28 @@ export async function updateStop(
   }
 
   const updated = await prisma.$transaction(async (tx) => {
+    const addressChanged =
+      input.address !== undefined && input.address !== existing.address;
+    const clearCoords =
+      addressChanged &&
+      input.latitude === undefined &&
+      input.longitude === undefined;
+
     await tx.tripStop.update({
       where: { id: stopId },
       data: {
         ...(input.name !== undefined ? { name: input.name } : {}),
         ...(input.address !== undefined ? { address: input.address } : {}),
-        ...(input.latitude !== undefined
-          ? { latitude: decimalOrUndefined(input.latitude) }
-          : {}),
-        ...(input.longitude !== undefined
-          ? { longitude: decimalOrUndefined(input.longitude) }
-          : {}),
+        ...(clearCoords
+          ? { latitude: null, longitude: null }
+          : {
+              ...(input.latitude !== undefined
+                ? { latitude: decimalOrUndefined(input.latitude) }
+                : {}),
+              ...(input.longitude !== undefined
+                ? { longitude: decimalOrUndefined(input.longitude) }
+                : {}),
+            }),
         ...(input.arrivalTime !== undefined
           ? { arrivalTime: input.arrivalTime }
           : {}),
@@ -572,6 +805,23 @@ export async function updateStop(
     newValue: { tripId, sequence: updated.sequence, name: updated.name },
     ipAddress,
   });
+
+  if (
+    updated.address &&
+    (updated.latitude == null || updated.longitude == null)
+  ) {
+    const coords = await tryGeocodeAddress(userId, updated.address);
+    if (coords) {
+      const geocoded = await prisma.tripStop.update({
+        where: { id: stopId },
+        data: {
+          latitude: new Prisma.Decimal(coords.lat),
+          longitude: new Prisma.Decimal(coords.lng),
+        },
+      });
+      return toStopDto(geocoded);
+    }
+  }
 
   return toStopDto(updated);
 }

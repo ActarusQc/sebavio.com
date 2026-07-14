@@ -12,6 +12,7 @@ import {
 } from "@/components/ui";
 import { TripDetailPanels } from "@/features/trips/components";
 import { getTripById } from "@/features/trips/services";
+import { getTripWeatherSafe } from "@/features/weather";
 import { isAppError } from "@/lib/errors";
 
 type PageProps = { params: Promise<{ id: string }> };
@@ -29,6 +30,8 @@ export default async function TripDetailPage({ params }: PageProps) {
     }
     throw error;
   }
+
+  const weather = await getTripWeatherSafe(user.id, id);
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
@@ -59,7 +62,7 @@ export default async function TripDetailPage({ params }: PageProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <TripDetailPanels trip={trip} />
+          <TripDetailPanels trip={trip} weather={weather} />
         </CardContent>
       </Card>
     </div>

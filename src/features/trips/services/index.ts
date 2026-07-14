@@ -8,12 +8,14 @@ export {
   cancelTrip,
   getTripSummary,
   optimizeTrip,
+  geocodeStop,
   addStop,
   updateStop,
   deleteStop,
   assertOwnedVehicle,
   assertTripAccess,
   getOwnedTripOrThrow,
+  isRouteStale,
 } from "@/features/trips/services/trips";
 
 export {

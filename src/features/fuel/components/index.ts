@@ -1,5 +1,3 @@
-/**
- * Feature `fuel` / components.
- * Socle architectural — aucune logique métier.
- */
-export {};
+export { FuelLogsPanel } from "./fuel-logs-panel";
+export { TripFuelEstimatePanel } from "./trip-fuel-estimate";
+export { VehicleFuelStatsSummary } from "./vehicle-fuel-summary";

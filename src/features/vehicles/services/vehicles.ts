@@ -25,6 +25,7 @@ import {
   toSettingsDto,
   toVehicleDto,
 } from "@/features/vehicles/services/mappers";
+import { assertOdometerNotDecreasing } from "@/features/vehicles/services/odometer";
 import type {
   PaginatedVehicles,
   UserVehicleDetailDto,
@@ -449,9 +450,11 @@ export async function updateOdometer(
   );
   const existing = await getOwnedVehicleOrThrow(userId, vehicleId);
 
-  if (input.currentOdometer < existing.currentOdometer) {
-    throw new AppError("VEH_004", "Kilométrage invalide", 400);
-  }
+  assertOdometerNotDecreasing(
+    existing.currentOdometer,
+    input.currentOdometer,
+    "VEH_004",
+  );
 
   const updated = await prisma.userVehicle.update({
     where: { id: vehicleId },

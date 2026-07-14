@@ -15,6 +15,8 @@ import {
   createTrip,
   deleteStop,
   deleteTrip,
+  geocodeStop,
+  optimizeTrip,
   updateTrip,
 } from "@/features/trips/services";
 
@@ -61,6 +63,7 @@ export async function createTripAction(
 ): Promise<TripsActionResult> {
   const parsed = tripCreateSchema.safeParse({
     vehicleId: formString(formData, "vehicleId"),
+    travelGroupId: formNullable(formData, "travelGroupId"),
     title: formString(formData, "title"),
     origin: formString(formData, "origin"),
     destination: formString(formData, "destination"),
@@ -99,6 +102,7 @@ export async function updateTripAction(
   const statusRaw = formNullable(formData, "status");
   const parsed = tripUpdateSchema.safeParse({
     vehicleId: formString(formData, "vehicleId"),
+    travelGroupId: formNullable(formData, "travelGroupId"),
     title: formString(formData, "title"),
     origin: formString(formData, "origin"),
     destination: formString(formData, "destination"),
@@ -266,5 +270,48 @@ export async function deleteStopAction(
       return { ok: false, message: error.message };
     }
     return { ok: false, message: "Suppression impossible" };
+  }
+}
+
+export async function geocodeStopAction(
+  _prev: TripsActionResult | undefined,
+  formData: FormData,
+): Promise<TripsActionResult> {
+  const tripId = formString(formData, "tripId");
+  const stopId = formString(formData, "stopId");
+  if (!tripId || !stopId) {
+    return { ok: false, message: "Identifiant manquant" };
+  }
+
+  try {
+    const user = await requireActiveUser();
+    await geocodeStop(user.id, tripId, stopId);
+    revalidateTripPaths(tripId);
+    return { ok: true, message: "Étape géocodée." };
+  } catch (error) {
+    if (isAppError(error)) {
+      return { ok: false, message: error.message };
+    }
+    return { ok: false, message: "Géocodage impossible" };
+  }
+}
+
+export async function optimizeTripAction(
+  _prev: TripsActionResult | undefined,
+  formData: FormData,
+): Promise<TripsActionResult> {
+  const id = formString(formData, "id");
+  if (!id) return { ok: false, message: "Identifiant manquant" };
+
+  try {
+    const user = await requireActiveUser();
+    await optimizeTrip(user.id, id);
+    revalidateTripPaths(id);
+    return { ok: true, message: "Itinéraire calculé.", id };
+  } catch (error) {
+    if (isAppError(error)) {
+      return { ok: false, message: error.message };
+    }
+    return { ok: false, message: "Calcul d'itinéraire impossible" };
   }
 }

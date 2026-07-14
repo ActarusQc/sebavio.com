@@ -634,6 +634,8 @@ Contraintes	Description PK/FK
 
 		user_vehicles 1→N maintenance_history 	user_vehicles 1→N trips
 
+		user_vehicles 1→N fuel_logs
+
 		user_vehicles N→1 vehicle_models
 
 ### Règles métier
@@ -645,6 +647,26 @@ Contraintes	Description PK/FK
 4.   La consommation réelle est recalculée automatiquement après chaque plein. 5.   Les documents expirés déclenchent une notification.
 
 6.   Les photos sont conservées en stockage objet et référencées uniquement par URL.
+
+### Table : fuel_logs (Partie 13)
+
+| Champ | Type | Contraintes | Description |
+| --- | --- | --- | --- |
+| id | UUID | PK | Identifiant |
+| vehicle_id | UUID | FK user_vehicles | Véhicule |
+| filled_at | DATE | | Date du plein |
+| odometer_km | INTEGER | | Kilométrage |
+| liters | NUMERIC(8,3) | | Volume |
+| price_per_liter | NUMERIC(8,3) | | Prix au litre |
+| total_cost | NUMERIC(10,2) | | Montant facture (2 des 3 montants suffisent ; écart ≤ 2 % si les 3) |
+| is_full | BOOLEAN | | Plein complet (segments conso) |
+| fuel_type | VARCHAR(30) | NULL | Type |
+| station_name | VARCHAR(200) | NULL | Station |
+| notes | TEXT | NULL | Notes |
+| created_at / updated_at | TIMESTAMPTZ | | |
+| deleted_at | TIMESTAMPTZ | NULL | Soft delete |
+
+Règle : `real_avg_consumption` recalculée après chaque mutation ; **null** si moins de 2 pleins complets.
 
 ### Calculs dérivés
 

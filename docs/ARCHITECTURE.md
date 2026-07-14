@@ -89,7 +89,7 @@ Tous les modules du Document 3 sont couverts. Statuts : **créée** (dossier pr�
 | Campings | `campings` | créée | Recherche et favoris |
 | Stations-service | `fuel` | créée | Même feature que l’optimisation carburant |
 | Points d'intérêt | `activities` | créée | Affichage carto via `maps` ; métier POI dans `activities` |
-| Météo | `weather` | créée | Prévisions et alertes |
+| Météo | `weather` | active | Open-Meteo (écart Doc 3) ; cache Redis ; fiche voyage |
 | Assistant IA | `ai` | créée | Abstraction multi-fournisseurs |
 | Notifications | `notifications` | créée | Centre, push, courriel |
 | Administration | `admin` | créée | Portail d’administration |
@@ -182,12 +182,107 @@ Husky + lint-staged sur les commits. TypeScript `strict: true`.
 
 ## 11. Module Voyages (Partie 11)
 
-- **Tables** : `trips` (soft delete), `trip_stops` (adresse texte + lat/lng nullable), `trip_routes` (stub cartes/carburant).
+- **Tables** : `trips` (soft delete), `trip_stops` (adresse texte + lat/lng nullable), `trip_routes` (tracé Google Maps + hash waypoints).
 - **Statuts** : `planned` → `in_progress` → `completed` ; `planned|in_progress` → `cancelled` (terminal, lecture seule, `TRIP_005`). Soft-delete inchangé.
-- **API** : `/api/v1/trips` CRUD + stops + summary + complete + cancel ; `optimize` → `TRIP_004` (cartes = Partie 12).
+- **API** : `/api/v1/trips` CRUD + stops + summary + complete + cancel ; `optimize` (itinéraires) ; `stops/:stopId/geocode`.
 - **Règles** : véhicule obligatoire et appartenant au même user (`TRIP_003` 404) ; isolation voyages (`TRIP_001` 404) ; voyage terminé en lecture seule (`TRIP_005`).
-- **Hors scope** : `travel_groups` (Partie 11bis), cartes (12), budget/dépenses (17), journal/médias.
+- **Hors scope** : budget/dépenses (17), journal/médias.
 
-## 12. Hors scope immédiat
+## 11bis. Cartographie (Partie 12)
+
+- **Fournisseur** : Google Maps via abstraction `@/services/maps` (Geocoding + Directions serveur ; Maps JS côté client).
+- **Clés** : `GOOGLE_MAPS_API_KEY` (serveur) ; `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (client, Maps JavaScript API uniquement) ; `NEXT_PUBLIC_GOOGLE_MAPS_ID` optionnel.
+- **Cache Redis** : géocodage / directions ; adresses normalisées (trim, minuscules, espaces) avant hash.
+- **Rate-limit** : 30 req/h/utilisateur ; Redis down → pas d'appel Google (`EXT_001`).
+- **Périmé** : `trip_routes.waypoints_hash` vs hash courant des étapes → `route.isStale` + invite UI « Itinéraire à recalculer ».
+- **Dégradé** : sans clé / API KO → adresses texte, pas de carte bloquante.
+- **UI** : `TripMap` (lazy) sur fiche voyage.
+
+## 13. Carburant — prix Régie Essence Québec (Partie 13bis)
+
+### Écart au Document 4 (`fuel_prices` plat)
+
+Le Doc 4 décrit une table unique `fuel_prices(country, region, city, station_name, fuel_type, price, captured_at)`.  
+L’export officiel Régie Essence Québec (feuille « Régie Essence Québec », ~2 500 lignes) fournit plutôt : **Nom, Bannière, Adresse, Région, Code Postal, Latitude, Longitude, Prix Régulier, Prix Super, Prix Diesel**.
+
+**Décision d’architecture** : deux tables normalisées —
+
+| Table | Rôle |
+| --- | --- |
+| `fuel_stations` | Identité station (`external_key`, géoloc, région, soft-delete différé) |
+| `fuel_prices` | Historique des relevés (`station_id`, `fuel_type`, `price` $/L, `captured_at`) — **jamais écrasé** |
+
+Cela respecte l’esprit Doc 4 (région, nom, type, prix, historisation) tout en supportant l’upsert réel et les requêtes « prix courant ».
+
+### Mapping `fuel_type`
+
+| Colonne Excel Régie | Valeur stockée | Catalogue véhicule |
+| --- | --- | --- |
+| Prix Régulier | `regular` | `Gasoline`, `Hybrid` |
+| Prix Super | `premium` | (saisie préférée / futur) |
+| Prix Diesel | `diesel` | `Diesel` |
+
+Types **sans** estimation Régie (repli / « non applicable », jamais d’erreur) : `Electric`, et hybride rechargeable si présent (`PlugInHybrid` / `PHEV`). `Propane` et autres → repli chaîne personnelle / défaut.
+
+### Parsing XLSX
+
+Bibliothèque retenue : **`xlsx` (SheetJS)**.  
+`exceljs` a été tenté puis écarté : l’export Régie (namespaces OOXML `x:`) provoque un échec de lecture (`workbook.sheets` undefined).
+
+Source fichier : `REGIE_ESSENCE_XLSX_URL` ou découverte via `stations.geojson.gz` → `metadata.excel_url`.
+
+### Soft-delete stations
+
+Une station absente du fichier incrémente `missing_streak`. Soft-delete seulement si `missing_streak ≥ 3` **et** fichier plausible (`≥ 1500` stations). Sinon ingestion refusée, données intactes.
+
+### Chaîne de prix (estimation voyage)
+
+1. Régie (données &lt; 48 h, régions des étapes / origin-destination)  
+2. Moyenne personnelle des pleins  
+3. Prix par défaut formulaire  
+
+Commande : `npm run ingest:fuel-prices` — à planifier au déploiement (ex. toutes les 2–4 h), pas de cron dans cette partie.
+
+## 14. Météo (Partie 14)
+
+### Écart au Document 3 (OpenWeather)
+
+Le Doc 3 prescrit **OpenWeather**. Fournisseur retenu : **Open-Meteo**.
+
+| Critère | OpenWeather (Doc 3) | Open-Meteo (retenu) |
+| --- | --- | --- |
+| Clé API | Obligatoire | Optionnelle (`OPEN_METEO_API_KEY`) |
+| Horizon | Free ≈ 5 j ; One Call payant | **16 jours** |
+| Coût en développement | Compte + quotas | Gratuit sans clé (non-commercial) |
+
+Abstraction : `@/services/weather` + `WEATHER_PROVIDER` (`open-meteo` \| `off` \| `openweather`).  
+Basculer vers OpenWeather ou l’offre commerciale Open-Meteo reste trivial.
+
+### Licence commerciale Open-Meteo
+
+L’API publique Open-Meteo est réservée à un **usage non-commercial**.  
+Sebavio est un SaaS destiné à devenir commercial.
+
+**Avant tout lancement commercial** : souscrire l’offre API commerciale Open-Meteo (payante, avec clé → `customer-api.open-meteo.com` via `OPEN_METEO_API_KEY`) **ou** basculer `WEATHER_PROVIDER` / implémenter OpenWeather.
+
+### Cache et données
+
+- **Redis uniquement** (TTL 2 h) — clé par point arrondi (2 décimales) ; pas de table `weather_cache` pour l’instant (Doc 4 : reportée avec le module IA si besoin).
+- Rate-limit : 60 req/h/utilisateur ; Redis down → pas d’appel fournisseur.
+- Étapes sans coordonnées → pas de météo (silencieux). Hors horizon → « Prévisions disponibles à l’approche » (aucune donnée inventée).
+- Mode dégradé : fiche voyage jamais bloquée.
+
+### API / UI
+
+- `GET /api/v1/weather/forecast?latitude=&longitude=`
+- `GET /api/v1/weather/current?latitude=&longitude=`
+- `GET /api/v1/trips/{id}/weather` (propriétaire uniquement)
+- UI : `TripWeatherPanel` sur la fiche voyage.
+
+### Hors scope (reporté)
+
+Suggestions IA selon la météo ; alertes météo riches.
+
+## 15. Hors scope immédiat
 
 Modules métier restants, OAuth Google, MFA réel, SMTP production, envoi notifications.

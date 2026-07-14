@@ -21,8 +21,14 @@ type VehicleOption = {
   displayName: string;
 };
 
+type GroupOption = {
+  id: string;
+  name: string;
+};
+
 type TripFormProps = {
   vehicles: VehicleOption[];
+  groups?: GroupOption[];
   trip?: TripDto;
 };
 
@@ -31,7 +37,7 @@ function toDateInput(iso: string | null | undefined): string {
   return iso.slice(0, 10);
 }
 
-export function TripForm({ vehicles, trip }: TripFormProps) {
+export function TripForm({ vehicles, groups = [], trip }: TripFormProps) {
   const router = useRouter();
   const isEdit = Boolean(trip);
   const action = isEdit ? updateTripAction : createTripAction;
@@ -81,6 +87,22 @@ export function TripForm({ vehicles, trip }: TripFormProps) {
           {vehicles.map((v) => (
             <option key={v.id} value={v.id}>
               {v.displayName}
+            </option>
+          ))}
+        </select>
+      </FormField>
+
+      <FormField htmlFor="trip-group" label="Groupe de voyageurs">
+        <select
+          id="trip-group"
+          name="travelGroupId"
+          className={selectClassName}
+          defaultValue={trip?.travelGroupId ?? ""}
+        >
+          <option value="">Aucun (optionnel)</option>
+          {groups.map((g) => (
+            <option key={g.id} value={g.id}>
+              {g.name}
             </option>
           ))}
         </select>

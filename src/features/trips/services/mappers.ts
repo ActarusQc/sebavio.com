@@ -2,11 +2,13 @@ import type { TripStatus } from "@/features/trips/constants";
 import type {
   TripDetailDto,
   TripDto,
+  TripGroupSummaryDto,
   TripRouteDto,
   TripStopDto,
   TripSummaryDto,
   TripVehicleSummaryDto,
 } from "@/features/trips/types";
+import { computeWaypointsHash } from "@/services/maps/cache";
 
 function decimalToString(
   value: { toString(): string } | null | undefined,
@@ -78,16 +80,24 @@ export function toStopDto(row: {
   };
 }
 
-export function toRouteDto(row: {
-  id: string;
-  tripId: string;
-  provider: string | null;
-  distanceKm: { toString(): string } | null;
-  estimatedDurationMin: number | null;
-  estimatedFuelCost: { toString(): string } | null;
-  polyline: string | null;
-  updatedAt: Date;
-}): TripRouteDto {
+export function toRouteDto(
+  row: {
+    id: string;
+    tripId: string;
+    provider: string | null;
+    distanceKm: { toString(): string } | null;
+    estimatedDurationMin: number | null;
+    estimatedFuelCost: { toString(): string } | null;
+    polyline: string | null;
+    waypointsHash: string | null;
+    updatedAt: Date;
+  },
+  currentHash?: string | null,
+): TripRouteDto {
+  const isStale =
+    !row.waypointsHash ||
+    (currentHash != null && row.waypointsHash !== currentHash);
+
   return {
     id: row.id,
     tripId: row.tripId,
@@ -96,6 +106,8 @@ export function toRouteDto(row: {
     estimatedDurationMin: row.estimatedDurationMin,
     estimatedFuelCost: decimalToString(row.estimatedFuelCost),
     polyline: row.polyline,
+    waypointsHash: row.waypointsHash,
+    isStale,
     updatedAt: row.updatedAt.toISOString(),
   };
 }
@@ -114,6 +126,12 @@ type VehicleInclude = {
   } | null;
 };
 
+type TravelGroupInclude = {
+  id: string;
+  name: string;
+  deletedAt: Date | null;
+};
+
 function toVehicleSummary(vehicle: VehicleInclude): TripVehicleSummaryDto {
   return {
     id: vehicle.id,
@@ -122,10 +140,22 @@ function toVehicleSummary(vehicle: VehicleInclude): TripVehicleSummaryDto {
   };
 }
 
+function toGroupSummary(
+  group: TravelGroupInclude | null | undefined,
+): TripGroupSummaryDto | null {
+  if (!group) return null;
+  return {
+    id: group.id,
+    name: group.deletedAt ? "Groupe archivé" : group.name,
+    archived: Boolean(group.deletedAt),
+  };
+}
+
 export function toTripDto(row: {
   id: string;
   userId: string;
   vehicleId: string;
+  travelGroupId?: string | null;
   title: string;
   status: string;
   departureDate: Date;
@@ -136,6 +166,7 @@ export function toTripDto(row: {
   createdAt: Date;
   updatedAt: Date;
   vehicle?: VehicleInclude | null;
+  travelGroup?: TravelGroupInclude | null;
   _count?: { stops: number };
   stops?: unknown[];
 }): TripDto {
@@ -146,6 +177,7 @@ export function toTripDto(row: {
     id: row.id,
     userId: row.userId,
     vehicleId: row.vehicleId,
+    travelGroupId: row.travelGroupId ?? null,
     title: row.title,
     status: row.status as TripStatus,
     departureDate: row.departureDate.toISOString(),
@@ -154,6 +186,7 @@ export function toTripDto(row: {
     destination: row.destination,
     plannedBudget: decimalToString(row.plannedBudget),
     vehicle: row.vehicle ? toVehicleSummary(row.vehicle) : null,
+    travelGroup: toGroupSummary(row.travelGroup),
     stopCount,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -164,6 +197,7 @@ export function toTripDetailDto(row: {
   id: string;
   userId: string;
   vehicleId: string;
+  travelGroupId?: string | null;
   title: string;
   status: string;
   departureDate: Date;
@@ -174,13 +208,29 @@ export function toTripDetailDto(row: {
   createdAt: Date;
   updatedAt: Date;
   vehicle: VehicleInclude;
+  travelGroup?: TravelGroupInclude | null;
   stops: Parameters<typeof toStopDto>[0][];
-  route: Parameters<typeof toRouteDto>[0] | null;
+  route:
+    | (Omit<Parameters<typeof toRouteDto>[0], never> & {
+        waypointsHash: string | null;
+      })
+    | null;
 }): TripDetailDto {
+  const currentHash = computeWaypointsHash({
+    origin: row.origin,
+    destination: row.destination,
+    stops: row.stops.map((s) => ({
+      sequence: s.sequence,
+      address: s.address,
+      latitude: s.latitude == null ? null : s.latitude.toString(),
+      longitude: s.longitude == null ? null : s.longitude.toString(),
+    })),
+  });
+
   return {
     ...toTripDto({ ...row, _count: { stops: row.stops.length } }),
     stops: row.stops.map(toStopDto),
-    route: row.route ? toRouteDto(row.route) : null,
+    route: row.route ? toRouteDto(row.route, currentHash) : null,
   };
 }
 

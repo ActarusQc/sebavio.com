@@ -23,6 +23,9 @@ export type TripRouteDto = {
   estimatedDurationMin: number | null;
   estimatedFuelCost: string | null;
   polyline: string | null;
+  waypointsHash: string | null;
+  /** true si les étapes ont changé depuis le dernier calcul d'itinéraire. */
+  isStale: boolean;
   updatedAt: string;
 };
 
@@ -32,10 +35,17 @@ export type TripVehicleSummaryDto = {
   nickname: string | null;
 };
 
+export type TripGroupSummaryDto = {
+  id: string;
+  name: string;
+  archived: boolean;
+};
+
 export type TripDto = {
   id: string;
   userId: string;
   vehicleId: string;
+  travelGroupId: string | null;
   title: string;
   status: TripStatus;
   departureDate: string;
@@ -44,6 +54,7 @@ export type TripDto = {
   destination: string;
   plannedBudget: string | null;
   vehicle: TripVehicleSummaryDto | null;
+  travelGroup: TripGroupSummaryDto | null;
   stopCount: number;
   createdAt: string;
   updatedAt: string;

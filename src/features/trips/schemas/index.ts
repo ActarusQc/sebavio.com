@@ -80,6 +80,11 @@ export const tripsListSchema = z.object({
 export const tripCreateSchema = z
   .object({
     vehicleId: z.string().uuid({ error: "Véhicule invalide" }),
+    travelGroupId: z
+      .string()
+      .uuid({ error: "Groupe invalide" })
+      .nullable()
+      .optional(),
     title: z
       .string()
       .trim()
@@ -104,6 +109,11 @@ export const tripCreateSchema = z
 export const tripUpdateSchema = z
   .object({
     vehicleId: z.string().uuid({ error: "Véhicule invalide" }).optional(),
+    travelGroupId: z
+      .string()
+      .uuid({ error: "Groupe invalide" })
+      .nullable()
+      .optional(),
     title: z
       .string()
       .trim()
