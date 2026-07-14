@@ -3,10 +3,9 @@
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell } from "lucide-react";
 import type { UserRole } from "@/lib/constants";
 import { ThemeToggle } from "@/components/common";
-import { Button } from "@/components/ui";
+import { NotificationBell } from "@/features/notifications/components";
 import { AppShell } from "./app-shell";
 import { Header } from "./header";
 import { Footer } from "./footer";
@@ -20,10 +19,16 @@ import { buildBreadcrumbs } from "./navigation";
 export type DashboardShellProps = {
   email: string;
   role: UserRole;
+  unreadNotificationCount?: number;
   children: ReactNode;
 };
 
-export function DashboardShell({ email, role, children }: DashboardShellProps) {
+export function DashboardShell({
+  email,
+  role,
+  unreadNotificationCount = 0,
+  children,
+}: DashboardShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
   const crumbs = buildBreadcrumbs(pathname);
@@ -46,14 +51,7 @@ export function DashboardShell({ email, role, children }: DashboardShellProps) {
           search={<HeaderSearch />}
           actions={
             <>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                render={<Link href="/dashboard/notifications" />}
-                aria-label="Notifications"
-              >
-                <Bell />
-              </Button>
+              <NotificationBell unreadCount={unreadNotificationCount} />
               <ThemeToggle />
               <UserMenu email={email} role={role} />
             </>

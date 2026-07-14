@@ -26,7 +26,7 @@ function parseZod<T>(parse: () => T, fallbackMessage: string): T {
 
 /**
  * Liste les rappels structurés (maintenance_notifications) des véhicules du user.
- * Pas d'envoi réel — le module Notifications consommera ces lignes plus tard.
+ * Consommés par le dispatcher Notifications (`npm run dispatch:notifications`).
  */
 export async function listReminders(
   userId: string,

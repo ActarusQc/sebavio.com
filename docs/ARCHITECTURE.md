@@ -91,7 +91,7 @@ Tous les modules du Document 3 sont couverts. Statuts : **créée** (dossier pr�
 | Points d'intérêt | `activities` | active | Unifiés dans `activities.kind=poi` (écart Doc 4 table séparée) |
 | Météo | `weather` | active | Open-Meteo (écart Doc 3) ; cache Redis ; fiche voyage |
 | Assistant IA | `ai` | créée | Abstraction multi-fournisseurs |
-| Notifications | `notifications` | créée | Centre, push, courriel |
+| Notifications | `notifications` | active | Centre in-app, prefs, dispatcher ; email/push structurés hors envoi |
 | Administration | `admin` | créée | Portail d’administration |
 | Abonnements | `subscriptions` | créée | Stripe / plans d’abonnement |
 | Journalisation | `travel-journal` | **future** | Journal de voyage — dossier non créé ; audit technique → `audit_logs` (infra) |
@@ -163,7 +163,9 @@ Husky + lint-staged sur les commits. TypeScript `strict: true`.
 
 - **Shell** : `DashboardShell` câble `AppShell` + sidebar + header + breadcrumbs + footer pour `(dashboard)` et `/admin`.
 - **Config** : `src/components/layout/navigation.ts` — menus, filtrage rôles (`admin` / `super_admin`), breadcrumbs.
-- **Routes placeholder** : `/dashboard`, `/dashboard/finance`, `/dashboard/ai`, `/dashboard/notifications`, `/dashboard/subscription`, `/admin`.
+- **Routes placeholder** : `/dashboard`, `/dashboard/ai`, `/dashboard/subscription`, `/admin`.
+- **Notifications** : `/dashboard/notifications` (centre in-app — Partie 18).
+- **Finances** : `/dashboard/finance` (+ trips/[tripId]).
 - **Véhicules** : `/dashboard/vehicles` (+ new / [id] / edit).
 - **Catalogue** : `/dashboard/catalog` (+ [id]).
 - **Entretien (Partie 10)** : `/dashboard/maintenance` (+ calendar / history / new / [id]).
@@ -177,7 +179,7 @@ Husky + lint-staged sur les commits. TypeScript `strict: true`.
 - **Gabarits** (`maintenance_templates`) : lecture authentifiée via `GET /api/v1/models/{id}/maintenance` ; écriture admin via `/api/v1/admin/maintenance-templates`.
 - **Entretiens utilisateur** : `maintenance_history` (soft delete), `maintenance_schedule`, `maintenance_documents`, isolation propriétaire (404).
 - **Échéances** : calculées uniquement côté serveur (`schedule-calc` + `recalculate`).
-- **Notifications** : table `maintenance_notifications` prête ; **pas de génération en masse** à chaque recalcul — lignes créées seulement à l’approche (14 j / 500 km), `sent=false`. L’envoi réel appartient au **module Notifications**.
+- **File d’attente** : table `maintenance_notifications` — lignes créées à l’approche (14 j / 500 km), `sent=false`. Consommées par le dispatcher Notifications (`npm run dispatch:notifications`) qui crée la notif in-app **puis** marque `sent=true` (même transaction).
 - **Odomètre** : champ `user_vehicles.odometer_updated_at` ; invite discrète sur le dashboard entretien si > 30 jours.
 
 ## 11. Module Voyages (Partie 11)
@@ -397,6 +399,43 @@ Fournisseur API externe, carte dédiée riche, cache Redis recherche, recommanda
 
 Stripe / `subscriptions` / `payments`, OCR reçus, exports PDF/Excel/CSV.
 
-## 18. Hors scope immédiat
+## 18. Module Notifications (Partie 18) — in-app
 
-Modules métier restants, OAuth Google, MFA réel, SMTP production, envoi notifications.
+### Tables
+
+- `notifications` : centre in-app (UUID, `user_id`, `type`, `channel`, `title`, `body`, `priority`, `dedupe_key`, `source_*`, `href`, `read_at`, soft-delete). Unique partielle `(user_id, channel, dedupe_key) WHERE deleted_at IS NULL`.
+- `notification_preferences` : drapeaux in_app / email / push par type — seuls `in_app_*` honorés ; email/push structurés pour phases SMTP/Push.
+- Interrupteur global : `user_preferences.notifications_enabled`.
+
+### Canaux Doc 10
+
+| Canal | Statut |
+|-------|--------|
+| In-app | Actif |
+| Courriel (SMTP) | Structure `channel` + prefs — pas d’envoi |
+| Web Push | Structure — pas d’envoi |
+| Broadcast admin / temps réel | Reporté |
+
+### Génération
+
+| Déclencheur | Mécanisme | `dedupe_key` |
+|-------------|-----------|--------------|
+| Entretien (`maintenance_notifications` `sent=false`) | `npm run dispatch:notifications` (horaire) — **création puis `sent=true` atomique** | `maintenance:{scheduleId}` |
+| Voyage ≤ 7 j | Même commande ; soft-delete si départ modifié | `trip_upcoming:{tripId}:{YYYY-MM-DD}` |
+| Budget dépassé | Au fil de l’eau (create/update/delete/import expense) ; soft-delete si variance ≥ 0 | `budget_exceeded:{tripId}` |
+| Météo / carburant / IA | Types stubs uniquement | — |
+
+### API / UI
+
+- `GET /api/v1/notifications`, `GET/DELETE …/{id}`, `POST …/{id}/read`, `POST …/read-all`
+- `GET/PUT /api/v1/notification-preferences`
+- UI : cloche (badge Redis `notif:unread:{userId}`, fallback COUNT), `/dashboard/notifications`
+- Feature : `src/features/notifications`
+
+### Hors scope immédiat
+
+SMTP, Push, broadcast, SSE, générateurs météo/carburant/IA.
+
+## 19. Hors scope immédiat
+
+Modules métier restants, OAuth Google, MFA réel, SMTP production, envoi email/push notifications.

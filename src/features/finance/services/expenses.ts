@@ -172,6 +172,10 @@ export async function createExpense(
     ipAddress,
   });
 
+  const { syncBudgetExceededNotification } =
+    await import("@/features/notifications/services/budget-sync");
+  await syncBudgetExceededNotification(userId, input.tripId);
+
   return {
     expense: toExpenseDto(created),
     warnings: collectDateWarnings(
@@ -226,6 +230,10 @@ export async function updateExpense(
     ipAddress,
   });
 
+  const { syncBudgetExceededNotification } =
+    await import("@/features/notifications/services/budget-sync");
+  await syncBudgetExceededNotification(userId, existing.tripId);
+
   return {
     expense: toExpenseDto(updated),
     warnings: collectDateWarnings(
@@ -265,6 +273,10 @@ export async function deleteExpense(
     },
     ipAddress,
   });
+
+  const { syncBudgetExceededNotification } =
+    await import("@/features/notifications/services/budget-sync");
+  await syncBudgetExceededNotification(userId, existing.tripId);
 }
 
 export async function addExpenseReceipt(
@@ -387,6 +399,10 @@ export async function importExpenseFromFuelLog(
       },
       ipAddress,
     });
+
+    const { syncBudgetExceededNotification } =
+      await import("@/features/notifications/services/budget-sync");
+    await syncBudgetExceededNotification(userId, trip.id);
 
     return {
       expense: toExpenseDto(created),

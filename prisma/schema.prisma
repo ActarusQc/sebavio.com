@@ -21,16 +21,18 @@ model User {
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt     DateTime? @map("deleted_at") @db.Timestamptz(6)
 
-  accounts             Account[]
-  sessions             Session[]
-  auditLogs            AuditLog[]
-  profile              UserProfile?
-  preferences          UserPreference?
-  vehicles             UserVehicle[]
-  trips                Trip[]
-  travelGroups         TravelGroup[]
-  campgroundFavorites  UserCampgroundFavorite[]
-  activityFavorites    UserActivityFavorite[]
+  accounts                Account[]
+  sessions                Session[]
+  auditLogs               AuditLog[]
+  profile                 UserProfile?
+  preferences             UserPreference?
+  vehicles                UserVehicle[]
+  trips                   Trip[]
+  travelGroups            TravelGroup[]
+  campgroundFavorites     UserCampgroundFavorite[]
+  activityFavorites       UserActivityFavorite[]
+  notifications           Notification[]
+  notificationPreference  NotificationPreference?
 
   @@index([status])
   @@map("users")
@@ -909,4 +911,64 @@ model ExpenseReceipt {
 
   @@index([expenseId])
   @@map("expense_receipts")
+}
+
+/// Notification in-app (centre) — Doc 4 users 1→N notifications (schéma détaillé
+/// non spécifié ; écart assumé). Canaux email/push réservés (channel uniquement).
+/// Unique partielle (user_id, channel, dedupe_key) WHERE deleted_at IS NULL
+/// créée en SQL dans la migration (anti-doublon + soft-delete).
+model Notification {
+  id           String    @id @default(uuid(4)) @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  /// maintenance | trip | budget | weather | fuel
+  type         String    @db.VarChar(30)
+  /// in_app | email | push — phase actuelle : in_app uniquement
+  channel      String    @default("in_app") @db.VarChar(20)
+  title        String    @db.VarChar(200)
+  body         String    @db.Text
+  /// low | normal | high
+  priority     String    @default("normal") @db.VarChar(20)
+  dedupeKey    String    @map("dedupe_key") @db.VarChar(255)
+  sourceEntity String?   @map("source_entity") @db.VarChar(100)
+  sourceId     String?   @map("source_id") @db.Uuid
+  href         String?   @db.VarChar(500)
+  readAt       DateTime? @map("read_at") @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+  @@index([deletedAt])
+  @@index([type])
+  @@map("notifications")
+}
+
+/// Préférences de canaux/types — Doc 6 notification-preferences.
+/// email_* / push_* stockés pour SMTP/Push futurs ; seuls in_app_* honorés.
+model NotificationPreference {
+  userId            String   @id @map("user_id") @db.Uuid
+  inAppMaintenance  Boolean  @default(true) @map("in_app_maintenance")
+  inAppTrip         Boolean  @default(true) @map("in_app_trip")
+  inAppBudget       Boolean  @default(true) @map("in_app_budget")
+  inAppWeather      Boolean  @default(true) @map("in_app_weather")
+  inAppFuel         Boolean  @default(true) @map("in_app_fuel")
+  emailMaintenance  Boolean  @default(false) @map("email_maintenance")
+  emailTrip         Boolean  @default(false) @map("email_trip")
+  emailBudget       Boolean  @default(false) @map("email_budget")
+  emailWeather      Boolean  @default(false) @map("email_weather")
+  emailFuel         Boolean  @default(false) @map("email_fuel")
+  pushMaintenance   Boolean  @default(false) @map("push_maintenance")
+  pushTrip          Boolean  @default(false) @map("push_trip")
+  pushBudget        Boolean  @default(false) @map("push_budget")
+  pushWeather       Boolean  @default(false) @map("push_weather")
+  pushFuel          Boolean  @default(false) @map("push_fuel")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@map("notification_preferences")
 }

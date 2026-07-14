@@ -1,5 +1,3 @@
-/**
- * Feature `notifications` / components.
- * Socle architectural — aucune logique métier.
- */
-export {};
+export { NotificationBell } from "./notification-bell";
+export { NotificationsList } from "./notifications-list";
+export { NotificationPreferencesForm } from "./notification-preferences-form";

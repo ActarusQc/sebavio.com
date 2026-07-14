@@ -32,9 +32,9 @@ async function getOwnedVehicleForMaintenance(
  * Recalcule les échéances d'un véhicule à partir des gabarits du modèle
  * et du dernier historique non supprimé.
  *
- * Notifications : AUCUNE génération en masse ici. Une ligne
- * `maintenance_notifications` (sent=false) n'est créée que si l'échéance
- * approche (14 j / 500 km). L'envoi appartient au module Notifications.
+ * Notifications : une ligne `maintenance_notifications` (sent=false) n'est
+ * créée que si l'échéance approche (14 j / 500 km). Le dispatcher
+ * Notifications crée ensuite la notif in-app puis marque sent=true.
  */
 export async function recalculateVehicleSchedule(
   userId: string,

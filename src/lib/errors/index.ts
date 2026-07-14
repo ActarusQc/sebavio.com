@@ -60,6 +60,11 @@ export type AppErrorCode =
   | "FIN_003"
   | "FIN_004"
   | "FIN_005"
+  | "NOTIF_001"
+  | "NOTIF_002"
+  | "NOTIF_003"
+  | "NOTIF_004"
+  | "NOTIF_005"
   | "VALIDATION_ERROR"
   | "INTERNAL_ERROR";
 

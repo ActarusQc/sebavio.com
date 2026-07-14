@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { requireAdminUser } from "@/features/auth";
 import { DashboardShell } from "@/components/layout";
+import { getUnreadCount } from "@/features/notifications/services";
 
 export default async function AdminLayout({
   children,
@@ -15,8 +16,14 @@ export default async function AdminLayout({
     redirect("/dashboard");
   }
 
+  const unreadNotificationCount = await getUnreadCount(user.id);
+
   return (
-    <DashboardShell email={user.email} role={user.role}>
+    <DashboardShell
+      email={user.email}
+      role={user.role}
+      unreadNotificationCount={unreadNotificationCount}
+    >
       {children}
     </DashboardShell>
   );

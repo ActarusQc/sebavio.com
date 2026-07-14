@@ -1,5 +1,5 @@
 /**
  * Feature `notifications` / hooks.
- * Socle architectural — aucune logique métier.
+ * Socle — hooks client optionnels (badge polling) en phase ultérieure.
  */
 export {};

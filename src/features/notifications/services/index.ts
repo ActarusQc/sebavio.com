@@ -1,5 +1,25 @@
-/**
- * Feature `notifications` / services.
- * Socle architectural — aucune logique métier.
- */
-export {};
+export {
+  getUnreadCount,
+  invalidateUnreadCache,
+  refreshUnreadCache,
+} from "./badge";
+export { createInAppNotification, softDeleteByDedupeKey } from "./create";
+export { listNotifications, getNotificationById } from "./list";
+export {
+  markNotificationRead,
+  markAllNotificationsRead,
+  deleteNotification,
+} from "./mutations";
+export {
+  ensureNotificationPreferences,
+  getNotificationPreferences,
+  updateNotificationPreferences,
+  isInAppTypeAllowed,
+} from "./preferences";
+export { syncBudgetExceededNotification } from "./budget-sync";
+export {
+  dispatchNotifications,
+  dispatchMaintenanceNotifications,
+  dispatchTripUpcomingNotifications,
+} from "./dispatch";
+export { toNotificationDto, toPreferencesDto } from "./mappers";

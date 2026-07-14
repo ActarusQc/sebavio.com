@@ -22,7 +22,8 @@
     "prisma:seed:catalog": "tsx prisma/seed-catalog.ts",
     "prisma:seed:campgrounds": "tsx prisma/seed-campgrounds.ts",
     "prisma:seed:activities": "tsx prisma/seed-activities.ts",
-    "ingest:fuel-prices": "tsx scripts/ingest-fuel-prices.ts"
+    "ingest:fuel-prices": "tsx scripts/ingest-fuel-prices.ts",
+    "dispatch:notifications": "tsx scripts/dispatch-notifications.ts"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
