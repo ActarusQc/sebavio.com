@@ -47,6 +47,14 @@ export type AppErrorCode =
   | "EXT_004"
   | "EXT_005"
   | "EXT_RATE_LIMIT"
+  | "CAMP_001"
+  | "CAMP_002"
+  | "CAMP_003"
+  | "CAMP_004"
+  | "ACT_001"
+  | "ACT_002"
+  | "ACT_003"
+  | "ACT_004"
   | "VALIDATION_ERROR"
   | "INTERNAL_ERROR";
 

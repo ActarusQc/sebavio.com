@@ -4,10 +4,15 @@ import type {
   TripDto,
   TripGroupSummaryDto,
   TripRouteDto,
+  TripStopActivityDto,
+  TripStopCampgroundDto,
   TripStopDto,
   TripSummaryDto,
   TripVehicleSummaryDto,
 } from "@/features/trips/types";
+import { ACTIVITY_STOP_DISTANCE_WARN_KM } from "@/features/activities/constants";
+import { CAMPGROUND_STOP_DISTANCE_WARN_KM } from "@/features/campings/constants";
+import { haversineKm } from "@/lib/geo";
 import { computeWaypointsHash } from "@/services/maps/cache";
 
 function decimalToString(
@@ -20,6 +25,83 @@ function decimalToString(
 function dateToIso(value: Date | null | undefined): string | null {
   if (!value) return null;
   return value.toISOString();
+}
+
+function toStopCampgroundDto(
+  campground:
+    | {
+        id: string;
+        name: string;
+        latitude: { toString(): string };
+        longitude: { toString(): string };
+        deletedAt: Date | null;
+      }
+    | null
+    | undefined,
+): TripStopCampgroundDto | null {
+  if (!campground) return null;
+  return {
+    id: campground.id,
+    name: campground.name,
+    archived: Boolean(campground.deletedAt),
+    latitude: campground.latitude.toString(),
+    longitude: campground.longitude.toString(),
+  };
+}
+
+function toStopActivityDtos(
+  stopLat: { toString(): string } | null | undefined,
+  stopLng: { toString(): string } | null | undefined,
+  links:
+    | {
+        deletedAt: Date | null;
+        sequence: number;
+        activity: {
+          id: string;
+          name: string;
+          kind: string;
+          category: string;
+          latitude: { toString(): string };
+          longitude: { toString(): string };
+          deletedAt: Date | null;
+        };
+      }[]
+    | null
+    | undefined,
+): TripStopActivityDto[] {
+  if (!links?.length) return [];
+  return links
+    .filter((l) => l.deletedAt == null)
+    .sort((a, b) => a.sequence - b.sequence)
+    .map((l) => {
+      let distanceKm: number | null = null;
+      let distanceWarning: string | null = null;
+      if (stopLat != null && stopLng != null) {
+        distanceKm =
+          Math.round(
+            haversineKm(
+              Number(stopLat.toString()),
+              Number(stopLng.toString()),
+              Number(l.activity.latitude),
+              Number(l.activity.longitude),
+            ) * 10,
+          ) / 10;
+        if (distanceKm > ACTIVITY_STOP_DISTANCE_WARN_KM) {
+          distanceWarning = `à ${distanceKm} km`;
+        }
+      }
+      return {
+        id: l.activity.id,
+        name: l.activity.name,
+        kind: l.activity.kind,
+        category: l.activity.category,
+        archived: Boolean(l.activity.deletedAt),
+        latitude: l.activity.latitude.toString(),
+        longitude: l.activity.longitude.toString(),
+        distanceKm,
+        distanceWarning,
+      };
+    });
 }
 
 export function clampPageSize(pageSize: number, max: number): number {
@@ -61,9 +143,55 @@ export function toStopDto(row: {
   arrivalTime: Date | null;
   departureTime: Date | null;
   stopType: string;
+  campgroundId?: string | null;
+  campground?: {
+    id: string;
+    name: string;
+    latitude: { toString(): string };
+    longitude: { toString(): string };
+    deletedAt: Date | null;
+  } | null;
+  stopActivities?: {
+    deletedAt: Date | null;
+    sequence: number;
+    activity: {
+      id: string;
+      name: string;
+      kind: string;
+      category: string;
+      latitude: { toString(): string };
+      longitude: { toString(): string };
+      deletedAt: Date | null;
+    };
+  }[];
   createdAt: Date;
   updatedAt: Date;
 }): TripStopDto {
+  const campground = toStopCampgroundDto(row.campground);
+  let distanceKmToCampground: number | null = null;
+  let distanceWarning: string | null = null;
+
+  if (campground && row.latitude != null && row.longitude != null) {
+    distanceKmToCampground =
+      Math.round(
+        haversineKm(
+          Number(row.latitude.toString()),
+          Number(row.longitude.toString()),
+          Number(campground.latitude),
+          Number(campground.longitude),
+        ) * 10,
+      ) / 10;
+    if (distanceKmToCampground > CAMPGROUND_STOP_DISTANCE_WARN_KM) {
+      distanceWarning = `Ce camping est à ${distanceKmToCampground} km de cette étape`;
+    }
+  }
+
+  const activities = toStopActivityDtos(
+    row.latitude,
+    row.longitude,
+    row.stopActivities,
+  );
+
   return {
     id: row.id,
     tripId: row.tripId,
@@ -75,6 +203,12 @@ export function toStopDto(row: {
     arrivalTime: dateToIso(row.arrivalTime),
     departureTime: dateToIso(row.departureTime),
     stopType: row.stopType,
+    campgroundId: row.campgroundId ?? null,
+    campground,
+    distanceKmToCampground,
+    distanceWarning,
+    activities,
+    activityCount: activities.length,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };

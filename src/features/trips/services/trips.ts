@@ -59,10 +59,44 @@ const tripListInclude = {
   _count: { select: { stops: true } },
 } as const;
 
+const campgroundInclude = {
+  select: {
+    id: true,
+    name: true,
+    latitude: true,
+    longitude: true,
+    deletedAt: true,
+  },
+} as const;
+
+const stopActivitiesInclude = {
+  where: { deletedAt: null },
+  orderBy: { sequence: "asc" as const },
+  include: {
+    activity: {
+      select: {
+        id: true,
+        name: true,
+        kind: true,
+        category: true,
+        latitude: true,
+        longitude: true,
+        deletedAt: true,
+      },
+    },
+  },
+} as const;
+
 const tripDetailInclude = {
   vehicle: { include: vehicleInclude },
   travelGroup: travelGroupInclude,
-  stops: { orderBy: { sequence: "asc" as const } },
+  stops: {
+    orderBy: { sequence: "asc" as const },
+    include: {
+      campground: campgroundInclude,
+      stopActivities: stopActivitiesInclude,
+    },
+  },
   route: true,
 } as const;
 
@@ -794,7 +828,13 @@ export async function updateStop(
       await renumberStopsInTx(tx, tripId);
     }
 
-    return tx.tripStop.findUniqueOrThrow({ where: { id: stopId } });
+    return tx.tripStop.findUniqueOrThrow({
+      where: { id: stopId },
+      include: {
+        campground: campgroundInclude,
+        stopActivities: stopActivitiesInclude,
+      },
+    });
   });
 
   await writeAuditLog({
@@ -817,6 +857,10 @@ export async function updateStop(
         data: {
           latitude: new Prisma.Decimal(coords.lat),
           longitude: new Prisma.Decimal(coords.lng),
+        },
+        include: {
+          campground: campgroundInclude,
+          stopActivities: stopActivitiesInclude,
         },
       });
       return toStopDto(geocoded);

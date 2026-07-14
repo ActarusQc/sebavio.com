@@ -1,5 +1,2 @@
-/**
- * Feature `campings` / components.
- * Socle architectural — aucune logique métier.
- */
-export {};
+export { TripCampingsPanel } from "./trip-campings-panel";
+export { AdminCampingsPanel } from "./admin-campings-panel";

@@ -20,6 +20,8 @@
     "prisma:migrate:status": "prisma migrate status",
     "prisma:seed": "prisma db seed",
     "prisma:seed:catalog": "tsx prisma/seed-catalog.ts",
+    "prisma:seed:campgrounds": "tsx prisma/seed-campgrounds.ts",
+    "prisma:seed:activities": "tsx prisma/seed-activities.ts",
     "ingest:fuel-prices": "tsx scripts/ingest-fuel-prices.ts"
   },
   "lint-staged": {

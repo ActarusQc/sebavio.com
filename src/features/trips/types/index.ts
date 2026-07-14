@@ -1,5 +1,25 @@
 import type { TripStatus } from "@/features/trips/constants";
 
+export type TripStopCampgroundDto = {
+  id: string;
+  name: string;
+  archived: boolean;
+  latitude: string;
+  longitude: string;
+};
+
+export type TripStopActivityDto = {
+  id: string;
+  name: string;
+  kind: string;
+  category: string;
+  archived: boolean;
+  latitude: string;
+  longitude: string;
+  distanceKm: number | null;
+  distanceWarning: string | null;
+};
+
 export type TripStopDto = {
   id: string;
   tripId: string;
@@ -11,6 +31,15 @@ export type TripStopDto = {
   arrivalTime: string | null;
   departureTime: string | null;
   stopType: string;
+  campgroundId: string | null;
+  campground: TripStopCampgroundDto | null;
+  /** Distance étape ↔ camping (km), si les deux ont des coordonnées. */
+  distanceKmToCampground: number | null;
+  /** Avertissement non bloquant si distance camping > 50 km. */
+  distanceWarning: string | null;
+  /** Activités liées (aperçu pour la liste d'étapes). */
+  activities: TripStopActivityDto[];
+  activityCount: number;
   createdAt: string;
   updatedAt: string;
 };

@@ -85,10 +85,10 @@ Tous les modules du Document 3 sont couverts. Statuts : **créée** (dossier pr�
 | Optimisation carburant | `fuel` | créée | Prix, arrêts, optimisation |
 | Entretien | `maintenance` | créée | Rappels, historique, factures |
 | Budget | `finance` | créée | Budgets, dépenses, rapports |
-| Activités | `activities` | créée | Activités et recommandations |
-| Campings | `campings` | créée | Recherche et favoris |
+| Activités | `activities` | active | Répertoire local, recherche, favoris, lien étapes N:N |
+| Campings | `campings` | active | Répertoire local, recherche, favoris, lien étapes |
 | Stations-service | `fuel` | créée | Même feature que l’optimisation carburant |
-| Points d'intérêt | `activities` | créée | Affichage carto via `maps` ; métier POI dans `activities` |
+| Points d'intérêt | `activities` | active | Unifiés dans `activities.kind=poi` (écart Doc 4 table séparée) |
 | Météo | `weather` | active | Open-Meteo (écart Doc 3) ; cache Redis ; fiche voyage |
 | Assistant IA | `ai` | créée | Abstraction multi-fournisseurs |
 | Notifications | `notifications` | créée | Centre, push, courriel |
@@ -283,6 +283,90 @@ Sebavio est un SaaS destiné à devenir commercial.
 
 Suggestions IA selon la météo ; alertes météo riches.
 
-## 15. Hors scope immédiat
+## 15. Campings (Partie 15)
+
+### Source de données (option A)
+
+Table locale `campgrounds` + seed démo (`source=seed-dev`, refusé en production) + CRUD admin.  
+Aucun fournisseur externe sans accord explicite. Abstraction : `@/services/campgrounds` (`CAMPGROUND_PROVIDER=local`).
+
+### Modèles
+
+| Table | Rôle |
+| --- | --- |
+| `campgrounds` | Répertoire (lat/lng, services JSONB, max_length_m, soft-delete) |
+| `user_campground_favorites` | Favoris utilisateur |
+| `trip_stops.campground_id` | Planifier une nuit sur une étape |
+
+### Soft-delete
+
+Même patron que les groupes de voyage : refus `CAMP_003` (409) si étapes de voyages `planned` / `in_progress` référencent le camping ; `completed` / `cancelled` conservent la FK → UI « Camping archivé ».
+
+### Proximité / avertissement
+
+Recherche Haversine (`src/lib/geo`) près d’une étape. Si distance étape↔camping > 50 km : avertissement **non bloquant** dans l’UI.
+
+### API / UI
+
+- `GET /api/v1/campgrounds/search`
+- `GET /api/v1/campgrounds/{id}`
+- `GET/POST /api/v1/campgrounds/favorites`, `DELETE …/favorites/{campgroundId}`
+- `PUT /api/v1/trips/{id}/stops/{stopId}/campground`
+- Admin : `/api/v1/admin/campgrounds`, UI `/admin/campings`
+- Panneau `TripCampingsPanel` sur fiche voyage
+- Seed : `npm run prisma:seed:campgrounds`
+
+### Hors scope (reporté)
+
+Fournisseur API externe, réservation intégrée, recommandations IA.
+
+## 16. Activités / Points d'intérêt (Partie 16)
+
+### Source de données (option A)
+
+Table locale unifiée `activities` (`kind` = `activity` \| `poi`) + seed démo (`source=seed-dev`, refusé en production) + CRUD admin.  
+Aucun fournisseur externe sans accord explicite. Abstraction : `@/services/activities` (`ACTIVITY_PROVIDER=local`).
+
+### Écarts au Document 4
+
+| Écart | Justification |
+| --- | --- |
+| Une table `activities` au lieu de `activities` + `points_of_interest` | Même patron campings ; POI métier dans la feature activities (ARCHITECTURE) |
+| `season` JSONB (tableau multi-saisons) | Une activité peut couvrir plusieurs saisons ; filtre multi |
+| `price_indicative`, `address`, `region`, `rating`, `description` | Champs utiles absents / partiels dans Doc 4 |
+| Liaison N:N `trip_stop_activities` | Une étape peut référencer plusieurs activités (contrairement au camping 0..1) |
+
+### Modèles
+
+| Table | Rôle |
+| --- | --- |
+| `activities` | Répertoire (lat/lng, catégorie, kind, soft-delete) |
+| `user_activity_favorites` | Favoris utilisateur |
+| `trip_stop_activities` | Planifier N activités sur une étape |
+
+### Soft-delete
+
+Refus `ACT_003` (409) si liens actifs sur voyages `planned` / `in_progress` ; `completed` / `cancelled` conservent le lien → UI « Activité archivée ».
+
+### Proximité / avertissement
+
+Recherche Haversine (`src/lib/geo`) près d’une étape. Si distance étape↔activité > 50 km : avertissement **non bloquant**. Compteur + aperçu visibles dans la liste des étapes de la fiche voyage.
+
+### API / UI
+
+- `GET /api/v1/activities/search`
+- `GET /api/v1/activities/{id}`
+- `GET/POST /api/v1/activities/favorites`, `DELETE …/favorites/{activityId}`
+- `GET/POST /api/v1/trips/{id}/stops/{stopId}/activities`
+- `DELETE /api/v1/trips/{id}/stops/{stopId}/activities/{activityId}`
+- Admin : `/api/v1/admin/activities`, UI `/admin/activites`
+- Panneau `TripActivitiesPanel` sur fiche voyage
+- Seed : `npm run prisma:seed:activities`
+
+### Hors scope (reporté)
+
+Fournisseur API externe, carte dédiée riche, cache Redis recherche, recommandations IA.
+
+## 17. Hors scope immédiat
 
 Modules métier restants, OAuth Google, MFA réel, SMTP production, envoi notifications.

@@ -18,6 +18,8 @@ import { FormField } from "@/components/common";
 import { Badge, Button, Input } from "@/components/ui";
 import { TripFuelEstimatePanel } from "@/features/fuel/components";
 import { TripWeatherPanel } from "@/features/weather/components";
+import { TripCampingsPanel } from "@/features/campings/components";
+import { TripActivitiesPanel } from "@/features/activities/components";
 import type { TripWeatherDto } from "@/features/weather/types";
 
 const TripMap = dynamic(
@@ -255,6 +257,10 @@ export function TripDetailPanels({
 
       <TripWeatherPanel weather={weather} />
 
+      <TripCampingsPanel trip={trip} />
+
+      <TripActivitiesPanel trip={trip} />
+
       <section className="space-y-3">
         <h3 className="font-medium">Étapes ({trip.stops.length})</h3>
         {trip.stops.length === 0 ? (
@@ -279,6 +285,30 @@ export function TripDetailPanels({
                       ? ` · ${stop.latitude}, ${stop.longitude}`
                       : " · non géocodé"}
                   </p>
+                  {stop.campground ? (
+                    <p className="text-muted-foreground text-sm">
+                      Camping :{" "}
+                      {stop.campground.archived
+                        ? "Camping archivé"
+                        : stop.campground.name}
+                    </p>
+                  ) : null}
+                  {stop.activityCount > 0 ? (
+                    <p className="text-muted-foreground text-sm">
+                      Activités ({stop.activityCount}) :{" "}
+                      {stop.activities
+                        .map((a) => (a.archived ? "Activité archivée" : a.name))
+                        .join(", ")}
+                    </p>
+                  ) : null}
+                  {stop.distanceWarning ? (
+                    <p
+                      className="mt-1 rounded-md border border-amber-300 bg-amber-50 px-2 py-1 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"
+                      role="status"
+                    >
+                      {stop.distanceWarning}
+                    </p>
+                  ) : null}
                 </div>
                 {!readonly ? (
                   <div className="flex flex-wrap gap-1">

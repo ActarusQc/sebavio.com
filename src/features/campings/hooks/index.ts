@@ -1,5 +1,5 @@
 /**
  * Feature `campings` / hooks.
- * Socle architectural — aucune logique métier.
+ * Hooks client dédiés — à compléter si besoin (React Query).
  */
 export {};

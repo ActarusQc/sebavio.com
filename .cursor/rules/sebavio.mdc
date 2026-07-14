@@ -39,7 +39,11 @@ alwaysApply: true
 ## Méthode de travail
 - Exécution séquentielle : une étape à la fois, dans l'ordre des Documents 9 et 10.
 - Après chaque étape : le projet doit compiler (`npm run build`) et les tests doivent passer.
-- Fin de phase obligatoire : une fois les vérifications vertes, proposer explicitement la commande `git commit` complète (avec un message conventionnel décrivant la phase) dans le rapport final, et me rappeler de l'exécuter. Ne jamais considérer une phase terminée sans avoir proposé ce commit.
+- Fin de phase obligatoire : une fois typecheck, lint, tests et build verts,
+  EXÉCUTER git add -A && git commit (message conventionnel décrivant la
+  phase) puis git push, et inclure le hash du commit dans le rapport final.
+  Une phase sans commit poussé n'est pas terminée. Exception : si je
+  demande explicitement de ne pas committer.
 - Ne jamais passer à l'étape suivante avec un build cassé ou des tests en échec.
 - Prompts idempotents : réexécuter une étape ne doit pas casser l'existant.
 - Mettre à jour la documentation à chaque changement significatif.

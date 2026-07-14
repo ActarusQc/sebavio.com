@@ -21,14 +21,16 @@ model User {
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt     DateTime? @map("deleted_at") @db.Timestamptz(6)
 
-  accounts    Account[]
-  sessions    Session[]
-  auditLogs   AuditLog[]
-  profile     UserProfile?
-  preferences UserPreference?
-  vehicles     UserVehicle[]
-  trips        Trip[]
-  travelGroups TravelGroup[]
+  accounts             Account[]
+  sessions             Session[]
+  auditLogs            AuditLog[]
+  profile              UserProfile?
+  preferences          UserPreference?
+  vehicles             UserVehicle[]
+  trips                Trip[]
+  travelGroups         TravelGroup[]
+  campgroundFavorites  UserCampgroundFavorite[]
+  activityFavorites    UserActivityFavorite[]
 
   @@index([status])
   @@map("users")
@@ -672,14 +674,159 @@ model TripStop {
   arrivalTime   DateTime? @map("arrival_time") @db.Timestamptz(6)
   departureTime DateTime? @map("departure_time") @db.Timestamptz(6)
   stopType      String    @default("stop") @map("stop_type") @db.VarChar(50)
+  /// Camping planifié pour la nuit (Doc 4 — trip_stops → campgrounds).
+  campgroundId  String?   @map("campground_id") @db.Uuid
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  trip Trip @relation(fields: [tripId], references: [id], onDelete: Restrict)
+  trip           Trip               @relation(fields: [tripId], references: [id], onDelete: Restrict)
+  campground     Campground?        @relation(fields: [campgroundId], references: [id], onDelete: Restrict)
+  stopActivities TripStopActivity[]
 
   @@unique([tripId, sequence])
   @@index([tripId, sequence])
+  @@index([campgroundId])
   @@map("trip_stops")
+}
+
+/// Répertoire local de campings (Doc 4 §8) — fournisseur local / seed-dev / admin.
+model Campground {
+  id             String    @id @default(uuid(4)) @db.Uuid
+  name           String    @db.VarChar(200)
+  latitude       Decimal   @db.Decimal(10, 7)
+  longitude      Decimal   @db.Decimal(10, 7)
+  address        String?   @db.VarChar(300)
+  city           String?   @db.VarChar(120)
+  region         String?   @db.VarChar(120)
+  countryCode    String    @default("CA") @map("country_code") @db.Char(2)
+  /// rv_park | campground | dump_station | overnight | other
+  campgroundType String    @default("campground") @map("campground_type") @db.VarChar(50)
+  maxLengthM     Decimal?  @map("max_length_m") @db.Decimal(6, 2)
+  /// Services : electricity, water, dump_station, wifi, propane, sewer…
+  services       Json      @default("[]")
+  petFriendly    Boolean   @default(false) @map("pet_friendly")
+  rating         Decimal?  @db.Decimal(3, 2)
+  priceMin       Decimal?  @map("price_min") @db.Decimal(8, 2)
+  priceMax       Decimal?  @map("price_max") @db.Decimal(8, 2)
+  reservationUrl String?   @map("reservation_url") @db.Text
+  /// manual | import | seed-dev (jamais en prod)
+  source         String    @default("manual") @db.VarChar(50)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  stops     TripStop[]
+  favorites UserCampgroundFavorite[]
+
+  @@index([latitude, longitude])
+  @@index([deletedAt])
+  @@index([source])
+  @@index([petFriendly])
+  @@index([campgroundType])
+  @@map("campgrounds")
+}
+
+/// Favoris camping par utilisateur (Doc 10 Partie 15).
+model UserCampgroundFavorite {
+  id           String    @id @default(uuid(4)) @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  campgroundId String    @map("campground_id") @db.Uuid
+  notes        String?   @db.VarChar(500)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Restrict)
+  campground Campground @relation(fields: [campgroundId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, campgroundId])
+  @@index([userId])
+  @@index([campgroundId])
+  @@index([deletedAt])
+  @@map("user_campground_favorites")
+}
+
+/// Répertoire local activités / POI unifiés (Doc 4 §8 + écarts plan Partie 16).
+model Activity {
+  id                    String    @id @default(uuid(4)) @db.Uuid
+  name                  String    @db.VarChar(200)
+  /// activity | poi
+  kind                  String    @default("activity") @db.VarChar(20)
+  /// parc, musee, plage, randonnee, restaurant, cascade, belvedere, autre…
+  category              String    @db.VarChar(60)
+  latitude              Decimal   @db.Decimal(10, 7)
+  longitude             Decimal   @db.Decimal(10, 7)
+  address               String?   @db.VarChar(300)
+  city                  String?   @db.VarChar(120)
+  region                String?   @db.VarChar(120)
+  countryCode           String    @default("CA") @map("country_code") @db.Char(2)
+  familyScore           Int?      @map("family_score")
+  petFriendly           Boolean   @default(false) @map("pet_friendly")
+  estimatedDurationMin  Int?      @map("estimated_duration_min")
+  /// Prix indicatif CAD (écart Doc 4).
+  priceIndicative       Decimal?  @map("price_indicative") @db.Decimal(8, 2)
+  /// Saisons couvertes JSONB ex. ["summer","fall"] (écart Doc 4).
+  season                Json      @default("[]")
+  description           String?   @db.Text
+  rating                Decimal?  @db.Decimal(3, 2)
+  website               String?   @db.Text
+  /// manual | import | seed-dev (jamais en prod)
+  source                String    @default("manual") @db.VarChar(50)
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt             DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  favorites      UserActivityFavorite[]
+  stopActivities TripStopActivity[]
+
+  @@index([latitude, longitude])
+  @@index([category, city])
+  @@index([kind])
+  @@index([deletedAt])
+  @@index([source])
+  @@index([petFriendly])
+  @@map("activities")
+}
+
+/// Favoris activité / POI par utilisateur (Doc 10 Partie 16).
+model UserActivityFavorite {
+  id         String    @id @default(uuid(4)) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  activityId String    @map("activity_id") @db.Uuid
+  notes      String?   @db.VarChar(500)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  activity Activity @relation(fields: [activityId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, activityId])
+  @@index([userId])
+  @@index([activityId])
+  @@index([deletedAt])
+  @@map("user_activity_favorites")
+}
+
+/// Liaison N:N étape ↔ activités (plusieurs activités par étape).
+model TripStopActivity {
+  id         String    @id @default(uuid(4)) @db.Uuid
+  tripStopId String    @map("trip_stop_id") @db.Uuid
+  activityId String    @map("activity_id") @db.Uuid
+  sequence   Int       @default(1)
+  notes      String?   @db.VarChar(500)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tripStop TripStop @relation(fields: [tripStopId], references: [id], onDelete: Cascade)
+  activity Activity @relation(fields: [activityId], references: [id], onDelete: Restrict)
+
+  @@unique([tripStopId, activityId])
+  @@index([tripStopId, sequence])
+  @@index([activityId])
+  @@index([deletedAt])
+  @@map("trip_stop_activities")
 }
 
 /// Tracé / estimations 1:1 — Google Maps (Partie 12) / carburant (Partie 13).
