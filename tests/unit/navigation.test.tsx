@@ -13,32 +13,44 @@ describe("navigation — rôles", () => {
   it("masque Administration pour le rôle user", () => {
     const items = getVisibleNavItems("user");
     expect(items.some((item) => item.href === "/admin")).toBe(false);
-    expect(items.some((item) => item.href === "/dashboard/catalog")).toBe(true);
+    // Catalogue masqué du menu (entrée conservée avec hidden: true).
+    expect(items.some((item) => item.href === "/dashboard/catalog")).toBe(
+      false,
+    );
     expect(items.some((item) => item.href === "/dashboard/subscription")).toBe(
       true,
     );
   });
 
-  it("affiche Administration pour admin et super_admin", () => {
-    expect(
-      getVisibleNavItems("admin").some((item) => item.href === "/admin"),
-    ).toBe(true);
-    expect(
-      getVisibleNavItems("super_admin").some((item) => item.href === "/admin"),
-    ).toBe(true);
+  it("affiche Administration pour tous les rôles staff", () => {
+    for (const role of [
+      "support",
+      "analyst",
+      "billing_admin",
+      "admin",
+      "super_admin",
+    ] as const) {
+      expect(
+        getVisibleNavItems(role).some((item) => item.href === "/admin"),
+      ).toBe(true);
+    }
   });
 
-  it("ne définit pas d’entrées menu pour weather/fuel/campings/activities/maps", () => {
+  it("ne définit pas d’entrées menu pour weather/fuel/campings/maps", () => {
     const features = MAIN_NAV_ITEMS.map((item) => item.feature);
-    for (const feature of [
-      "weather",
-      "fuel",
-      "campings",
-      "activities",
-      "maps",
-    ]) {
+    for (const feature of ["weather", "fuel", "campings", "maps"]) {
       expect(features).not.toContain(feature);
     }
+  });
+
+  it("expose l’entrée Activités au menu principal", () => {
+    const items = getVisibleNavItems("user");
+    expect(items.some((item) => item.href === "/dashboard/activities")).toBe(
+      true,
+    );
+    expect(MAIN_NAV_ITEMS.some((item) => item.feature === "activities")).toBe(
+      true,
+    );
   });
 });
 
@@ -53,6 +65,10 @@ describe("navigation — actif et breadcrumbs", () => {
     expect(buildBreadcrumbs("/dashboard/trips")).toEqual([
       { label: "Tableau de bord", href: "/dashboard" },
       { label: "Voyages" },
+    ]);
+    expect(buildBreadcrumbs("/dashboard/activities")).toEqual([
+      { label: "Tableau de bord", href: "/dashboard" },
+      { label: "Activités" },
     ]);
   });
 

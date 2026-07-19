@@ -5,7 +5,30 @@ import { isAdminRole } from "@/features/auth/services/roles";
 import { hasPermission, type AdminPermission } from "@/lib/rbac";
 import type { AuthUser } from "@/features/auth/types";
 
-/** Session JWT + re-vérification status en base (mutations / admin). */
+/**
+ * Log d'accès admin — uniquement si ADMIN_ACCESS_DEBUG=true.
+ * Jamais de cookie, JWT, secret ni mot de passe.
+ */
+function logAdminAccessDebug(payload: {
+  userId: string | null;
+  databaseRole: string | null;
+  jwtRole: string | null;
+  sessionRole: string | null;
+  requiredPermission: string | null;
+  redirectSource: string;
+  redirectDestination: string | null;
+}): void {
+  if (process.env.ADMIN_ACCESS_DEBUG !== "true") return;
+  if (
+    process.env.NODE_ENV === "production" &&
+    process.env.SEBAVIO_ENV === "production"
+  ) {
+    return;
+  }
+  console.info("[admin-access]", JSON.stringify(payload));
+}
+
+/** Session JWT + re-vérification status/rôle en base (mutations / admin). */
 export async function requireActiveUser(): Promise<AuthUser> {
   const session = await auth();
   if (!session?.user?.id) {
@@ -14,26 +37,88 @@ export async function requireActiveUser(): Promise<AuthUser> {
   return assertUserActive(session.user.id);
 }
 
-/** Tout rôle staff avec `admin.portal`. */
+/**
+ * Tout rôle staff avec `admin.portal`.
+ * Source de vérité : rôle actuel en PostgreSQL (pas le JWT).
+ */
 export async function requireStaffUser(): Promise<AuthUser> {
-  const user = await requireActiveUser();
-  if (!hasPermission(user.role, "admin.portal")) {
-    throw new AppError("AUTH_006", "Accès refusé", 403);
+  const session = await auth();
+  const jwtRole =
+    typeof session?.user?.role === "string" ? session.user.role : null;
+
+  if (!session?.user?.id) {
+    logAdminAccessDebug({
+      userId: null,
+      databaseRole: null,
+      jwtRole,
+      sessionRole: jwtRole,
+      requiredPermission: "admin.portal",
+      redirectSource: "requireStaffUser",
+      redirectDestination: "/login",
+    });
+    throw new AppError("AUTH_006", "Accès refusé", 401);
   }
+
+  const user = await assertUserActive(session.user.id);
+
+  if (!hasPermission(user.role, "admin.portal")) {
+    logAdminAccessDebug({
+      userId: user.id,
+      databaseRole: user.role,
+      jwtRole,
+      sessionRole: jwtRole,
+      requiredPermission: "admin.portal",
+      redirectSource: "requireStaffUser",
+      redirectDestination: "/forbidden",
+    });
+    throw new AppError("ADM_001", "Accès refusé", 403);
+  }
+
+  if (process.env.ADMIN_ACCESS_DEBUG === "true") {
+    logAdminAccessDebug({
+      userId: user.id,
+      databaseRole: user.role,
+      jwtRole,
+      sessionRole: jwtRole,
+      requiredPermission: "admin.portal",
+      redirectSource: "requireStaffUser",
+      redirectDestination: null,
+    });
+  }
+
   return user;
 }
 
 /**
  * Permission fine — à appeler dans chaque Server Action / Route Handler sensible.
- * Ne pas se fier uniquement au layout ou au proxy.
+ * Rôle lu en base via `assertUserActive`, indépendamment d'un JWT périmé.
  */
 export async function requirePermission(
   permission: AdminPermission,
 ): Promise<AuthUser> {
-  const user = await requireActiveUser();
+  const session = await auth();
+  const jwtRole =
+    typeof session?.user?.role === "string" ? session.user.role : null;
+
+  if (!session?.user?.id) {
+    throw new AppError("AUTH_006", "Accès refusé", 401);
+  }
+
+  const user = await assertUserActive(session.user.id);
+
   if (!hasPermission(user.role, permission)) {
+    logAdminAccessDebug({
+      userId: user.id,
+      databaseRole: user.role,
+      jwtRole,
+      sessionRole: jwtRole,
+      requiredPermission: permission,
+      redirectSource: "requirePermission",
+      redirectDestination: "/forbidden",
+    });
     throw new AppError("ADM_001", "Accès refusé", 403);
   }
+
   return user;
 }
 

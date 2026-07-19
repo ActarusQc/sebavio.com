@@ -73,10 +73,9 @@ Avant production commerciale :
 | 6 | Analytics & santé |
 | 7 | MFA, durcissement, docs exploitation |
 
-## 7. Promotion du premier SUPER_ADMIN
+## Accès après promotion
 
-```bash
-npm run admin:promote -- --email="adresse@example.com"
-```
-
-Le script vérifie l’existence, demande confirmation, écrit un audit `system` / `role.promote`, ne crée aucun mot de passe.
+- **Source de vérité** : PostgreSQL via `requireStaffUser` / `requirePermission` (`assertUserActive`).
+- **Proxy** : vérifie seulement session + statut `active` — **pas** le rôle JWT (évite les faux refus après promotion).
+- **UI** : le menu Admin utilise le rôle lu en base dans le layout dashboard. Une reconnexion peut rafraîchir le claim JWT affiché ailleurs, mais **n’est plus requise** pour ouvrir `/admin`.
+- Refus explicite : `/forbidden` (403). Session absente : `/login` (401).

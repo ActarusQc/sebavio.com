@@ -21,6 +21,7 @@ import {
   requireSuperAdminUser,
   requireAnyAdminUser,
 } from "./session";
+import { adminAccessRedirectPath } from "./admin-access";
 
 export {
   hashPassword,
@@ -46,4 +47,5 @@ export {
   requireAdminUser,
   requireSuperAdminUser,
   requireAnyAdminUser,
+  adminAccessRedirectPath,
 };

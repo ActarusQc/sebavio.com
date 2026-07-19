@@ -32,6 +32,12 @@ declare module "next-auth/jwt" {
 /**
  * Config Edge-compatible (pas de Prisma / Node APIs).
  * Utilisée par le proxy pour lire le JWT uniquement.
+ *
+ * Important — accès `/admin` :
+ * le Proxy ne doit PAS autoriser/refuser selon `token.role` (souvent périmé
+ * après une promotion en base). Il vérifie seulement session + statut actif.
+ * La source de vérité RBAC reste `requireStaffUser` / `requirePermission`
+ * (relecture PostgreSQL via `assertUserActive`).
  */
 export const authConfig = {
   trustHost: true,
@@ -87,20 +93,8 @@ export const authConfig = {
       const isAdmin = pathname.startsWith("/admin");
 
       if (isDashboard || isAdmin) {
-        if (!isLoggedIn || !isActive) {
-          return false;
-        }
-        if (isAdmin) {
-          const role = auth?.user?.role;
-          return (
-            role === "support" ||
-            role === "analyst" ||
-            role === "billing_admin" ||
-            role === "admin" ||
-            role === "super_admin"
-          );
-        }
-        return true;
+        // Session requise. Le rôle staff / RBAC se décide côté serveur (DB).
+        return isLoggedIn && isActive;
       }
 
       return true;

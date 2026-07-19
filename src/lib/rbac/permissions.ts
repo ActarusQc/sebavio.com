@@ -104,6 +104,18 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly AdminPermission[]> = {
   super_admin: SUPER_ADMIN_PERMS,
 };
 
+export function hasPermission(
+  role: UserRole,
+  permission: AdminPermission,
+): boolean {
+  const perms = ROLE_PERMISSIONS[role];
+  return Array.isArray(perms) && perms.includes(permission);
+}
+
+export function listPermissions(role: UserRole): readonly AdminPermission[] {
+  return ROLE_PERMISSIONS[role] ?? [];
+}
+
 export function isStaffRole(role: UserRole): boolean {
   return (STAFF_ROLES as readonly string[]).includes(role);
 }
@@ -114,17 +126,6 @@ export function canAccessAdminPortal(role: UserRole): boolean {
 
 export function isContentAdminRole(role: UserRole): boolean {
   return hasPermission(role, "content.manage");
-}
-
-export function hasPermission(
-  role: UserRole,
-  permission: AdminPermission,
-): boolean {
-  return ROLE_PERMISSIONS[role].includes(permission);
-}
-
-export function listPermissions(role: UserRole): readonly AdminPermission[] {
-  return ROLE_PERMISSIONS[role];
 }
 
 /**

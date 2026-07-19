@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
-import { requireStaffUser } from "@/features/auth";
+import { requireStaffUser } from "@/features/auth/services/session";
+import { adminAccessRedirectPath } from "@/features/auth/services/admin-access";
 import { getUnreadCount } from "@/features/notifications/services";
 import { AdminShell } from "@/features/admin/components/admin-shell";
 import { AdminNav } from "@/features/admin/components/admin-nav";
@@ -20,8 +21,8 @@ export default async function AdminLayout({
   let user;
   try {
     user = await requireStaffUser();
-  } catch {
-    redirect("/dashboard");
+  } catch (error) {
+    redirect(adminAccessRedirectPath(error));
   }
 
   const unreadNotificationCount = await getUnreadCount(user.id);

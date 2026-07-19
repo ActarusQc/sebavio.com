@@ -35,6 +35,7 @@ export {
   requireAdminUser,
   requireSuperAdminUser,
   requireAnyAdminUser,
+  adminAccessRedirectPath,
   isAdminRole,
   hashPassword,
   verifyPassword,
