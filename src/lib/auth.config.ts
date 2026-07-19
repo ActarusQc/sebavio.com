@@ -6,6 +6,7 @@ declare module "next-auth" {
   interface User {
     role?: UserRole;
     status?: UserStatus;
+    sessionVersion?: number;
   }
 
   interface Session {
@@ -15,6 +16,7 @@ declare module "next-auth" {
       role: UserRole;
       status: UserStatus;
       emailVerified?: Date | null;
+      sessionVersion?: number;
     };
   }
 }
@@ -26,6 +28,7 @@ declare module "next-auth/jwt" {
     status?: UserStatus;
     email?: string;
     statusCheckedAt?: number;
+    sessionVersion?: number;
   }
 }
 
@@ -52,6 +55,8 @@ export const authConfig = {
         token.email = user.email ?? undefined;
         token.role = user.role;
         token.status = user.status;
+        token.sessionVersion =
+          typeof user.sessionVersion === "number" ? user.sessionVersion : 0;
       }
       return token;
     },
@@ -67,6 +72,8 @@ export const authConfig = {
         session.user.email = token.email;
         session.user.role = token.role as UserRole;
         session.user.status = token.status as UserStatus;
+        session.user.sessionVersion =
+          typeof token.sessionVersion === "number" ? token.sessionVersion : 0;
       }
       return session;
     },

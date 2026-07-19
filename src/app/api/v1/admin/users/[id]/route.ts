@@ -32,6 +32,7 @@ export async function PATCH(request: Request, { params }: Params) {
     const { id } = await params;
     const body = adminUserRolePatchSchema.parse(await request.json());
     const user = await changeAdminUserRole(id, body.role, actor, {
+      reason: body.reason,
       ipAddress: clientIp(request),
     });
     return jsonOk({ user });

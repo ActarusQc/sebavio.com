@@ -1,5 +1,5 @@
 /**
- * RBAC administratif — permissions nommées (Phase 1).
+ * RBAC administratif — permissions nommées (Phase 1 + Phase 2 support users).
  * Placé sous `lib/` pour éviter les dépendances circulaires auth ↔ admin.
  */
 
@@ -10,6 +10,8 @@ export const ADMIN_PERMISSIONS = [
   "admin.dashboard",
   "users.read",
   "users.notes",
+  "users.notes.create",
+  "users.resend_verification",
   "users.suspend",
   "users.sessions.revoke",
   "users.password.reset",
@@ -52,6 +54,8 @@ const SUPPORT_PERMS: readonly AdminPermission[] = [
   ...ALL_STAFF,
   "users.read",
   "users.notes",
+  "users.notes.create",
+  "users.resend_verification",
   "users.suspend",
   "users.sessions.revoke",
   "users.password.reset",
@@ -64,6 +68,7 @@ const ANALYST_PERMS: readonly AdminPermission[] = [
 
 const BILLING_PERMS: readonly AdminPermission[] = [
   ...ALL_STAFF,
+  "users.read",
   "billing.read",
   "billing.manage",
   "billing.refund",
@@ -75,6 +80,8 @@ const ADMIN_PERMS: readonly AdminPermission[] = [
   ...ALL_STAFF,
   "users.read",
   "users.notes",
+  "users.notes.create",
+  "users.resend_verification",
   "users.suspend",
   "users.sessions.revoke",
   "users.password.reset",
@@ -104,12 +111,27 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly AdminPermission[]> = {
   super_admin: SUPER_ADMIN_PERMS,
 };
 
+/**
+ * `users.notes` reste un alias lecture+création :
+ * - vérifier `users.notes.create` réussit aussi si le rôle a `users.notes`
+ * - vérifier `users.notes` réussit si le rôle a `users.notes` ou `users.notes.create`
+ */
 export function hasPermission(
   role: UserRole,
   permission: AdminPermission,
 ): boolean {
   const perms = ROLE_PERMISSIONS[role];
-  return Array.isArray(perms) && perms.includes(permission);
+  if (!Array.isArray(perms)) return false;
+  if (perms.includes(permission)) return true;
+
+  if (permission === "users.notes.create" && perms.includes("users.notes")) {
+    return true;
+  }
+  if (permission === "users.notes" && perms.includes("users.notes.create")) {
+    return true;
+  }
+
+  return false;
 }
 
 export function listPermissions(role: UserRole): readonly AdminPermission[] {

@@ -20,7 +20,9 @@ export type AdminUserAction =
   | "change_role"
   | "notes"
   | "password_reset"
-  | "revoke_sessions";
+  | "resend_verification"
+  | "revoke_sessions"
+  | "export";
 
 const ACTION_PERMISSION: Record<AdminUserAction, AdminPermission> = {
   view: "users.read",
@@ -29,7 +31,9 @@ const ACTION_PERMISSION: Record<AdminUserAction, AdminPermission> = {
   change_role: "users.roles.manage",
   notes: "users.notes",
   password_reset: "users.password.reset",
+  resend_verification: "users.resend_verification",
   revoke_sessions: "users.sessions.revoke",
+  export: "users.export",
 };
 
 /**
@@ -61,7 +65,7 @@ export function assertActorCanActOnTarget(
     throw new AppError("ADM_001", "Accès refusé", 403);
   }
 
-  if (action === "view" || action === "notes") {
+  if (action === "view" || action === "notes" || action === "export") {
     return;
   }
 
@@ -84,7 +88,7 @@ export function assertActorCanActOnTarget(
     return;
   }
 
-  // suspend / reactivate / password_reset / revoke_sessions
+  // suspend / reactivate / password_reset / resend_verification / revoke_sessions
   if (target.role === "user") {
     return;
   }

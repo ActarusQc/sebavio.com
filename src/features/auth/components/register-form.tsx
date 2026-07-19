@@ -5,6 +5,12 @@ import Link from "next/link";
 import { registerAction, type ActionResult } from "@/features/auth/actions";
 import { FormField } from "@/components/common";
 import { Button, Input } from "@/components/ui";
+import {
+  authButtonClassName,
+  authInputClassName,
+  authLinkClassName,
+  authMutedClassName,
+} from "@/features/auth/lib/auth-ui";
 
 const initial: ActionResult | undefined = undefined;
 
@@ -12,10 +18,7 @@ export function RegisterForm() {
   const [state, formAction, pending] = useActionState(registerAction, initial);
 
   return (
-    <form
-      action={formAction}
-      className="mx-auto flex w-full max-w-sm flex-col gap-4"
-    >
+    <form action={formAction} className="flex w-full flex-col gap-4">
       <FormField htmlFor="email" label="Courriel" required>
         <Input
           id="email"
@@ -23,6 +26,7 @@ export function RegisterForm() {
           type="email"
           required
           autoComplete="email"
+          className={authInputClassName}
         />
       </FormField>
       <FormField
@@ -38,6 +42,7 @@ export function RegisterForm() {
           required
           autoComplete="new-password"
           minLength={8}
+          className={authInputClassName}
         />
       </FormField>
       {state ? (
@@ -50,15 +55,16 @@ export function RegisterForm() {
           {state.message}
         </p>
       ) : null}
-      <Button type="submit" disabled={pending} className="w-full">
+      <Button
+        type="submit"
+        disabled={pending}
+        className={`mt-2 ${authButtonClassName}`}
+      >
         {pending ? "Création…" : "Créer mon compte"}
       </Button>
-      <p className="text-muted-foreground text-center text-sm">
+      <p className={`mt-6 text-center ${authMutedClassName}`}>
         Déjà inscrit ?{" "}
-        <Link
-          href="/login"
-          className="text-primary underline-offset-4 hover:underline"
-        >
+        <Link href="/login" className={authLinkClassName}>
           Se connecter
         </Link>
       </p>

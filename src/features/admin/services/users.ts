@@ -14,6 +14,8 @@ import {
   assertNotLastActiveSuperAdmin,
   removesActiveSuperAdminPrivilege,
 } from "@/features/admin/services/roles-policy";
+import { writeAdminAuditLog } from "@/features/admin/services/audit-write";
+import { bumpSessionVersion } from "@/features/admin/services/session-revoke";
 import { invalidateAdminDashboardCache } from "@/features/admin/services/dashboard";
 
 type Tx = Prisma.TransactionClient;
@@ -21,8 +23,6 @@ type Tx = Prisma.TransactionClient;
 /**
  * Verrouille toutes les lignes super_admin actives (SELECT … FOR UPDATE)
  * pour sérialiser suspension / rétrogradation concurrentes.
- * Deux super_admins qui se suspendent mutuellement : le 2e voit COUNT=1
- * après le commit du 1er et est refusé.
  */
 async function lockActiveSuperAdmins(tx: Tx): Promise<void> {
   await tx.$queryRaw`
@@ -45,6 +45,14 @@ async function countActiveSuperAdmins(tx: Tx): Promise<number> {
   });
 }
 
+function requireReason(reason: string | undefined): string {
+  const trimmed = reason?.trim() ?? "";
+  if (trimmed.length < 3) {
+    throw new AppError("ADM_002", "Motif requis (minimum 3 caractères)", 400);
+  }
+  return trimmed;
+}
+
 function toListItem(row: {
   id: string;
   email: string;
@@ -53,6 +61,7 @@ function toListItem(row: {
   createdAt: Date;
   updatedAt: Date;
   emailVerified: Date | null;
+  lastLoginAt?: Date | null;
   profile: { firstName: string; lastName: string } | null;
   _count: { vehicles: number; trips: number };
 }): AdminUserListItem {
@@ -68,10 +77,11 @@ function toListItem(row: {
     lastName: row.profile?.lastName || null,
     vehicleCount: row._count.vehicles,
     tripCount: row._count.trips,
+    lastLoginAt: row.lastLoginAt?.toISOString() ?? null,
   };
 }
 
-const userSelect = {
+const userListSelect = {
   id: true,
   email: true,
   status: true,
@@ -79,6 +89,7 @@ const userSelect = {
   createdAt: true,
   updatedAt: true,
   emailVerified: true,
+  lastLoginAt: true,
   profile: { select: { firstName: true, lastName: true } },
   _count: {
     select: {
@@ -88,18 +99,51 @@ const userSelect = {
   },
 } as const;
 
-export async function listAdminUsers(query: AdminUserListQuery): Promise<{
-  items: AdminUserListItem[];
-  total: number;
-  page: number;
-  pageSize: number;
-}> {
+/** Filtres liste / export CSV (hors pagination). */
+export function buildAdminUserListWhere(
+  query: Pick<
+    AdminUserListQuery,
+    | "q"
+    | "status"
+    | "role"
+    | "emailVerified"
+    | "createdFrom"
+    | "createdTo"
+    | "hasTrips"
+    | "hasVehicles"
+  >,
+): Prisma.UserWhereInput {
   const where: Prisma.UserWhereInput = {
     deletedAt: null,
   };
 
   if (query.status) where.status = query.status;
   if (query.role) where.role = query.role;
+
+  if (query.emailVerified === true) {
+    where.emailVerified = { not: null };
+  } else if (query.emailVerified === false) {
+    where.emailVerified = null;
+  }
+
+  if (query.createdFrom || query.createdTo) {
+    where.createdAt = {};
+    if (query.createdFrom) where.createdAt.gte = query.createdFrom;
+    if (query.createdTo) where.createdAt.lte = query.createdTo;
+  }
+
+  if (query.hasTrips === true) {
+    where.trips = { some: { deletedAt: null } };
+  } else if (query.hasTrips === false) {
+    where.trips = { none: { deletedAt: null } };
+  }
+
+  if (query.hasVehicles === true) {
+    where.vehicles = { some: { deletedAt: null } };
+  } else if (query.hasVehicles === false) {
+    where.vehicles = { none: { deletedAt: null } };
+  }
+
   if (query.q) {
     const q = query.q;
     where.OR = [
@@ -109,12 +153,50 @@ export async function listAdminUsers(query: AdminUserListQuery): Promise<{
     ];
   }
 
+  return where;
+}
+
+function buildOrderBy(
+  sort: AdminUserListQuery["sort"],
+  order: AdminUserListQuery["order"],
+): Prisma.UserOrderByWithRelationInput[] {
+  const dir = order;
+  const secondary: Prisma.UserOrderByWithRelationInput = { id: "asc" };
+
+  switch (sort) {
+    case "email":
+      return [{ email: dir }, secondary];
+    case "name":
+      return [
+        { profile: { firstName: dir } },
+        { profile: { lastName: dir } },
+        secondary,
+      ];
+    case "lastActivity":
+      return [{ lastLoginAt: dir }, secondary];
+    case "tripCount":
+      return [{ trips: { _count: dir } }, secondary];
+    case "createdAt":
+    default:
+      return [{ createdAt: dir }, secondary];
+  }
+}
+
+export async function listAdminUsers(query: AdminUserListQuery): Promise<{
+  items: AdminUserListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+}> {
+  const where = buildAdminUserListWhere(query);
+  const orderBy = buildOrderBy(query.sort, query.order);
+
   const [total, rows] = await Promise.all([
     prisma.user.count({ where }),
     prisma.user.findMany({
       where,
-      select: userSelect,
-      orderBy: { createdAt: "desc" },
+      select: userListSelect,
+      orderBy,
       skip: (query.page - 1) * query.pageSize,
       take: query.pageSize,
     }),
@@ -131,18 +213,67 @@ export async function listAdminUsers(query: AdminUserListQuery): Promise<{
 export async function getAdminUserById(id: string): Promise<AdminUserDetail> {
   const row = await prisma.user.findFirst({
     where: { id, deletedAt: null },
-    select: userSelect,
+    select: {
+      ...userListSelect,
+      sessionVersion: true,
+      passwordChangedAt: true,
+      suspendedAt: true,
+      suspensionReason: true,
+      suspendedById: true,
+      suspensionEndsAt: true,
+      reactivatedAt: true,
+      reactivatedById: true,
+    },
   });
 
   if (!row) {
     throw new AppError("ADM_003", "Utilisateur introuvable", 404);
   }
 
-  const [lastSession, activeSaCount] = await Promise.all([
+  const [
+    lastSession,
+    activeSessionCount,
+    notesCount,
+    recentTrips,
+    vehicles,
+    activeSaCount,
+  ] = await Promise.all([
     prisma.session.findFirst({
       where: { userId: id, deletedAt: null },
       orderBy: { updatedAt: "desc" },
       select: { updatedAt: true },
+    }),
+    prisma.session.count({
+      where: { userId: id, deletedAt: null },
+    }),
+    prisma.adminUserNote.count({
+      where: { userId: id, deletedAt: null },
+    }),
+    prisma.trip.findMany({
+      where: { userId: id, deletedAt: null },
+      orderBy: [{ departureDate: "desc" }, { id: "desc" }],
+      take: 10,
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        departureDate: true,
+        destination: true,
+        createdAt: true,
+      },
+    }),
+    prisma.userVehicle.findMany({
+      where: { userId: id, deletedAt: null },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: 10,
+      select: {
+        id: true,
+        nickname: true,
+        licensePlate: true,
+        manualManufacturerName: true,
+        manualModelName: true,
+        createdAt: true,
+      },
     }),
     row.role === "super_admin" && row.status === "active"
       ? prisma.user.count({
@@ -155,24 +286,78 @@ export async function getAdminUserById(id: string): Promise<AdminUserDetail> {
       : Promise.resolve(0),
   ]);
 
+  const lastActivityAt =
+    lastSession?.updatedAt.toISOString() ??
+    row.lastLoginAt?.toISOString() ??
+    null;
+
   return {
     ...toListItem(row),
-    lastActivityAt: lastSession?.updatedAt.toISOString() ?? null,
+    lastActivityAt,
     isLastActiveSuperAdmin:
       row.role === "super_admin" &&
       row.status === "active" &&
       activeSaCount === 1,
+    sessionVersion: row.sessionVersion,
+    passwordChangedAt: row.passwordChangedAt?.toISOString() ?? null,
+    suspendedAt: row.suspendedAt?.toISOString() ?? null,
+    suspensionReason: row.suspensionReason,
+    suspendedById: row.suspendedById,
+    suspensionEndsAt: row.suspensionEndsAt?.toISOString() ?? null,
+    reactivatedAt: row.reactivatedAt?.toISOString() ?? null,
+    reactivatedById: row.reactivatedById,
+    activeSessionCount,
+    notesCount,
+    recentTrips: recentTrips.map((t) => ({
+      id: t.id,
+      title: t.title,
+      status: t.status,
+      departureDate: t.departureDate.toISOString(),
+      destination: t.destination,
+      createdAt: t.createdAt.toISOString(),
+    })),
+    vehicles: vehicles.map((v) => ({
+      id: v.id,
+      nickname: v.nickname,
+      licensePlate: v.licensePlate,
+      label:
+        v.nickname?.trim() ||
+        [v.manualManufacturerName, v.manualModelName]
+          .filter(Boolean)
+          .join(" ") ||
+        null,
+      createdAt: v.createdAt.toISOString(),
+    })),
   };
 }
 
 export async function suspendAdminUser(
   targetId: string,
   actor: AuthUser,
-  options: { reason?: string; ipAddress?: string | null } = {},
+  options: {
+    reason: string;
+    suspensionEndsAt?: Date | null;
+    ipAddress?: string | null;
+    userAgent?: string | null;
+    requestId?: string | null;
+  },
 ): Promise<AdminUserDetail> {
+  const reason = requireReason(options.reason);
+
+  if (
+    options.suspensionEndsAt &&
+    options.suspensionEndsAt.getTime() <= Date.now()
+  ) {
+    throw new AppError(
+      "ADM_002",
+      "La date de fin de suspension doit être dans le futur",
+      400,
+    );
+  }
+
   const target = await prisma.user.findFirst({
     where: { id: targetId, deletedAt: null },
-    select: { id: true, role: true, status: true },
+    select: { id: true, role: true, status: true, sessionVersion: true },
   });
 
   if (!target) {
@@ -205,6 +390,8 @@ export async function suspendAdminUser(
     { status: "suspended" },
   );
 
+  const now = new Date();
+
   await prisma.$transaction(async (tx) => {
     if (needsLock) {
       await lockActiveSuperAdmins(tx);
@@ -219,27 +406,51 @@ export async function suspendAdminUser(
       );
     }
 
-    await tx.user.update({
-      where: { id: targetId },
-      data: { status: "suspended" },
+    const nextVersion = await bumpSessionVersion(tx, targetId);
+
+    await tx.session.updateMany({
+      where: { userId: targetId, deletedAt: null },
+      data: { deletedAt: now },
     });
 
-    await tx.auditLog.create({
+    await tx.user.update({
+      where: { id: targetId },
       data: {
-        userId: actor.id,
+        status: "suspended",
+        suspendedAt: now,
+        suspendedById: actor.id,
+        suspensionReason: reason,
+        suspensionEndsAt: options.suspensionEndsAt ?? null,
+        reactivatedAt: null,
+        reactivatedById: null,
+      },
+    });
+
+    await writeAdminAuditLog(
+      {
+        actorUserId: actor.id,
         actorRole: actor.role,
         entity: "users",
         entityId: targetId,
-        action: "ADMIN_SUSPEND",
-        reason: options.reason ?? null,
-        oldValue: { status: target.status, role: target.role },
+        action: "USER_SUSPENDED",
+        reason,
+        oldValue: {
+          status: target.status,
+          role: target.role,
+          sessionVersion: target.sessionVersion,
+        },
         newValue: {
           status: "suspended",
           role: target.role,
+          sessionVersion: nextVersion,
+          suspensionEndsAt: options.suspensionEndsAt?.toISOString() ?? null,
         },
         ipAddress: options.ipAddress ?? null,
+        userAgent: options.userAgent ?? null,
+        requestId: options.requestId ?? null,
       },
-    });
+      tx,
+    );
   });
 
   await invalidateAdminDashboardCache();
@@ -249,11 +460,24 @@ export async function suspendAdminUser(
 export async function reactivateAdminUser(
   targetId: string,
   actor: AuthUser,
-  options: { ipAddress?: string | null } = {},
+  options: {
+    reason: string;
+    ipAddress?: string | null;
+    userAgent?: string | null;
+    requestId?: string | null;
+  },
 ): Promise<AdminUserDetail> {
+  const reason = requireReason(options.reason);
+
   const target = await prisma.user.findFirst({
     where: { id: targetId, deletedAt: null },
-    select: { id: true, role: true, status: true },
+    select: {
+      id: true,
+      role: true,
+      status: true,
+      sessionVersion: true,
+      suspensionReason: true,
+    },
   });
 
   if (!target) {
@@ -274,24 +498,54 @@ export async function reactivateAdminUser(
     throw new AppError("ADM_002", "Compte non suspendu", 400);
   }
 
+  const now = new Date();
+
   await prisma.$transaction(async (tx) => {
-    await tx.user.update({
-      where: { id: targetId },
-      data: { status: "active" },
+    const nextVersion = await bumpSessionVersion(tx, targetId);
+
+    await tx.session.updateMany({
+      where: { userId: targetId, deletedAt: null },
+      data: { deletedAt: now },
     });
 
-    await tx.auditLog.create({
+    await tx.user.update({
+      where: { id: targetId },
       data: {
-        userId: actor.id,
+        status: "active",
+        suspendedAt: null,
+        suspensionReason: null,
+        suspendedById: null,
+        suspensionEndsAt: null,
+        reactivatedAt: now,
+        reactivatedById: actor.id,
+      },
+    });
+
+    await writeAdminAuditLog(
+      {
+        actorUserId: actor.id,
         actorRole: actor.role,
         entity: "users",
         entityId: targetId,
-        action: "ADMIN_REACTIVATE",
-        oldValue: { status: target.status, role: target.role },
-        newValue: { status: "active", role: target.role },
+        action: "USER_REACTIVATED",
+        reason,
+        oldValue: {
+          status: target.status,
+          role: target.role,
+          sessionVersion: target.sessionVersion,
+          suspensionReason: target.suspensionReason,
+        },
+        newValue: {
+          status: "active",
+          role: target.role,
+          sessionVersion: nextVersion,
+        },
         ipAddress: options.ipAddress ?? null,
+        userAgent: options.userAgent ?? null,
+        requestId: options.requestId ?? null,
       },
-    });
+      tx,
+    );
   });
 
   await invalidateAdminDashboardCache();
@@ -302,11 +556,18 @@ export async function changeAdminUserRole(
   targetId: string,
   nextRole: UserRole,
   actor: AuthUser,
-  options: { ipAddress?: string | null } = {},
+  options: {
+    reason: string;
+    ipAddress?: string | null;
+    userAgent?: string | null;
+    requestId?: string | null;
+  },
 ): Promise<AdminUserDetail> {
+  const reason = requireReason(options.reason);
+
   const target = await prisma.user.findFirst({
     where: { id: targetId, deletedAt: null },
-    select: { id: true, role: true, status: true },
+    select: { id: true, role: true, status: true, sessionVersion: true },
   });
 
   if (!target) {
@@ -335,6 +596,8 @@ export async function changeAdminUserRole(
     { role: nextRole },
   );
 
+  const now = new Date();
+
   await prisma.$transaction(async (tx) => {
     if (needsLock) {
       await lockActiveSuperAdmins(tx);
@@ -349,24 +612,42 @@ export async function changeAdminUserRole(
       );
     }
 
+    const nextVersion = await bumpSessionVersion(tx, targetId);
+
+    await tx.session.updateMany({
+      where: { userId: targetId, deletedAt: null },
+      data: { deletedAt: now },
+    });
+
     await tx.user.update({
       where: { id: targetId },
       data: { role: nextRole },
     });
 
-    await tx.auditLog.create({
-      data: {
-        userId: actor.id,
+    await writeAdminAuditLog(
+      {
+        actorUserId: actor.id,
         actorRole: actor.role,
         entity: "users",
         entityId: targetId,
-        action: "ADMIN_CHANGE_ROLE",
-        reason: null,
-        oldValue: { role: target.role, status: target.status },
-        newValue: { role: nextRole, status: target.status },
+        action: "USER_ROLE_CHANGED",
+        reason,
+        oldValue: {
+          role: target.role,
+          status: target.status,
+          sessionVersion: target.sessionVersion,
+        },
+        newValue: {
+          role: nextRole,
+          status: target.status,
+          sessionVersion: nextVersion,
+        },
         ipAddress: options.ipAddress ?? null,
+        userAgent: options.userAgent ?? null,
+        requestId: options.requestId ?? null,
       },
-    });
+      tx,
+    );
   });
 
   await invalidateAdminDashboardCache();

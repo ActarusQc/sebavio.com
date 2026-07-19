@@ -13,16 +13,11 @@ export async function POST(request: Request, { params }: Params) {
   try {
     const actor = await requirePermission("users.suspend");
     const { id } = await params;
-
-    let reason: string | undefined;
-    const raw = await request.text();
-    if (raw.trim()) {
-      const body = adminUserSuspendSchema.parse(JSON.parse(raw) as unknown);
-      reason = body.reason;
-    }
+    const body = adminUserSuspendSchema.parse(await request.json());
 
     const user = await suspendAdminUser(id, actor, {
-      reason,
+      reason: body.reason,
+      suspensionEndsAt: body.suspensionEndsAt,
       ipAddress: clientIp(request),
     });
     return jsonOk({ user });

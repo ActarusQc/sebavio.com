@@ -32,12 +32,15 @@ export function UsersTable({ items }: Props) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Courriel</TableHead>
+          <TableHead>Utilisateur</TableHead>
           <TableHead>Rôle</TableHead>
           <TableHead>Statut</TableHead>
+          <TableHead>Vérifié</TableHead>
           <TableHead className="text-right">Véhicules</TableHead>
           <TableHead className="text-right">Voyages</TableHead>
           <TableHead>Inscription</TableHead>
+          <TableHead>Dernière connexion</TableHead>
+          <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -62,6 +65,13 @@ export function UsersTable({ items }: Props) {
                 {STATUS_LABELS[u.status] ?? u.status}
               </StatusBadge>
             </TableCell>
+            <TableCell>
+              {u.emailVerified ? (
+                <StatusBadge status="success">Oui</StatusBadge>
+              ) : (
+                <StatusBadge status="neutral">Non</StatusBadge>
+              )}
+            </TableCell>
             <TableCell className="text-right tabular-nums">
               {u.vehicleCount}
             </TableCell>
@@ -70,6 +80,19 @@ export function UsersTable({ items }: Props) {
             </TableCell>
             <TableCell className="text-muted-foreground text-xs">
               {new Date(u.createdAt).toLocaleDateString("fr-CA")}
+            </TableCell>
+            <TableCell className="text-muted-foreground text-xs">
+              {u.lastLoginAt
+                ? new Date(u.lastLoginAt).toLocaleString("fr-CA")
+                : "—"}
+            </TableCell>
+            <TableCell>
+              <Link
+                href={`/admin/users/${u.id}`}
+                className="text-sm font-medium underline-offset-2 hover:underline"
+              >
+                Voir
+              </Link>
             </TableCell>
           </TableRow>
         ))}

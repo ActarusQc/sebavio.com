@@ -5,4 +5,5 @@ export { AdminComingSoon } from "./admin-coming-soon";
 export { DashboardStats } from "./dashboard-stats";
 export { UsersTable } from "./users-table";
 export { UserDetailPanel } from "./user-detail-panel";
+export { AdminNotesPanel } from "./admin-notes-panel";
 export { AuditTable } from "./audit-table";

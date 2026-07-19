@@ -149,6 +149,7 @@ describe("requireStaffUser — JWT périmé vs rôle DB", () => {
         role: "super_admin",
         status: "active",
         emailVerified: new Date(),
+        sessionVersion: 0,
       })),
     }));
 
@@ -176,6 +177,7 @@ describe("requireStaffUser — JWT périmé vs rôle DB", () => {
         role: "user",
         status: "active",
         emailVerified: new Date(),
+        sessionVersion: 0,
       })),
     }));
 

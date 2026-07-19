@@ -15,37 +15,36 @@ import { authorizeCredentials } from "@/features/auth/services/authorize";
 import { getUserStatusSnapshot } from "@/features/auth/services/user-status";
 import { authConfig } from "@/lib/auth.config";
 
-/** Intervalle max entre deux relectures status en base via le JWT callback. */
-const STATUS_RECHECK_MS = AUTH_JWT_UPDATE_AGE_SECONDS * 1000;
-
+/**
+ * Relecture DB : sessionVersion comparé à CHAQUE appel (révocation immédiate).
+ * status/role/email rafraîchis au moins toutes les AUTH_JWT_UPDATE_AGE_SECONDS.
+ */
 async function refreshTokenStatus(token: JWT): Promise<JWT> {
   if (typeof token.id !== "string") {
-    return token;
-  }
-
-  const checkedAt =
-    typeof token.statusCheckedAt === "number" ? token.statusCheckedAt : 0;
-  const shouldRecheck = Date.now() - checkedAt >= STATUS_RECHECK_MS;
-
-  if (!shouldRecheck && token.status) {
     return token;
   }
 
   const snapshot = await getUserStatusSnapshot(token.id);
   token.statusCheckedAt = Date.now();
 
-  if (!snapshot || snapshot.status !== "active") {
-    token.status = (snapshot?.status ?? "deleted") as UserStatus;
-    if (snapshot) {
-      token.role = snapshot.role;
-      token.email = snapshot.email;
-    }
+  if (!snapshot) {
+    token.status = "deleted" as UserStatus;
     return token;
   }
 
-  token.status = snapshot.status;
+  const tokenVersion =
+    typeof token.sessionVersion === "number" ? token.sessionVersion : 0;
+  if (snapshot.sessionVersion !== tokenVersion) {
+    // Sessions révoquées / MDP changé / rôle modifié — JWT invalide.
+    token.status = "deleted" as UserStatus;
+    token.sessionVersion = snapshot.sessionVersion;
+    return token;
+  }
+
+  token.sessionVersion = snapshot.sessionVersion;
   token.role = snapshot.role;
   token.email = snapshot.email;
+  token.status = snapshot.status;
   return token;
 }
 
@@ -87,6 +86,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             email: user.email,
             role: user.role as UserRole,
             status: user.status as UserStatus,
+            sessionVersion: user.sessionVersion,
           };
         } catch (error) {
           if (error instanceof EmailUnverifiedError) {
@@ -105,6 +105,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.email = user.email ?? undefined;
         token.role = user.role;
         token.status = user.status;
+        token.sessionVersion =
+          typeof user.sessionVersion === "number" ? user.sessionVersion : 0;
         token.statusCheckedAt = Date.now();
         return token;
       }
@@ -114,6 +116,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
 
       return refreshTokenStatus(token);
+    },
+    async session({ session, token }) {
+      if (
+        session.user &&
+        typeof token.id === "string" &&
+        typeof token.email === "string" &&
+        typeof token.role === "string" &&
+        typeof token.status === "string"
+      ) {
+        session.user.id = token.id;
+        session.user.email = token.email;
+        session.user.role = token.role as UserRole;
+        session.user.status = token.status as UserStatus;
+        session.user.sessionVersion =
+          typeof token.sessionVersion === "number" ? token.sessionVersion : 0;
+      }
+      return session;
     },
   },
 });

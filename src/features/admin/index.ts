@@ -1,5 +1,5 @@
 /**
- * Feature `admin` — centre d'administration (Phase 1 fondation RBAC).
+ * Feature `admin` — centre d'administration (Phase 1 fondation RBAC + Phase 2 support users).
  */
 export {
   listAdminUsers,
@@ -7,6 +7,17 @@ export {
   suspendAdminUser,
   reactivateAdminUser,
   changeAdminUserRole,
+  buildAdminUserListWhere,
+  bumpSessionVersion,
+  revokeUserSessions,
+  listAdminUserNotes,
+  createAdminUserNote,
+  updateAdminUserNote,
+  deleteAdminUserNote,
+  adminSendPasswordReset,
+  adminResendVerification,
+  exportAdminUsersCsv,
+  ADMIN_USER_EXPORT_MAX_ROWS,
   listAdminAuditLogs,
   getAdminDashboardStats,
   assertActorCanActOnTarget,
@@ -25,6 +36,7 @@ export {
   DashboardStats,
   UsersTable,
   UserDetailPanel,
+  AdminNotesPanel,
   AuditTable,
 } from "./components";
 
@@ -32,6 +44,12 @@ export {
   suspendUserAction,
   reactivateUserAction,
   changeUserRoleAction,
+  revokeSessionsAction,
+  sendPasswordResetAction,
+  resendVerificationAction,
+  createNoteAction,
+  updateNoteAction,
+  deleteNoteAction,
   type AdminActionResult,
 } from "./actions";
 
@@ -39,7 +57,16 @@ export {
   adminUserListQuerySchema,
   adminUserRolePatchSchema,
   adminUserSuspendSchema,
+  adminUserReactivateSchema,
+  adminUserRevokeSessionsSchema,
+  adminUserPasswordResetSchema,
+  adminUserResendVerificationSchema,
+  adminUserNoteCreateSchema,
+  adminUserNoteUpdateSchema,
   adminAuditQuerySchema,
+  ADMIN_NOTE_CATEGORIES,
+  ADMIN_NOTE_IMPORTANCES,
+  ADMIN_USER_LIST_SORTS,
 } from "./schemas";
 
 export {
@@ -59,6 +86,11 @@ export {
 export type {
   AdminUserListItem,
   AdminUserDetail,
+  AdminUserTripSummary,
+  AdminUserVehicleSummary,
+  AdminUserNoteItem,
+  AdminNoteCategory,
+  AdminNoteImportance,
   AdminDashboardStats,
   AdminAuditLogItem,
 } from "./types";

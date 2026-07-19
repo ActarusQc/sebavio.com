@@ -131,9 +131,19 @@ export async function resetPassword(
 
   const passwordHash = await hashPassword(input.password);
 
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { passwordHash },
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        passwordChangedAt: new Date(),
+        sessionVersion: { increment: 1 },
+      },
+    });
+    await tx.session.updateMany({
+      where: { userId: user.id, deletedAt: null },
+      data: { deletedAt: new Date() },
+    });
   });
 
   await writeAuditLog({

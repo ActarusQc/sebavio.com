@@ -48,9 +48,18 @@ describe("RBAC admin — permissions", () => {
   it("BILLING_ADMIN gère facturation sans secrets ni rôles", () => {
     expect(hasPermission("billing_admin", "billing.refund")).toBe(true);
     expect(hasPermission("billing_admin", "billing.manage")).toBe(true);
+    expect(hasPermission("billing_admin", "users.read")).toBe(true);
+    expect(hasPermission("billing_admin", "users.suspend")).toBe(false);
+    expect(hasPermission("billing_admin", "users.notes")).toBe(false);
     expect(hasPermission("billing_admin", "ai.secrets.manage")).toBe(false);
     expect(hasPermission("billing_admin", "users.roles.manage")).toBe(false);
     expect(hasPermission("billing_admin", "content.manage")).toBe(false);
+  });
+
+  it("SUPPORT peut renvoyer la vérification et créer des notes", () => {
+    expect(hasPermission("support", "users.resend_verification")).toBe(true);
+    expect(hasPermission("support", "users.notes.create")).toBe(true);
+    expect(hasPermission("support", "users.export")).toBe(false);
   });
 
   it("ADMIN a support+analyse+facturation+plans, pas les secrets", () => {

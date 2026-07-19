@@ -8,6 +8,12 @@ import {
 } from "@/features/auth/actions";
 import { FormField } from "@/components/common";
 import { Button, Input } from "@/components/ui";
+import {
+  authButtonClassName,
+  authInputClassName,
+  authLinkClassName,
+  authMutedClassName,
+} from "@/features/auth/lib/auth-ui";
 
 const initial: ActionResult | undefined = undefined;
 
@@ -23,10 +29,7 @@ export function ResetPasswordForm({ email, token }: Props) {
   );
 
   return (
-    <form
-      action={formAction}
-      className="mx-auto flex w-full max-w-sm flex-col gap-4"
-    >
+    <form action={formAction} className="flex w-full flex-col gap-4">
       <input type="hidden" name="email" value={email} />
       <input type="hidden" name="token" value={token} />
       <FormField htmlFor="password" label="Nouveau mot de passe" required>
@@ -37,6 +40,7 @@ export function ResetPasswordForm({ email, token }: Props) {
           required
           autoComplete="new-password"
           minLength={8}
+          className={authInputClassName}
         />
       </FormField>
       {state ? (
@@ -49,14 +53,15 @@ export function ResetPasswordForm({ email, token }: Props) {
           {state.message}
         </p>
       ) : null}
-      <Button type="submit" disabled={pending} className="w-full">
+      <Button
+        type="submit"
+        disabled={pending}
+        className={`mt-2 ${authButtonClassName}`}
+      >
         {pending ? "Enregistrement…" : "Réinitialiser"}
       </Button>
-      <p className="text-muted-foreground text-center text-sm">
-        <Link
-          href="/login"
-          className="text-primary underline-offset-4 hover:underline"
-        >
+      <p className={`mt-6 text-center ${authMutedClassName}`}>
+        <Link href="/login" className={authLinkClassName}>
           Connexion
         </Link>
       </p>

@@ -48,11 +48,14 @@ export type AdminAuditWriteInput = {
 /**
  * Journal d'audit admin — immutable, données sensibles caviardées.
  * Réutilise `audit_logs` (pas de table dupliquée).
+ * `tx` optionnel pour écrire dans une transaction Prisma.
  */
 export async function writeAdminAuditLog(
   input: AdminAuditWriteInput,
+  tx?: Prisma.TransactionClient,
 ): Promise<void> {
-  await prisma.auditLog.create({
+  const db = tx ?? prisma;
+  await db.auditLog.create({
     data: {
       userId: input.actorUserId ?? null,
       actorRole: input.actorRole ?? null,

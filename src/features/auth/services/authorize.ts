@@ -4,6 +4,7 @@ import { EmailUnverifiedError } from "@/features/auth/errors";
 import { verifyPassword } from "./password";
 import { assertLoginRateLimit, clearLoginRateLimit } from "./rate-limit";
 import { writeAuditLog } from "./audit";
+import { assertUserActive } from "./user-status";
 
 export type CredentialsUser = {
   id: string;
@@ -11,6 +12,7 @@ export type CredentialsUser = {
   role: string;
   status: string;
   emailVerified: Date | null;
+  sessionVersion: number;
 };
 
 /**
@@ -48,6 +50,8 @@ export async function authorizeCredentials(
       role: true,
       status: true,
       emailVerified: true,
+      sessionVersion: true,
+      suspensionEndsAt: true,
     },
   });
 
@@ -74,23 +78,23 @@ export async function authorizeCredentials(
     return null;
   }
 
-  if (user.status === "suspended") {
+  // Lève une suspension expirée si applicable, puis refuse si encore suspendu.
+  let active;
+  try {
+    active = await assertUserActive(user.id);
+  } catch {
     await writeAuditLog({
       userId: user.id,
       entity: "auth",
       entityId: user.id,
       action: "login_blocked",
-      newValue: { reason: "suspended" },
+      newValue: { reason: "inactive_or_suspended" },
       ipAddress: ip,
     });
     return null;
   }
 
-  if (user.status !== "active") {
-    return null;
-  }
-
-  if (!user.emailVerified) {
+  if (!active.emailVerified) {
     await writeAuditLog({
       userId: user.id,
       entity: "auth",
@@ -104,6 +108,11 @@ export async function authorizeCredentials(
 
   await clearLoginRateLimit(ip, email);
 
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { lastLoginAt: new Date() },
+  });
+
   await writeAuditLog({
     userId: user.id,
     entity: "auth",
@@ -113,10 +122,11 @@ export async function authorizeCredentials(
   });
 
   return {
-    id: user.id,
-    email: user.email,
-    role: user.role,
-    status: user.status,
-    emailVerified: user.emailVerified,
+    id: active.id,
+    email: active.email,
+    role: active.role,
+    status: active.status,
+    emailVerified: active.emailVerified,
+    sessionVersion: active.sessionVersion,
   };
 }

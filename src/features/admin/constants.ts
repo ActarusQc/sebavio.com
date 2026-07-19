@@ -124,6 +124,28 @@ export const STATUS_LABELS: Record<string, string> = {
   deleted: "Supprimé",
 };
 
+export const NOTE_CATEGORY_LABELS: Record<string, string> = {
+  general: "Général",
+  support: "Soutien",
+  security: "Sécurité",
+  billing: "Facturation",
+  account: "Compte",
+};
+
+export const NOTE_IMPORTANCE_LABELS: Record<string, string> = {
+  normal: "Normale",
+  important: "Importante",
+  critical: "Critique",
+};
+
+export const USER_LIST_SORT_LABELS: Record<string, string> = {
+  createdAt: "Inscription",
+  email: "Courriel",
+  name: "Nom",
+  lastActivity: "Dernière activité",
+  tripCount: "Voyages",
+};
+
 export const ENV_LABELS = {
   development: "Développement",
   test: "Test",

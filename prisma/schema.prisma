@@ -17,6 +17,16 @@ model User {
   emailVerified DateTime? @map("email_verified_at") @db.Timestamptz(6)
   status        String    @db.VarChar(20)
   role          String    @db.VarChar(32)
+  /// Incrémente pour invalider tous les JWT existants (revoke / suspend / reset MDP).
+  sessionVersion Int      @default(0) @map("session_version")
+  lastLoginAt   DateTime? @map("last_login_at") @db.Timestamptz(6)
+  passwordChangedAt DateTime? @map("password_changed_at") @db.Timestamptz(6)
+  suspendedAt   DateTime? @map("suspended_at") @db.Timestamptz(6)
+  suspensionReason String? @map("suspension_reason") @db.Text
+  suspendedById String?   @map("suspended_by_id") @db.Uuid
+  suspensionEndsAt DateTime? @map("suspension_ends_at") @db.Timestamptz(6)
+  reactivatedAt DateTime? @map("reactivated_at") @db.Timestamptz(6)
+  reactivatedById String? @map("reactivated_by_id") @db.Uuid
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt     DateTime? @map("deleted_at") @db.Timestamptz(6)
@@ -34,9 +44,39 @@ model User {
   activityFavorites       UserActivityFavorite[]
   notifications           Notification[]
   notificationPreference  NotificationPreference?
+  adminNotesAbout         AdminUserNote[] @relation("AdminNoteTarget")
+  adminNotesAuthored      AdminUserNote[] @relation("AdminNoteAuthor")
+  suspendedBy             User?           @relation("UserSuspensionActor", fields: [suspendedById], references: [id], onDelete: Restrict)
+  suspensionsActed        User[]          @relation("UserSuspensionActor")
+  reactivatedBy           User?           @relation("UserReactivationActor", fields: [reactivatedById], references: [id], onDelete: Restrict)
+  reactivationsActed      User[]          @relation("UserReactivationActor")
 
   @@index([status])
+  @@index([role])
+  @@index([createdAt])
+  @@index([lastLoginAt])
   @@map("users")
+}
+
+/// Notes administratives privées (Phase 2) — invisibles pour l'utilisateur cible.
+model AdminUserNote {
+  id         String    @id @default(uuid(4)) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  authorId   String    @map("author_id") @db.Uuid
+  category   String    @db.VarChar(30)
+  importance String    @default("normal") @db.VarChar(20)
+  content    String    @db.Text
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  user   User @relation("AdminNoteTarget", fields: [userId], references: [id], onDelete: Restrict)
+  author User @relation("AdminNoteAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([userId, createdAt])
+  @@index([authorId])
+  @@index([category])
+  @@map("admin_user_notes")
 }
 
 /// Constructeur (Doc 4 §4 catalogue). `source` marque la provenance (ex. seed-dev).

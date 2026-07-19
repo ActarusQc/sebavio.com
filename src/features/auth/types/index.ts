@@ -18,6 +18,7 @@ export type AuthUser = {
   role: UserRole;
   status: UserStatus;
   emailVerified: Date | null;
+  sessionVersion: number;
 };
 
 export type AuthApiSuccess<T> = {

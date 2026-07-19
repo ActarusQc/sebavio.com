@@ -11,6 +11,13 @@ export async function GET(request: Request) {
       q: url.searchParams.get("q") ?? undefined,
       status: url.searchParams.get("status") ?? undefined,
       role: url.searchParams.get("role") ?? undefined,
+      emailVerified: url.searchParams.get("emailVerified") ?? undefined,
+      createdFrom: url.searchParams.get("createdFrom") ?? undefined,
+      createdTo: url.searchParams.get("createdTo") ?? undefined,
+      hasTrips: url.searchParams.get("hasTrips") ?? undefined,
+      hasVehicles: url.searchParams.get("hasVehicles") ?? undefined,
+      sort: url.searchParams.get("sort") ?? undefined,
+      order: url.searchParams.get("order") ?? undefined,
       page: url.searchParams.get("page") ?? undefined,
       pageSize: url.searchParams.get("pageSize") ?? undefined,
     });

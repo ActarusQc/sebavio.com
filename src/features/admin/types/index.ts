@@ -1,5 +1,10 @@
 import type { UserRole, UserStatus } from "@/lib/constants";
 
+export type AdminNoteCategory =
+  "general" | "support" | "security" | "billing" | "account";
+
+export type AdminNoteImportance = "normal" | "important" | "critical";
+
 export type AdminUserListItem = {
   id: string;
   email: string;
@@ -12,11 +17,53 @@ export type AdminUserListItem = {
   lastName: string | null;
   vehicleCount: number;
   tripCount: number;
+  lastLoginAt: string | null;
+};
+
+export type AdminUserTripSummary = {
+  id: string;
+  title: string;
+  status: string;
+  departureDate: string;
+  destination: string;
+  createdAt: string;
+};
+
+export type AdminUserVehicleSummary = {
+  id: string;
+  nickname: string | null;
+  licensePlate: string | null;
+  label: string | null;
+  createdAt: string;
 };
 
 export type AdminUserDetail = AdminUserListItem & {
   lastActivityAt: string | null;
   isLastActiveSuperAdmin: boolean;
+  sessionVersion: number;
+  passwordChangedAt: string | null;
+  suspendedAt: string | null;
+  suspensionReason: string | null;
+  suspendedById: string | null;
+  suspensionEndsAt: string | null;
+  reactivatedAt: string | null;
+  reactivatedById: string | null;
+  activeSessionCount: number;
+  notesCount: number;
+  recentTrips: AdminUserTripSummary[];
+  vehicles: AdminUserVehicleSummary[];
+};
+
+export type AdminUserNoteItem = {
+  id: string;
+  userId: string;
+  authorId: string;
+  authorEmail: string | null;
+  category: AdminNoteCategory;
+  importance: AdminNoteImportance;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type AdminDashboardStats = {
