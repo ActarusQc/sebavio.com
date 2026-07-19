@@ -30,11 +30,13 @@ describe("RBAC admin — permissions", () => {
     }
   });
 
-  it("SUPPORT voit les users mais pas les secrets IA ni les remboursements", () => {
+  it("SUPPORT voit les users + billing.read, pas secrets IA ni remboursements", () => {
     expect(hasPermission("support", "users.read")).toBe(true);
     expect(hasPermission("support", "users.suspend")).toBe(true);
+    expect(hasPermission("support", "billing.read")).toBe(true);
     expect(hasPermission("support", "ai.secrets.manage")).toBe(false);
     expect(hasPermission("support", "billing.refund")).toBe(false);
+    expect(hasPermission("support", "billing.refunds.create")).toBe(false);
     expect(hasPermission("support", "plans.manage")).toBe(false);
   });
 

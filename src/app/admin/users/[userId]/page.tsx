@@ -11,6 +11,11 @@ import {
   getAdminUserById,
   listAdminUserNotes,
 } from "@/features/admin/services";
+import {
+  UserBillingSection,
+  getUserBillingSummary,
+  isStripeLiveMode,
+} from "@/features/billing";
 
 type Params = Promise<{ userId: string }>;
 
@@ -35,6 +40,10 @@ export default async function AdminUserDetailPage({
     ? await listAdminUserNotes(userId, actor)
     : [];
 
+  const billingSummary = hasPermission(actor.role, "billing.read")
+    ? await getUserBillingSummary(userId)
+    : null;
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -53,6 +62,14 @@ export default async function AdminUserDetailPage({
         actorId={actor.id}
         isProduction={isProduction}
       />
+      {billingSummary ? (
+        <UserBillingSection
+          summary={billingSummary}
+          userId={userId}
+          actorRole={actor.role}
+          isLive={isStripeLiveMode()}
+        />
+      ) : null}
     </div>
   );
 }

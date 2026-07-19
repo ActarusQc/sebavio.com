@@ -49,10 +49,13 @@ describe("admin nav visibility by role", () => {
     expect(hrefs).not.toContain("/admin/payments");
   });
 
-  it("SUPPORT voit users mais pas billing ni audit", () => {
+  it("SUPPORT voit users + résumé abonnements, pas paiements/webhooks/audit", () => {
     const hrefs = visibleHrefs("support");
     expect(hrefs).toContain("/admin/users");
+    expect(hrefs).toContain("/admin/subscriptions");
     expect(hrefs).not.toContain("/admin/payments");
+    expect(hrefs).not.toContain("/admin/invoices");
+    expect(hrefs).not.toContain("/admin/webhooks/stripe");
     expect(hrefs).not.toContain("/admin/audit");
     expect(hrefs).not.toContain("/admin/ai");
   });

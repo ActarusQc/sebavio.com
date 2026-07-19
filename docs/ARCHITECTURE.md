@@ -93,7 +93,7 @@ Tous les modules du Document 3 sont couverts. Statuts : **créée** (dossier pr�
 | Assistant IA | `ai` | créée | Abstraction multi-fournisseurs |
 | Notifications | `notifications` | active | Centre in-app + canal email (SMTP) ; push structuré hors envoi |
 | Administration | `admin` | active | Phase 1 : RBAC étendu, AdminShell, users EN, audit, stubs phases 2–7 |
-| Abonnements | `subscriptions` | créée | Stripe / plans d’abonnement |
+| Abonnements | `subscriptions` + `billing` + `services/stripe` | active (admin Phase 3) | Projection Stripe ; forfaits UI = Phase 4 |
 | Journalisation | `travel-journal` | **future** | Journal de voyage — dossier non créé ; audit technique → `audit_logs` (infra) |
 
 ### Décision : Points d’intérêt
@@ -433,9 +433,10 @@ Push, broadcast, SSE, digest/groupage courriel, générateurs météo/carburant/
 - **Audit** : `audit_logs` enrichi (`actor_role`, `reason`, `user_agent`, `request_id`) + caviardage des secrets.
 - **Promotion** : `npm run admin:promote -- --email=…` (confirmation + audit système).
 - **Doc** : `docs/admin/phase-1-fondation.md`.
-- **Hors Phase 1** : Stripe, forfaits, coffre IA, analytics avancées, MFA obligatoire (stubs préparés).
+- **Hors Phase 1** : forfaits (Phase 4), coffre IA, analytics avancées, MFA obligatoire (stubs préparés).
+- **Phase 3 (livrée)** : Stripe Test/Live, projection PG, webhooks idempotents, admin abonnements/paiements/factures/remboursements — voir `docs/admin/phase-3-stripe-paiements-abonnements.md`.
 - **Compat** : `/admin/utilisateurs` → `/admin/users`.
 
 ## 20. Hors scope immédiat
 
-Modules métier restants, OAuth Google, MFA réel (Phase 7), Push notifications, Stripe (Phase 3).
+Modules métier restants, OAuth Google, MFA réel (Phase 7), Push notifications, forfaits Stripe (Phase 4).

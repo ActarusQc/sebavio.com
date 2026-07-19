@@ -7,6 +7,7 @@ import {
   Activity,
   BarChart3,
   CreditCard,
+  FileText,
   Fuel,
   LayoutDashboard,
   MapPin,
@@ -16,6 +17,7 @@ import {
   Sparkles,
   Tent,
   Users,
+  Webhook,
 } from "lucide-react";
 import type { UserRole } from "@/lib/constants";
 import { hasPermission } from "@/lib/rbac";
@@ -27,6 +29,8 @@ const ICONS: Record<string, ComponentType<{ className?: string }>> = {
   "/admin/users": Users,
   "/admin/subscriptions": CreditCard,
   "/admin/payments": CreditCard,
+  "/admin/invoices": FileText,
+  "/admin/webhooks/stripe": Webhook,
   "/admin/plans": Package,
   "/admin/analytics": BarChart3,
   "/admin/ai": Sparkles,

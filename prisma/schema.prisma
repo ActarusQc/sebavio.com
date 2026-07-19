@@ -50,6 +50,12 @@ model User {
   suspensionsActed        User[]          @relation("UserSuspensionActor")
   reactivatedBy           User?           @relation("UserReactivationActor", fields: [reactivatedById], references: [id], onDelete: Restrict)
   reactivationsActed      User[]          @relation("UserReactivationActor")
+  stripeCustomers         StripeCustomer[]
+  stripeSubscriptions     StripeSubscription[]
+  stripePayments          StripePayment[]
+  stripeInvoices          StripeInvoice[]
+  stripeRefunds           StripeRefund[]  @relation("StripeRefundUser")
+  stripeRefundsCreated    StripeRefund[]  @relation("StripeRefundAdmin")
 
   @@index([status])
   @@index([role])
@@ -1458,4 +1464,219 @@ model NotificationPreference {
   user User @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@map("notification_preferences")
+}
+
+/// Projection locale d'un client Stripe (Phase 3). Unique active (userId, stripeMode) en SQL.
+model StripeCustomer {
+  id               String    @id @default(uuid(4)) @db.Uuid
+  userId           String    @map("user_id") @db.Uuid
+  stripeCustomerId String    @map("stripe_customer_id") @db.VarChar(255)
+  /// test | live — jamais déduit uniquement du préfixe de clé
+  stripeMode       String    @map("stripe_mode") @db.VarChar(10)
+  emailSnapshot    String?   @map("email_snapshot") @db.VarChar(255)
+  nameSnapshot     String?   @map("name_snapshot") @db.VarChar(255)
+  lastSyncedAt     DateTime? @map("last_synced_at") @db.Timestamptz(6)
+  stripeUpdatedAt  DateTime? @map("stripe_updated_at") @db.Timestamptz(6)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt        DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([stripeCustomerId, stripeMode])
+  @@index([userId])
+  @@index([stripeMode])
+  @@index([deletedAt])
+  @@map("stripe_customers")
+}
+
+/// Projection locale d'un abonnement Stripe (source de vérité = Stripe).
+model StripeSubscription {
+  id                   String    @id @default(uuid(4)) @db.Uuid
+  userId               String    @map("user_id") @db.Uuid
+  stripeCustomerId     String    @map("stripe_customer_id") @db.VarChar(255)
+  stripeSubscriptionId String    @map("stripe_subscription_id") @db.VarChar(255)
+  stripePriceId        String?   @map("stripe_price_id") @db.VarChar(255)
+  stripeProductId      String?   @map("stripe_product_id") @db.VarChar(255)
+  /// Statut Stripe brut (string) — ne pas forcer active si inconnu
+  status               String    @db.VarChar(40)
+  currency             String?   @db.VarChar(10)
+  /// Montant unitaire en cents
+  unitAmount           Int?      @map("unit_amount")
+  billingInterval      String?   @map("billing_interval") @db.VarChar(20)
+  quantity             Int       @default(1)
+  currentPeriodStart   DateTime? @map("current_period_start") @db.Timestamptz(6)
+  currentPeriodEnd     DateTime? @map("current_period_end") @db.Timestamptz(6)
+  cancelAtPeriodEnd    Boolean   @default(false) @map("cancel_at_period_end")
+  cancelAt             DateTime? @map("cancel_at") @db.Timestamptz(6)
+  canceledAt           DateTime? @map("canceled_at") @db.Timestamptz(6)
+  trialStart           DateTime? @map("trial_start") @db.Timestamptz(6)
+  trialEnd             DateTime? @map("trial_end") @db.Timestamptz(6)
+  endedAt              DateTime? @map("ended_at") @db.Timestamptz(6)
+  latestInvoiceId      String?   @map("latest_invoice_id") @db.VarChar(255)
+  stripeMode           String    @map("stripe_mode") @db.VarChar(10)
+  lastSyncedAt         DateTime? @map("last_synced_at") @db.Timestamptz(6)
+  stripeUpdatedAt      DateTime? @map("stripe_updated_at") @db.Timestamptz(6)
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([stripeSubscriptionId, stripeMode])
+  @@index([userId])
+  @@index([stripeCustomerId])
+  @@index([status])
+  @@index([stripeMode])
+  @@index([currentPeriodEnd])
+  @@index([createdAt])
+  @@map("stripe_subscriptions")
+}
+
+/// Projection locale d'un PaymentIntent / paiement Stripe.
+model StripePayment {
+  id                     String    @id @default(uuid(4)) @db.Uuid
+  userId                 String    @map("user_id") @db.Uuid
+  stripeCustomerId       String?   @map("stripe_customer_id") @db.VarChar(255)
+  stripePaymentIntentId  String    @map("stripe_payment_intent_id") @db.VarChar(255)
+  stripeChargeId         String?   @map("stripe_charge_id") @db.VarChar(255)
+  stripeInvoiceId        String?   @map("stripe_invoice_id") @db.VarChar(255)
+  /// Montants en cents
+  amount                 Int
+  amountReceived         Int       @default(0) @map("amount_received")
+  amountRefunded         Int       @default(0) @map("amount_refunded")
+  currency               String    @db.VarChar(10)
+  status                 String    @db.VarChar(40)
+  failureCode            String?   @map("failure_code") @db.VarChar(100)
+  failureMessageSafe     String?   @map("failure_message_safe") @db.Text
+  paymentMethodType      String?   @map("payment_method_type") @db.VarChar(40)
+  cardBrand              String?   @map("card_brand") @db.VarChar(40)
+  cardLast4              String?   @map("card_last4") @db.VarChar(4)
+  cardExpMonth           Int?      @map("card_exp_month")
+  cardExpYear            Int?      @map("card_exp_year")
+  stripeMode             String    @map("stripe_mode") @db.VarChar(10)
+  paidAt                 DateTime? @map("paid_at") @db.Timestamptz(6)
+  lastSyncedAt           DateTime? @map("last_synced_at") @db.Timestamptz(6)
+  stripeUpdatedAt        DateTime? @map("stripe_updated_at") @db.Timestamptz(6)
+  createdAt              DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user    User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  refunds StripeRefund[]
+
+  @@unique([stripePaymentIntentId, stripeMode])
+  @@index([userId])
+  @@index([stripeCustomerId])
+  @@index([status])
+  @@index([stripeMode])
+  @@index([createdAt])
+  @@map("stripe_payments")
+}
+
+/// Projection locale d'une facture Stripe.
+model StripeInvoice {
+  id                   String    @id @default(uuid(4)) @db.Uuid
+  userId               String    @map("user_id") @db.Uuid
+  stripeCustomerId     String?   @map("stripe_customer_id") @db.VarChar(255)
+  stripeInvoiceId      String    @map("stripe_invoice_id") @db.VarChar(255)
+  stripeSubscriptionId String?   @map("stripe_subscription_id") @db.VarChar(255)
+  number               String?   @db.VarChar(100)
+  status               String?   @db.VarChar(40)
+  currency             String?   @db.VarChar(10)
+  /// Montants en cents
+  subtotal             Int       @default(0)
+  tax                  Int       @default(0)
+  total                Int       @default(0)
+  amountPaid           Int       @default(0) @map("amount_paid")
+  amountDue            Int       @default(0) @map("amount_due")
+  amountRemaining      Int       @default(0) @map("amount_remaining")
+  hostedInvoiceUrl     String?   @map("hosted_invoice_url") @db.Text
+  invoicePdfUrl        String?   @map("invoice_pdf_url") @db.Text
+  periodStart          DateTime? @map("period_start") @db.Timestamptz(6)
+  periodEnd            DateTime? @map("period_end") @db.Timestamptz(6)
+  dueDate              DateTime? @map("due_date") @db.Timestamptz(6)
+  paidAt               DateTime? @map("paid_at") @db.Timestamptz(6)
+  voidedAt             DateTime? @map("voided_at") @db.Timestamptz(6)
+  stripeMode           String    @map("stripe_mode") @db.VarChar(10)
+  lastSyncedAt         DateTime? @map("last_synced_at") @db.Timestamptz(6)
+  stripeUpdatedAt      DateTime? @map("stripe_updated_at") @db.Timestamptz(6)
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([stripeInvoiceId, stripeMode])
+  @@index([userId])
+  @@index([stripeCustomerId])
+  @@index([stripeSubscriptionId])
+  @@index([status])
+  @@index([stripeMode])
+  @@index([createdAt])
+  @@map("stripe_invoices")
+}
+
+/// Projection locale d'un remboursement Stripe.
+model StripeRefund {
+  id                    String    @id @default(uuid(4)) @db.Uuid
+  paymentId             String    @map("payment_id") @db.Uuid
+  userId                String    @map("user_id") @db.Uuid
+  stripeRefundId        String    @map("stripe_refund_id") @db.VarChar(255)
+  stripePaymentIntentId String?   @map("stripe_payment_intent_id") @db.VarChar(255)
+  stripeChargeId        String?   @map("stripe_charge_id") @db.VarChar(255)
+  /// Montant en cents
+  amount                Int
+  currency              String    @db.VarChar(10)
+  status                String    @db.VarChar(40)
+  /// Raison normalisée Stripe (duplicate, fraudulent, requested_by_customer, …)
+  stripeReason          String?   @map("stripe_reason") @db.VarChar(60)
+  /// Justification administrative interne
+  adminReason           String?   @map("admin_reason") @db.Text
+  createdByAdminId      String?   @map("created_by_admin_id") @db.Uuid
+  stripeMode            String    @map("stripe_mode") @db.VarChar(10)
+  lastSyncedAt          DateTime? @map("last_synced_at") @db.Timestamptz(6)
+  stripeUpdatedAt       DateTime? @map("stripe_updated_at") @db.Timestamptz(6)
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  payment         StripePayment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  user            User          @relation("StripeRefundUser", fields: [userId], references: [id], onDelete: Restrict)
+  createdByAdmin  User?         @relation("StripeRefundAdmin", fields: [createdByAdminId], references: [id], onDelete: Restrict)
+
+  @@unique([stripeRefundId, stripeMode])
+  @@index([paymentId])
+  @@index([userId])
+  @@index([createdByAdminId])
+  @@index([status])
+  @@index([stripeMode])
+  @@index([createdAt])
+  @@map("stripe_refunds")
+}
+
+/// Registre idempotent des événements webhook Stripe (pas de payload complet).
+model StripeWebhookEvent {
+  id                   String    @id @default(uuid(4)) @db.Uuid
+  stripeEventId        String    @map("stripe_event_id") @db.VarChar(255)
+  stripeMode           String    @map("stripe_mode") @db.VarChar(10)
+  type                 String    @db.VarChar(120)
+  apiVersion           String?   @map("api_version") @db.VarChar(40)
+  objectId             String?   @map("object_id") @db.VarChar(255)
+  /// received | processing | processed | ignored | failed
+  status               String    @db.VarChar(20)
+  attemptCount         Int       @default(0) @map("attempt_count")
+  receivedAt           DateTime  @default(now()) @map("received_at") @db.Timestamptz(6)
+  processingStartedAt  DateTime? @map("processing_started_at") @db.Timestamptz(6)
+  processedAt          DateTime? @map("processed_at") @db.Timestamptz(6)
+  lastErrorCode        String?   @map("last_error_code") @db.VarChar(80)
+  lastErrorSafe        String?   @map("last_error_safe") @db.Text
+  nextRetryAt          DateTime? @map("next_retry_at") @db.Timestamptz(6)
+  payloadHash          String    @map("payload_hash") @db.VarChar(64)
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([stripeEventId, stripeMode])
+  @@index([status])
+  @@index([type])
+  @@index([stripeMode])
+  @@index([receivedAt])
+  @@index([objectId])
+  @@map("stripe_webhook_events")
 }

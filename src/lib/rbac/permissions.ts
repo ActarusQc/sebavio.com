@@ -1,5 +1,5 @@
 /**
- * RBAC administratif — permissions nommées (Phase 1 + Phase 2 support users).
+ * RBAC administratif — permissions nommées (Phase 1–3).
  * Placé sous `lib/` pour éviter les dépendances circulaires auth ↔ admin.
  */
 
@@ -19,8 +19,20 @@ export const ADMIN_PERMISSIONS = [
   "users.export",
   "analytics.read",
   "billing.read",
+  "billing.read_sensitive",
   "billing.manage",
   "billing.refund",
+  "billing.subscriptions.manage",
+  "billing.subscriptions.cancel",
+  "billing.subscriptions.resume",
+  "billing.payments.read",
+  "billing.invoices.read",
+  "billing.refunds.create",
+  "billing.refunds.read",
+  "billing.sync",
+  "billing.webhooks.read",
+  "billing.webhooks.retry",
+  "billing.export",
   "plans.read",
   "plans.manage",
   "ai.read",
@@ -59,6 +71,7 @@ const SUPPORT_PERMS: readonly AdminPermission[] = [
   "users.suspend",
   "users.sessions.revoke",
   "users.password.reset",
+  "billing.read",
 ];
 
 const ANALYST_PERMS: readonly AdminPermission[] = [
@@ -66,12 +79,28 @@ const ANALYST_PERMS: readonly AdminPermission[] = [
   "analytics.read",
 ];
 
+const BILLING_GRANULAR: readonly AdminPermission[] = [
+  "billing.read",
+  "billing.read_sensitive",
+  "billing.subscriptions.manage",
+  "billing.subscriptions.cancel",
+  "billing.subscriptions.resume",
+  "billing.payments.read",
+  "billing.invoices.read",
+  "billing.refunds.create",
+  "billing.refunds.read",
+  "billing.sync",
+  "billing.webhooks.read",
+  "billing.webhooks.retry",
+  "billing.export",
+  "billing.manage",
+  "billing.refund",
+];
+
 const BILLING_PERMS: readonly AdminPermission[] = [
   ...ALL_STAFF,
   "users.read",
-  "billing.read",
-  "billing.manage",
-  "billing.refund",
+  ...BILLING_GRANULAR,
   "plans.read",
   "webhooks.diagnose",
 ];
@@ -87,9 +116,7 @@ const ADMIN_PERMS: readonly AdminPermission[] = [
   "users.password.reset",
   "users.export",
   "analytics.read",
-  "billing.read",
-  "billing.manage",
-  "billing.refund",
+  ...BILLING_GRANULAR,
   "plans.read",
   "plans.manage",
   "audit.read",
@@ -111,10 +138,17 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly AdminPermission[]> = {
   super_admin: SUPER_ADMIN_PERMS,
 };
 
+const BILLING_MANAGE_ALIASES = [
+  "billing.subscriptions.manage",
+  "billing.subscriptions.cancel",
+  "billing.subscriptions.resume",
+  "billing.sync",
+] as const satisfies readonly AdminPermission[];
+
 /**
- * `users.notes` reste un alias lecture+création :
- * - vérifier `users.notes.create` réussit aussi si le rôle a `users.notes`
- * - vérifier `users.notes` réussit si le rôle a `users.notes` ou `users.notes.create`
+ * `users.notes` reste un alias lecture+création.
+ * `billing.manage` → subscriptions.manage | cancel | resume | sync
+ * `billing.refund` → billing.refunds.create
  */
 export function hasPermission(
   role: UserRole,
@@ -128,6 +162,26 @@ export function hasPermission(
     return true;
   }
   if (permission === "users.notes" && perms.includes("users.notes.create")) {
+    return true;
+  }
+
+  if (permission === "billing.manage") {
+    return BILLING_MANAGE_ALIASES.some((p) => perms.includes(p));
+  }
+  if (permission === "billing.refund") {
+    return perms.includes("billing.refunds.create");
+  }
+
+  if (
+    (BILLING_MANAGE_ALIASES as readonly string[]).includes(permission) &&
+    perms.includes("billing.manage")
+  ) {
+    return true;
+  }
+  if (
+    permission === "billing.refunds.create" &&
+    perms.includes("billing.refund")
+  ) {
     return true;
   }
 
