@@ -1,45 +1,13 @@
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import { requireAdminUser } from "@/features/auth";
-import { isAppError } from "@/lib/errors";
-import { PageHeader } from "@/components/common";
-import { Button } from "@/components/ui";
-import { UserDetailPanel } from "@/features/admin/components";
-import { getAdminUserById } from "@/features/admin/services";
+import { redirect } from "next/navigation";
 
 type Params = Promise<{ id: string }>;
 
-export default async function AdminUserDetailPage({
+/** Compatibilité — canonical : `/admin/users/[userId]`. */
+export default async function AdminUserDetailFrRedirect({
   params,
 }: {
   params: Params;
 }) {
-  const actor = await requireAdminUser();
   const { id } = await params;
-
-  let user;
-  try {
-    user = await getAdminUserById(id);
-  } catch (error) {
-    if (isAppError(error) && error.code === "ADM_003") notFound();
-    throw error;
-  }
-
-  return (
-    <div className="flex flex-col gap-6">
-      <PageHeader
-        title={user.email}
-        description="Détail du compte — aucune donnée sensible (hash mot de passe exclus)."
-        actions={
-          <Button
-            variant="outline"
-            render={<Link href="/admin/utilisateurs" />}
-          >
-            Retour à la liste
-          </Button>
-        }
-      />
-      <UserDetailPanel user={user} actorRole={actor.role} actorId={actor.id} />
-    </div>
-  );
+  redirect(`/admin/users/${id}`);
 }

@@ -2,12 +2,14 @@ import type { UserRole, UserStatus } from "@/lib/constants";
 
 export type { UserRole, UserStatus };
 
-/** Préparation MFA — structure uniquement (non implémenté). */
+/** Préparation MFA — structure uniquement (Phase 7, non implémenté). */
 export type MfaMethod = "totp" | "webauthn";
 
 export type MfaSetupStub = {
   enabled: false;
   preferredMethod: MfaMethod | null;
+  /** Futur : bloquer `/admin` si `ADMIN_MFA_REQUIRED=true` et MFA absente. */
+  requiredForStaff: false;
 };
 
 export type AuthUser = {

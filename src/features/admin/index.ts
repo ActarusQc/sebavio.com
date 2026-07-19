@@ -1,5 +1,5 @@
 /**
- * Feature `admin` — portail d'administration (Doc 10 Partie 20).
+ * Feature `admin` — centre d'administration (Phase 1 fondation RBAC).
  */
 export {
   listAdminUsers,
@@ -10,12 +10,18 @@ export {
   listAdminAuditLogs,
   getAdminDashboardStats,
   assertActorCanActOnTarget,
+  assertActorCanAssignRole,
   assertNotLastActiveSuperAdmin,
   removesActiveSuperAdminPrivilege,
+  writeAdminAuditLog,
+  sanitizeAuditPayload,
 } from "./services";
 
 export {
   AdminNav,
+  AdminShell,
+  AdminSidebar,
+  AdminComingSoon,
   DashboardStats,
   UsersTable,
   UserDetailPanel,
@@ -35,6 +41,20 @@ export {
   adminUserSuspendSchema,
   adminAuditQuerySchema,
 } from "./schemas";
+
+export {
+  ADMIN_PERMISSIONS,
+  ROLE_PERMISSIONS,
+  STAFF_ROLES,
+  hasPermission,
+  canAccessAdminPortal,
+  isStaffRole,
+  isContentAdminRole,
+  canAssignRole,
+  listPermissions,
+  type AdminPermission,
+  type StaffRole,
+} from "@/lib/rbac";
 
 export type {
   AdminUserListItem,

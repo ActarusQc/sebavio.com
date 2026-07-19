@@ -4,7 +4,7 @@ import {
   jsonOk,
 } from "@/features/auth/services/http";
 import {
-  requireAdminUser,
+  requirePermission,
   requireSuperAdminUser,
 } from "@/features/auth/services/session";
 import {
@@ -17,7 +17,7 @@ type Params = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, { params }: Params) {
   try {
-    await requireAdminUser();
+    await requirePermission("users.read");
     const { id } = await params;
     const user = await getAdminUserById(id);
     return jsonOk({ user });

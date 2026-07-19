@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requirePermission } from "@/features/auth";
 import { PageHeader } from "@/components/common";
 import { Button, Input } from "@/components/ui";
 import { AuditTable } from "@/features/admin/components";
@@ -12,6 +13,8 @@ export default async function AdminAuditPage({
 }: {
   searchParams: SearchParams;
 }) {
+  await requirePermission("audit.read");
+
   const raw = await searchParams;
   const parsed = adminAuditQuerySchema.safeParse({
     userId: typeof raw.userId === "string" ? raw.userId : undefined,

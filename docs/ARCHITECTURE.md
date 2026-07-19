@@ -92,7 +92,7 @@ Tous les modules du Document 3 sont couverts. Statuts : **créée** (dossier pr�
 | Météo | `weather` | active | Open-Meteo (écart Doc 3) ; cache Redis ; fiche voyage |
 | Assistant IA | `ai` | créée | Abstraction multi-fournisseurs |
 | Notifications | `notifications` | active | Centre in-app + canal email (SMTP) ; push structuré hors envoi |
-| Administration | `admin` | active | Dashboard, users, audit, nav campings/activités ; stats Redis TTL 90 s |
+| Administration | `admin` | active | Phase 1 : RBAC étendu, AdminShell, users EN, audit, stubs phases 2–7 |
 | Abonnements | `subscriptions` | créée | Stripe / plans d’abonnement |
 | Journalisation | `travel-journal` | **future** | Journal de voyage — dossier non créé ; audit technique → `audit_logs` (infra) |
 
@@ -193,98 +193,86 @@ Husky + lint-staged sur les commits. TypeScript `strict: true`.
 
 ## 11bis. Cartographie (Partie 12)
 
-- **Fournisseur** : Google Maps via abstraction `@/services/maps` (Geocoding + Directions serveur ; Maps JS côté client).
-- **Clés** : `GOOGLE_MAPS_API_KEY` (serveur) ; `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (client, Maps JavaScript API uniquement) ; `NEXT_PUBLIC_GOOGLE_MAPS_ID` optionnel.
+- **Fournisseur** : Google Maps via abstraction `@/services/maps` (Geocoding + Directions serveur ; Maps JS + Places Autocomplete côté client).
+- **Clés** : `GOOGLE_MAPS_API_KEY` (serveur) ; `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (client : Maps JavaScript API + Places API New) ; `NEXT_PUBLIC_GOOGLE_MAPS_ID` optionnel.
+- **Autocomplete** : composant `AddressAutocomplete` (`AutocompleteSuggestion` + Place Details) sur départ/destination ; bias Québec, saisie manuelle autorisée ; coords/placeId invalidés si le texte change après sélection.
 - **Cache Redis** : géocodage / directions ; adresses normalisées (trim, minuscules, espaces) avant hash.
 - **Rate-limit** : 30 req/h/utilisateur ; Redis down → pas d'appel Google (`EXT_001`).
 - **Périmé** : `trip_routes.waypoints_hash` vs hash courant des étapes → `route.isStale` + invite UI « Itinéraire à recalculer ».
 - **Dégradé** : sans clé / API KO → adresses texte, pas de carte bloquante.
 - **UI** : `TripMap` (lazy) sur fiche voyage.
 
-## 13. Carburant — prix Régie Essence Québec (Partie 13bis)
+## 13. Carburant — prix via FDE (écart assumé à l’ingestion Régie directe)
 
-### Écart au Document 4 (`fuel_prices` plat)
+### Décision
 
-Le Doc 4 décrit une table unique `fuel_prices(country, region, city, station_name, fuel_type, price, captured_at)`.  
-L’export officiel Régie Essence Québec (feuille « Régie Essence Québec », ~2 500 lignes) fournit plutôt : **Nom, Bannière, Adresse, Région, Code Postal, Latitude, Longitude, Prix Régulier, Prix Super, Prix Diesel**.
+Les prix d’estimation voyage sont obtenus via **FDE** (`https://fde.monteregia.com`) lorsque `FDE_ENABLED=true` :
 
-**Décision d’architecture** : deux tables normalisées —
+```text
+Backend Sebavio → Bearer FDE_API_KEY → FDE → Régie / StatCan
+```
 
-| Table | Rôle |
+Voir `docs/integrations/fde/` et ADR `docs/adr/fde-fuel-price-integration.md`.
+
+### Chaîne de prix (estimation voyage, FDE activé)
+
+1. FDE nearby — **médiane** des prix stations (point de départ)  
+2. FDE fallback régional (StatCan)  
+3. Moyenne personnelle des pleins  
+4. Prix par défaut formulaire  
+
+Si `FDE_ENABLED=false` : chaîne historique Régie locale → personnelle → défaut.
+
+### Mapping `fuel_type` Sebavio → FDE
+
+| Véhicule / préférence | FDE |
 | --- | --- |
-| `fuel_stations` | Identité station (`external_key`, géoloc, région, soft-delete différé) |
-| `fuel_prices` | Historique des relevés (`station_id`, `fuel_type`, `price` $/L, `captured_at`) — **jamais écrasé** |
+| Gasoline, Hybrid, regular | `regular` |
+| premium / super | `premium` |
+| Diesel | `diesel` |
+| Electric, PHEV | non applicable |
+| Propane, E85, midGrade | erreur `FUEL_006` |
 
-Cela respecte l’esprit Doc 4 (région, nom, type, prix, historisation) tout en supportant l’upsert réel et les requêtes « prix courant ».
+### Legacy : tables Régie locales
 
-### Mapping `fuel_type`
-
-| Colonne Excel Régie | Valeur stockée | Catalogue véhicule |
-| --- | --- | --- |
-| Prix Régulier | `regular` | `Gasoline`, `Hybrid` |
-| Prix Super | `premium` | (saisie préférée / futur) |
-| Prix Diesel | `diesel` | `Diesel` |
-
-Types **sans** estimation Régie (repli / « non applicable », jamais d’erreur) : `Electric`, et hybride rechargeable si présent (`PlugInHybrid` / `PHEV`). `Propane` et autres → repli chaîne personnelle / défaut.
-
-### Parsing XLSX
-
-Bibliothèque retenue : **`xlsx` (SheetJS)**.  
-`exceljs` a été tenté puis écarté : l’export Régie (namespaces OOXML `x:`) provoque un échec de lecture (`workbook.sheets` undefined).
-
-Source fichier : `REGIE_ESSENCE_XLSX_URL` ou découverte via `stations.geojson.gz` → `metadata.excel_url`.
-
-### Soft-delete stations
-
-Une station absente du fichier incrémente `missing_streak`. Soft-delete seulement si `missing_streak ≥ 3` **et** fichier plausible (`≥ 1500` stations). Sinon ingestion refusée, données intactes.
-
-### Chaîne de prix (estimation voyage)
-
-1. Régie (données &lt; 48 h, régions des étapes / origin-destination)  
-2. Moyenne personnelle des pleins  
-3. Prix par défaut formulaire  
-
-Commande : `npm run ingest:fuel-prices` — à planifier au déploiement (ex. toutes les 2–4 h), pas de cron dans cette partie.
+Les tables `fuel_stations` / `fuel_prices` et `npm run ingest:fuel-prices` restent disponibles hors chemin d’estimation FDE (écart Doc 4 plat conservé). Soft-delete streak ≥ 3 inchangé.
 
 ## 14. Météo (Partie 14)
 
-### Écart au Document 3 (OpenWeather)
+### OpenWeather (Doc 3) — implémenté
 
-Le Doc 3 prescrit **OpenWeather**. Fournisseur retenu : **Open-Meteo**.
+Le Doc 3 prescrit **OpenWeather**. Fournisseur commercial retenu : **OpenWeather One Call** (`WEATHER_PROVIDER=openweather`).
 
-| Critère | OpenWeather (Doc 3) | Open-Meteo (retenu) |
+| Critère | OpenWeather One Call | Open-Meteo (alternative) |
 | --- | --- | --- |
-| Clé API | Obligatoire | Optionnelle (`OPEN_METEO_API_KEY`) |
-| Horizon | Free ≈ 5 j ; One Call payant | **16 jours** |
-| Coût en développement | Compte + quotas | Gratuit sans clé (non-commercial) |
+| Clé API | Obligatoire (`OPENWEATHER_API_KEY`) | Optionnelle (`OPEN_METEO_API_KEY`) |
+| Horizon | Daily jusqu’à ~8–16 j selon produit | **16 jours** |
+| Quota | ~1 000 appels/jour (One Call by Call) — plafond interne **900** | Selon offre |
 
-Abstraction : `@/services/weather` + `WEATHER_PROVIDER` (`open-meteo` \| `off` \| `openweather`).  
-Basculer vers OpenWeather ou l’offre commerciale Open-Meteo reste trivial.
+Abstraction : `@/services/weather` + `WEATHER_PROVIDER` (`openweather` \| `open-meteo` \| `off`).  
+Documentation : `docs/integrations/openweather/README.md`.
 
-### Licence commerciale Open-Meteo
-
-L’API publique Open-Meteo est réservée à un **usage non-commercial**.  
-Sebavio est un SaaS destiné à devenir commercial.
-
-**Avant tout lancement commercial** : souscrire l’offre API commerciale Open-Meteo (payante, avec clé → `customer-api.open-meteo.com` via `OPEN_METEO_API_KEY`) **ou** basculer `WEATHER_PROVIDER` / implémenter OpenWeather.
+Open-Meteo reste disponible comme alternative (usage non-commercial sans clé).
 
 ### Cache et données
 
-- **Redis uniquement** (TTL 2 h) — clé par point arrondi (2 décimales) ; pas de table `weather_cache` pour l’instant (Doc 4 : reportée avec le module IA si besoin).
-- Rate-limit : 60 req/h/utilisateur ; Redis down → pas d’appel fournisseur.
-- Étapes sans coordonnées → pas de météo (silencieux). Hors horizon → « Prévisions disponibles à l’approche » (aucune donnée inventée).
-- Mode dégradé : fiche voyage jamais bloquée.
+- **Redis** — TTL dynamique (30 min à 6 h) selon proximité du voyage ; clé `weather:v2:…`.
+- Compteur quotidien Redis + `WEATHER_MAX_DAILY_CALLS` (défaut 900).
+- Rate-limit utilisateur : 60 req/h ; Redis down → pas d’appel fournisseur.
+- Regroupement géographique des étapes (rayon 20 km).
+- Hors fenêtre / sans coordonnées → message UX (aucune donnée inventée).
+- Mode dégradé : fiche voyage jamais bloquée ; fallback cache stale.
 
 ### API / UI
 
 - `GET /api/v1/weather/forecast?latitude=&longitude=`
 - `GET /api/v1/weather/current?latitude=&longitude=`
-- `GET /api/v1/trips/{id}/weather` (propriétaire uniquement)
-- UI : `TripWeatherPanel` sur la fiche voyage.
+- `GET /api/v1/trips/{id}/weather` (propriétaire uniquement) → `TripWeatherResponse`
+- UI : `TripWeatherSection` sur la fiche voyage.
 
 ### Hors scope (reporté)
 
-Suggestions IA selon la météo ; alertes météo riches.
+Moteur complet de recommandations d’activités (classifieur `WeatherActivityClassifier` prêt).
 
 ## 15. Campings (Partie 15)
 
@@ -437,13 +425,17 @@ Stripe / `subscriptions` / `payments`, OCR reçus, exports PDF/Excel/CSV.
 
 Push, broadcast, SSE, digest/groupage courriel, générateurs météo/carburant/IA.
 
-## 19. Administration (Partie 20)
+## 19. Administration (Partie 20 + Phase 1 centre d’admin)
 
-- **Feature** : `src/features/admin` — dashboard (stats + cache Redis 90 s), utilisateurs, audit lecture seule.
+- **Feature** : `src/features/admin` — layout `AdminShell`, RBAC étendu, dashboard, utilisateurs (`/admin/users`), audit lecture seule.
+- **RBAC** : `src/lib/rbac` — rôles `user | support | analyst | billing_admin | admin | super_admin` + permissions nommées. Contrôles dans chaque route/action via `requirePermission` / `requireStaffUser` (pas uniquement proxy/layout).
 - **API** : `GET /api/v1/admin/dashboard|statistics`, `GET/PATCH /api/v1/admin/users/{id}`, `POST …/suspend|reactivate`, `GET /api/v1/admin/audit`.
-- **Rôles** : admin agit sur `user` uniquement ; `super_admin` gère rôles et comptes admin. Anti-verrouillage atomique (`SELECT … FOR UPDATE` + COUNT dans la même transaction) pour suspension **et** rétrogradation du dernier `super_admin` actif. Indicateur UI « dernier super_admin actif ».
-- **Hors scope** : settings/cache clear, anonymisation RGPD, UI catalogue/gabarits/fuel dédiées (liens nav uniquement).
+- **Audit** : `audit_logs` enrichi (`actor_role`, `reason`, `user_agent`, `request_id`) + caviardage des secrets.
+- **Promotion** : `npm run admin:promote -- --email=…` (confirmation + audit système).
+- **Doc** : `docs/admin/phase-1-fondation.md`.
+- **Hors Phase 1** : Stripe, forfaits, coffre IA, analytics avancées, MFA obligatoire (stubs préparés).
+- **Compat** : `/admin/utilisateurs` → `/admin/users`.
 
 ## 20. Hors scope immédiat
 
-Modules métier restants, OAuth Google, MFA réel, Push notifications.
+Modules métier restants, OAuth Google, MFA réel (Phase 7), Push notifications, Stripe (Phase 3).

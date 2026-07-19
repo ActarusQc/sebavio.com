@@ -92,7 +92,13 @@ export const authConfig = {
         }
         if (isAdmin) {
           const role = auth?.user?.role;
-          return role === "admin" || role === "super_admin";
+          return (
+            role === "support" ||
+            role === "analyst" ||
+            role === "billing_admin" ||
+            role === "admin" ||
+            role === "super_admin"
+          );
         }
         return true;
       }

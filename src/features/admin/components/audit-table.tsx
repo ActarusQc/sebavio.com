@@ -49,7 +49,14 @@ export function AuditTable({ items }: Props) {
               {new Date(row.createdAt).toLocaleString("fr-CA")}
             </TableCell>
             <TableCell className="text-sm">
-              {row.userEmail ?? row.userId ?? "—"}
+              <span className="block">
+                {row.userEmail ?? row.userId ?? "système"}
+              </span>
+              {row.actorRole ? (
+                <span className="text-muted-foreground text-xs">
+                  {row.actorRole}
+                </span>
+              ) : null}
             </TableCell>
             <TableCell className="text-sm font-medium">{row.action}</TableCell>
             <TableCell className="text-sm">

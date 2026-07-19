@@ -10,6 +10,7 @@ import type {
 } from "@/features/admin/types";
 import {
   assertActorCanActOnTarget,
+  assertActorCanAssignRole,
   assertNotLastActiveSuperAdmin,
   removesActiveSuperAdminPrivilege,
 } from "@/features/admin/services/roles-policy";
@@ -226,14 +227,15 @@ export async function suspendAdminUser(
     await tx.auditLog.create({
       data: {
         userId: actor.id,
+        actorRole: actor.role,
         entity: "users",
         entityId: targetId,
         action: "ADMIN_SUSPEND",
+        reason: options.reason ?? null,
         oldValue: { status: target.status, role: target.role },
         newValue: {
           status: "suspended",
           role: target.role,
-          reason: options.reason ?? null,
         },
         ipAddress: options.ipAddress ?? null,
       },
@@ -281,6 +283,7 @@ export async function reactivateAdminUser(
     await tx.auditLog.create({
       data: {
         userId: actor.id,
+        actorRole: actor.role,
         entity: "users",
         entityId: targetId,
         action: "ADMIN_REACTIVATE",
@@ -301,14 +304,6 @@ export async function changeAdminUserRole(
   actor: AuthUser,
   options: { ipAddress?: string | null } = {},
 ): Promise<AdminUserDetail> {
-  if (actor.role !== "super_admin") {
-    throw new AppError(
-      "ADM_004",
-      "Seuls les super administrateurs peuvent modifier les rôles",
-      403,
-    );
-  }
-
   const target = await prisma.user.findFirst({
     where: { id: targetId, deletedAt: null },
     select: { id: true, role: true, status: true },
@@ -318,14 +313,14 @@ export async function changeAdminUserRole(
     throw new AppError("ADM_003", "Utilisateur introuvable", 404);
   }
 
-  assertActorCanActOnTarget(
+  assertActorCanAssignRole(
     { id: actor.id, role: actor.role },
     {
       id: target.id,
       role: target.role as UserRole,
       status: target.status as UserStatus,
     },
-    "change_role",
+    nextRole,
   );
 
   if (target.role === nextRole) {
@@ -362,9 +357,11 @@ export async function changeAdminUserRole(
     await tx.auditLog.create({
       data: {
         userId: actor.id,
+        actorRole: actor.role,
         entity: "users",
         entityId: targetId,
         action: "ADMIN_CHANGE_ROLE",
+        reason: null,
         oldValue: { role: target.role, status: target.status },
         newValue: { role: nextRole, status: target.status },
         ipAddress: options.ipAddress ?? null,

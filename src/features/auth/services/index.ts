@@ -15,8 +15,11 @@ import { assertEmailAuthRateLimit } from "./email-rate-limit";
 import { authorizeCredentials } from "./authorize";
 import {
   requireActiveUser,
+  requireStaffUser,
+  requirePermission,
   requireAdminUser,
   requireSuperAdminUser,
+  requireAnyAdminUser,
 } from "./session";
 
 export {
@@ -38,6 +41,9 @@ export {
   verifyEmail,
   authorizeCredentials,
   requireActiveUser,
+  requireStaffUser,
+  requirePermission,
   requireAdminUser,
   requireSuperAdminUser,
+  requireAnyAdminUser,
 };

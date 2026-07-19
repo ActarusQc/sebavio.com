@@ -1,5 +1,21 @@
-export const USER_ROLES = ["user", "admin", "super_admin"] as const;
+export const USER_ROLES = [
+  "user",
+  "support",
+  "analyst",
+  "billing_admin",
+  "admin",
+  "super_admin",
+] as const;
 export type UserRole = (typeof USER_ROLES)[number];
+
+/** Rôles staff (accès portail `/admin`). */
+export const STAFF_USER_ROLES = [
+  "support",
+  "analyst",
+  "billing_admin",
+  "admin",
+  "super_admin",
+] as const satisfies readonly UserRole[];
 
 export const USER_STATUSES = ["active", "suspended", "deleted"] as const;
 export type UserStatus = (typeof USER_STATUSES)[number];
@@ -30,11 +46,25 @@ export const MAPS_DIRECTIONS_CACHE_TTL_SECONDS = 60 * 60 * 24 * 7;
 export const WEATHER_RATE_LIMIT_MAX = 60;
 export const WEATHER_RATE_LIMIT_WINDOW_SECONDS = 60 * 60;
 
-/** TTL cache Redis — prévisions / conditions météo (2 h). */
+/** TTL cache Redis — prévisions / conditions météo (défaut 2 h, TTL dynamique selon proximité). */
 export const WEATHER_CACHE_TTL_SECONDS = 60 * 60 * 2;
 
-/** Horizon max Open-Meteo (jours civils à partir d'aujourd'hui inclus). */
+/** Horizon max prévisions (jours civils à partir d'aujourd'hui inclus). */
 export const WEATHER_FORECAST_HORIZON_DAYS = 16;
+
+/** Plafond interne d'appels fournisseur / jour (marge sous 1 000 One Call). */
+export const WEATHER_MAX_DAILY_CALLS_DEFAULT = 900;
+
+/** Rate-limit estimations carburant (appels FDE) par utilisateur. */
+export const FDE_RATE_LIMIT_MAX = 30;
+export const FDE_RATE_LIMIT_WINDOW_SECONDS = 60 * 60;
+
+/**
+ * Consommation L/100 km par défaut pour l'estimation automatique.
+ * Laisser `undefined` = aucun défaut inventé (l'utilisateur doit renseigner
+ * la fiche véhicule). Définir explicitement (ex. 10) pour activer le repli.
+ */
+export const DEFAULT_VEHICLE_CONSUMPTION_L100: number | undefined = undefined;
 
 export const PASSWORD_MIN_LENGTH = 8;
 

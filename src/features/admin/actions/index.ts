@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { requireAdminUser, requireSuperAdminUser } from "@/features/auth";
+import { requirePermission, requireSuperAdminUser } from "@/features/auth";
 import { isAppError } from "@/lib/errors";
 import { USER_ROLES } from "@/lib/constants";
 import {
@@ -27,7 +27,7 @@ export async function suspendUserAction(
   formData: FormData,
 ): Promise<AdminActionResult> {
   try {
-    const actor = await requireAdminUser();
+    const actor = await requirePermission("users.suspend");
     const userId = String(formData.get("userId") ?? "");
     const reason = String(formData.get("reason") ?? "").trim() || undefined;
     if (!userId) return { ok: false, message: "Identifiant manquant" };
@@ -37,8 +37,8 @@ export async function suspendUserAction(
       ipAddress: await actorIp(),
     });
     revalidatePath("/admin");
-    revalidatePath("/admin/utilisateurs");
-    revalidatePath(`/admin/utilisateurs/${userId}`);
+    revalidatePath("/admin/users");
+    revalidatePath(`/admin/users/${userId}`);
     return { ok: true, message: "Compte suspendu" };
   } catch (error) {
     if (isAppError(error)) return { ok: false, message: error.message };
@@ -51,7 +51,7 @@ export async function reactivateUserAction(
   formData: FormData,
 ): Promise<AdminActionResult> {
   try {
-    const actor = await requireAdminUser();
+    const actor = await requirePermission("users.suspend");
     const userId = String(formData.get("userId") ?? "");
     if (!userId) return { ok: false, message: "Identifiant manquant" };
 
@@ -59,8 +59,8 @@ export async function reactivateUserAction(
       ipAddress: await actorIp(),
     });
     revalidatePath("/admin");
-    revalidatePath("/admin/utilisateurs");
-    revalidatePath(`/admin/utilisateurs/${userId}`);
+    revalidatePath("/admin/users");
+    revalidatePath(`/admin/users/${userId}`);
     return { ok: true, message: "Compte réactivé" };
   } catch (error) {
     if (isAppError(error)) return { ok: false, message: error.message };
@@ -88,8 +88,8 @@ export async function changeUserRoleAction(
       { ipAddress: await actorIp() },
     );
     revalidatePath("/admin");
-    revalidatePath("/admin/utilisateurs");
-    revalidatePath(`/admin/utilisateurs/${userId}`);
+    revalidatePath("/admin/users");
+    revalidatePath(`/admin/users/${userId}`);
     return { ok: true, message: "Rôle mis à jour" };
   } catch (error) {
     if (isAppError(error)) return { ok: false, message: error.message };

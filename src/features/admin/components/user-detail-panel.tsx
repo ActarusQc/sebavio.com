@@ -41,9 +41,15 @@ export function UserDetailPanel({ user, actorRole, actorId }: Props) {
   const isSelf = actorId === user.id;
   const isSuperAdmin = actorRole === "super_admin";
   const canManageStaff = isSuperAdmin;
+  const canManageMidStaff =
+    actorRole === "admin" || actorRole === "super_admin";
+  const targetIsPrivileged =
+    user.role === "admin" || user.role === "super_admin";
   const canSuspendOrReactivate =
     !isSelf &&
-    (user.role === "user" || canManageStaff) &&
+    (user.role === "user" ||
+      (canManageMidStaff && !targetIsPrivileged) ||
+      (canManageStaff && targetIsPrivileged)) &&
     !(user.isLastActiveSuperAdmin && user.status === "active");
 
   const feedback =
@@ -172,6 +178,9 @@ export function UserDetailPanel({ user, actorRole, actorId }: Props) {
             disabled={user.isLastActiveSuperAdmin}
           >
             <option value="user">Utilisateur</option>
+            <option value="support">Support</option>
+            <option value="analyst">Analyste</option>
+            <option value="billing_admin">Admin facturation</option>
             <option value="admin">Admin</option>
             <option value="super_admin">Super admin</option>
           </select>

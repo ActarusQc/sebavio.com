@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import { AppError } from "@/lib/errors";
 import {
   assertActorCanActOnTarget,
+  assertActorCanAssignRole,
   assertNotLastActiveSuperAdmin,
   removesActiveSuperAdminPrivilege,
 } from "@/features/admin/services/roles-policy";
+import { sanitizeAuditPayload } from "@/features/admin/services/audit-write";
 
 const sa = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -13,6 +15,14 @@ const sa = {
 const admin = {
   id: "22222222-2222-4222-8222-222222222222",
   role: "admin" as const,
+};
+const support = {
+  id: "66666666-6666-4666-8666-666666666666",
+  role: "support" as const,
+};
+const analyst = {
+  id: "77777777-7777-4777-8777-777777777777",
+  role: "analyst" as const,
 };
 const user = {
   id: "33333333-3333-4333-8333-333333333333",
@@ -100,7 +110,34 @@ describe("assertNotLastActiveSuperAdmin", () => {
   });
 });
 
-describe("assertActorCanActOnTarget — matrice", () => {
+describe("assertActorCanActOnTarget — matrice Phase 1", () => {
+  it("utilisateur standard sans permission est refusé", () => {
+    expect(() =>
+      assertActorCanActOnTarget({ id: user.id, role: "user" }, user, "view"),
+    ).toThrow(AppError);
+  });
+
+  it("SUPPORT peut consulter et suspendre un user", () => {
+    expect(() =>
+      assertActorCanActOnTarget(support, user, "view"),
+    ).not.toThrow();
+    expect(() =>
+      assertActorCanActOnTarget(support, user, "suspend"),
+    ).not.toThrow();
+  });
+
+  it("SUPPORT ne peut pas suspendre un admin", () => {
+    expect(() =>
+      assertActorCanActOnTarget(support, otherAdmin, "suspend"),
+    ).toThrow(AppError);
+  });
+
+  it("ANALYST ne peut pas consulter les utilisateurs", () => {
+    expect(() => assertActorCanActOnTarget(analyst, user, "view")).toThrow(
+      AppError,
+    );
+  });
+
   it("admin peut suspendre un user", () => {
     expect(() =>
       assertActorCanActOnTarget(admin, user, "suspend"),
@@ -131,6 +168,18 @@ describe("assertActorCanActOnTarget — matrice", () => {
     ).not.toThrow();
   });
 
+  it("ADMIN ne peut pas promouvoir en SUPER_ADMIN", () => {
+    expect(() => assertActorCanAssignRole(admin, user, "super_admin")).toThrow(
+      AppError,
+    );
+  });
+
+  it("SUPER_ADMIN peut promouvoir en SUPER_ADMIN", () => {
+    expect(() =>
+      assertActorCanAssignRole(sa, user, "super_admin"),
+    ).not.toThrow();
+  });
+
   it("super_admin peut suspendre un admin", () => {
     expect(() =>
       assertActorCanActOnTarget(sa, otherAdmin, "suspend"),
@@ -144,5 +193,22 @@ describe("assertActorCanActOnTarget — matrice", () => {
     expect(() =>
       assertActorCanActOnTarget(sa, { ...otherSa, id: sa.id }, "change_role"),
     ).toThrow(AppError);
+  });
+});
+
+describe("sanitizeAuditPayload", () => {
+  it("caviardé les clés sensibles", () => {
+    const scrubbed = sanitizeAuditPayload({
+      email: "a@b.c",
+      passwordHash: "secret",
+      apiKey: "sk-test",
+      nested: { token: "abc", ok: true },
+    });
+    expect(scrubbed).toEqual({
+      email: "a@b.c",
+      passwordHash: "[REDACTED]",
+      apiKey: "[REDACTED]",
+      nested: { token: "[REDACTED]", ok: true },
+    });
   });
 });

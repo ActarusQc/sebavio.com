@@ -1,11 +1,11 @@
 import { handleRouteError, jsonOk } from "@/features/auth/services/http";
-import { requireAdminUser } from "@/features/auth/services/session";
+import { requirePermission } from "@/features/auth/services/session";
 import { listAdminUsers } from "@/features/admin/services";
 import { adminUserListQuerySchema } from "@/features/admin/schemas";
 
 export async function GET(request: Request) {
   try {
-    await requireAdminUser();
+    await requirePermission("users.read");
     const url = new URL(request.url);
     const query = adminUserListQuerySchema.parse({
       q: url.searchParams.get("q") ?? undefined,

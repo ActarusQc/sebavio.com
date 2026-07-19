@@ -1,11 +1,11 @@
 import { handleRouteError, jsonOk } from "@/features/auth/services/http";
-import { requireAdminUser } from "@/features/auth/services/session";
+import { requirePermission } from "@/features/auth/services/session";
 import { listAdminAuditLogs } from "@/features/admin/services";
 import { adminAuditQuerySchema } from "@/features/admin/schemas";
 
 export async function GET(request: Request) {
   try {
-    await requireAdminUser();
+    await requirePermission("audit.read");
     const url = new URL(request.url);
     const query = adminAuditQuerySchema.parse({
       userId: url.searchParams.get("userId") ?? undefined,

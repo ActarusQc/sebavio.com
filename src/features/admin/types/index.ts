@@ -37,11 +37,14 @@ export type AdminAuditLogItem = {
   id: string;
   userId: string | null;
   userEmail: string | null;
+  actorRole: string | null;
   entity: string;
   entityId: string | null;
   action: string;
+  reason: string | null;
   oldValue: unknown;
   newValue: unknown;
   ipAddress: string | null;
+  requestId: string | null;
   createdAt: string;
 };

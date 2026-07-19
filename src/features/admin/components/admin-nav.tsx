@@ -2,18 +2,28 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { UserRole } from "@/lib/constants";
+import { hasPermission } from "@/lib/rbac";
 import { ADMIN_NAV_ITEMS } from "@/features/admin/constants";
 import { cn } from "@/lib/utils";
 
-export function AdminNav() {
+type AdminNavProps = {
+  role: UserRole;
+};
+
+/** Nav horizontale compacte (mobile / secours) — filtre par permissions. */
+export function AdminNav({ role }: AdminNavProps) {
   const pathname = usePathname();
+  const items = ADMIN_NAV_ITEMS.filter(
+    (item) => item.available && hasPermission(role, item.permission),
+  );
 
   return (
     <nav
       aria-label="Administration"
-      className="mb-6 flex flex-wrap gap-1 border-b pb-3"
+      className="mb-6 flex flex-wrap gap-1 border-b pb-3 md:hidden"
     >
-      {ADMIN_NAV_ITEMS.map((item) => {
+      {items.map((item) => {
         const active = item.exact
           ? pathname === item.href
           : pathname === item.href || pathname.startsWith(`${item.href}/`);

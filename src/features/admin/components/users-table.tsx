@@ -45,7 +45,7 @@ export function UsersTable({ items }: Props) {
           <TableRow key={u.id}>
             <TableCell>
               <Link
-                href={`/admin/utilisateurs/${u.id}`}
+                href={`/admin/users/${u.id}`}
                 className="font-medium underline-offset-2 hover:underline"
               >
                 {u.email}

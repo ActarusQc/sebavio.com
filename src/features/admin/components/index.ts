@@ -1,4 +1,7 @@
 export { AdminNav } from "./admin-nav";
+export { AdminShell } from "./admin-shell";
+export { AdminSidebar } from "./admin-sidebar";
+export { AdminComingSoon } from "./admin-coming-soon";
 export { DashboardStats } from "./dashboard-stats";
 export { UsersTable } from "./users-table";
 export { UserDetailPanel } from "./user-detail-panel";

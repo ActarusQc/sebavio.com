@@ -16,7 +16,7 @@ model User {
   passwordHash  String?   @map("password_hash") @db.Text
   emailVerified DateTime? @map("email_verified_at") @db.Timestamptz(6)
   status        String    @db.VarChar(20)
-  role          String    @db.VarChar(20)
+  role          String    @db.VarChar(32)
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt     DateTime? @map("deleted_at") @db.Timestamptz(6)
@@ -28,6 +28,7 @@ model User {
   preferences             UserPreference?
   vehicles                UserVehicle[]
   trips                   Trip[]
+  tripLocations           TripLocation[]
   travelGroups            TravelGroup[]
   campgroundFavorites     UserCampgroundFavorite[]
   activityFavorites       UserActivityFavorite[]
@@ -168,6 +169,8 @@ model UserPreference {
   fuelUnit              String   @default("L/100") @map("fuel_unit") @db.VarChar(20)
   notificationsEnabled  Boolean  @default(true) @map("notifications_enabled")
   aiProactive           Boolean  @default(false) @map("ai_proactive")
+  /// Si false, les stations Costco sont exclues du plan de ravitaillement.
+  costcoMember          Boolean  @default(false) @map("costco_member")
   createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -231,30 +234,40 @@ model VerificationToken {
 }
 
 /// Journal d'audit immuable (Doc 4 §11) — pas de updated_at / deleted_at.
+/// Champs admin optionnels (Phase 1) : actorRole, reason, userAgent, requestId.
 model AuditLog {
-  id        String   @id @default(uuid(4)) @db.Uuid
-  userId    String?  @map("user_id") @db.Uuid
-  entity    String   @db.VarChar(100)
-  entityId  String?  @map("entity_id") @db.Uuid
-  action    String   @db.VarChar(50)
-  oldValue  Json?    @map("old_value") @db.JsonB
-  newValue  Json?    @map("new_value") @db.JsonB
-  ipAddress String?  @map("ip_address") @db.VarChar(64)
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  id         String   @id @default(uuid(4)) @db.Uuid
+  userId     String?  @map("user_id") @db.Uuid
+  /// Rôle de l'acteur au moment de l'action (`system` pour scripts CLI).
+  actorRole  String?  @map("actor_role") @db.VarChar(32)
+  entity     String   @db.VarChar(100)
+  entityId   String?  @map("entity_id") @db.Uuid
+  action     String   @db.VarChar(80)
+  reason     String?  @db.Text
+  oldValue   Json?    @map("old_value") @db.JsonB
+  newValue   Json?    @map("new_value") @db.JsonB
+  ipAddress  String?  @map("ip_address") @db.VarChar(64)
+  userAgent  String?  @map("user_agent") @db.VarChar(512)
+  requestId  String?  @map("request_id") @db.VarChar(64)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   user User? @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@index([userId])
   @@index([createdAt])
   @@index([entity, entityId])
+  @@index([action])
+  @@index([actorRole])
   @@map("audit_logs")
 }
 
-/// Véhicule utilisateur (Doc 4 §5) — model_id nullable + saisie manuelle.
+/// Véhicule utilisateur (Doc 4 §5) — model_id nullable + saisie manuelle + catalogue NRCan.
 model UserVehicle {
   id                       String    @id @default(uuid(4)) @db.Uuid
   userId                   String    @map("user_id") @db.Uuid
   modelId                  String?   @map("model_id") @db.Uuid
+  /// Entrée cotes NRCan (consommation officielle canadienne).
+  catalogEntryId           String?   @map("catalog_entry_id") @db.Uuid
   isManualEntry            Boolean   @default(false) @map("is_manual_entry")
   manualManufacturerName   String?   @map("manual_manufacturer_name") @db.VarChar(150)
   manualModelName          String?   @map("manual_model_name") @db.VarChar(150)
@@ -270,31 +283,153 @@ model UserVehicle {
   /// Dernière mise à jour explicite de l'odomètre (création / PATCH odometer / entretien).
   odometerUpdatedAt        DateTime  @default(now()) @map("odometer_updated_at") @db.Timestamptz(6)
   realAvgConsumption       Decimal?  @map("real_avg_consumption") @db.Decimal(5, 2)
+  /// Override utilisateur explicite (L/100 km) — prioritaire sur constructeur / moyenne pleins.
+  customConsumptionL100    Decimal?  @map("custom_consumption_l100") @db.Decimal(5, 2)
+  /// Type carburant normalisé (regular, premium, diesel, electric, …) — valeur courante / legacy.
+  fuelType                 String?   @map("fuel_type") @db.VarChar(40)
+  /// Type carburant constructeur / catalogue (jamais écrasé par une personnalisation).
+  manufacturerFuelType     String?   @map("manufacturer_fuel_type") @db.VarChar(40)
+  /// Override utilisateur du type de carburant.
+  customFuelType           String?   @map("custom_fuel_type") @db.VarChar(40)
+  /// Consommations officielles (catalogue NRCan ou saisie manuelle déclarée).
+  officialCityConsumptionL100     Decimal? @map("official_city_consumption_l100") @db.Decimal(6, 2)
+  officialHighwayConsumptionL100  Decimal? @map("official_highway_consumption_l100") @db.Decimal(6, 2)
+  officialCombinedConsumptionL100 Decimal? @map("official_combined_consumption_l100") @db.Decimal(6, 2)
+  /// nrcan_catalog | user_manual | legacy_model | null
+  consumptionDataSource    String?   @map("consumption_data_source") @db.VarChar(40)
   tankCapacityOverride     Decimal?  @map("tank_capacity_override") @db.Decimal(6, 2)
+  /// Capacité réservoir constructeur / catalogue (valeur suggérée, non écrasée).
+  manufacturerTankCapacityL Decimal? @map("manufacturer_tank_capacity_l") @db.Decimal(6, 2)
+  /// user_manual | catalog | legacy_model | null
+  tankCapacitySource       String?   @map("tank_capacity_source") @db.VarChar(40)
+  tankCapacityUpdatedAt    DateTime? @map("tank_capacity_updated_at") @db.Timestamptz(6)
+  /// Overrides optionnels (dimensions, poids, autonomie électrique, batterie).
+  specOverrides            Json?     @map("spec_overrides") @db.JsonB
+  /// Horodatage dernière modif des specs influençant le calcul carburant.
+  specsUpdatedAt           DateTime? @map("specs_updated_at") @db.Timestamptz(6)
   primaryVehicle           Boolean   @default(false) @map("primary_vehicle")
+  /// Motorisation / transmission (décodage VIN ou saisie manuelle).
+  engine                   String?   @db.VarChar(150)
+  transmission             String?   @db.VarChar(80)
+  drivetrain               String?   @db.VarChar(80)
+  vehicleType              String?   @map("vehicle_type") @db.VarChar(80)
+  bodyClass                String?   @map("body_class") @db.VarChar(80)
+  cylinders                Int?
+  displacementL            Decimal?  @map("displacement_l") @db.Decimal(4, 1)
+  plantCountry             String?   @map("plant_country") @db.VarChar(80)
+  manufacturerName         String?   @map("manufacturer_name") @db.VarChar(150)
+  /// Kilométrage annuel estimé (profil d’usage / calcul échéances).
+  annualEstimatedKm        Int?      @map("annual_estimated_km")
+  /// Date de mise en service (sinon purchase_date).
+  inServiceDate            DateTime? @map("in_service_date") @db.Date
+  /// vin | manual | nrcan | mixed
+  identificationSource     String?   @map("identification_source") @db.VarChar(30)
+  /// high | medium | low | ambiguous
+  identificationConfidence String?   @map("identification_confidence") @db.VarChar(20)
+  /// normal | severe | automatic
+  usageProfile             String    @default("automatic") @map("usage_profile") @db.VarChar(20)
+  /// Facteurs d’usage sévère (JSON) — courts trajets, remorquage, etc.
+  usageFactors             Json?     @map("usage_factors") @db.JsonB
   createdAt                DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt                DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt                DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   user                    User                      @relation(fields: [userId], references: [id], onDelete: Restrict)
   model                   VehicleModel?             @relation(fields: [modelId], references: [id], onDelete: Restrict)
+  catalogEntry            VehicleCatalogEntry?      @relation(fields: [catalogEntryId], references: [id], onDelete: Restrict)
   documents               UserVehicleDocument[]
   photos                  VehiclePhoto[]
   settings                VehicleSettings?
   maintenanceSchedules    MaintenanceSchedule[]
   maintenanceHistories    MaintenanceHistory[]
   maintenanceNotifications MaintenanceNotification[]
+  providerMaintenanceSchedules ProviderMaintenanceSchedule[]
+  maintenanceReminders    VehicleMaintenanceReminder[]
+  safetyRecalls           VehicleSafetyRecall[]
   fuelLogs                FuelLog[]
   trips                   Trip[]
 
   @@unique([userId, vin])
   @@index([userId])
   @@index([modelId])
+  @@index([catalogEntryId])
   @@index([vin])
   @@index([userId, primaryVehicle])
   @@index([deletedAt])
   @@index([odometerUpdatedAt])
   @@map("user_vehicles")
+}
+
+/// Cote de consommation officielle (Ressources naturelles Canada).
+model VehicleCatalogEntry {
+  id                          String    @id @default(uuid(4)) @db.Uuid
+  sourceKey                   String    @unique @map("source_key") @db.VarChar(64)
+  modelYear                   Int       @map("model_year")
+  make                        String    @db.VarChar(150)
+  makeNormalized              String    @map("make_normalized") @db.VarChar(150)
+  model                       String    @db.VarChar(200)
+  modelNormalized             String    @map("model_normalized") @db.VarChar(200)
+  configuration               String?   @db.VarChar(300)
+  vehicleClass                String?   @map("vehicle_class") @db.VarChar(120)
+  engineSizeLitres            Decimal?  @map("engine_size_litres") @db.Decimal(4, 1)
+  cylinders                   Int?
+  transmission                String?   @db.VarChar(40)
+  transmissionCode            String?   @map("transmission_code") @db.VarChar(40)
+  fuelType                    String?   @map("fuel_type") @db.VarChar(80)
+  normalizedFuelType          String?   @map("normalized_fuel_type") @db.VarChar(40)
+  cityConsumptionL100Km       Decimal?  @map("city_consumption_l100_km") @db.Decimal(6, 2)
+  highwayConsumptionL100Km    Decimal?  @map("highway_consumption_l100_km") @db.Decimal(6, 2)
+  combinedConsumptionL100Km   Decimal?  @map("combined_consumption_l100_km") @db.Decimal(6, 2)
+  combinedMpg                 Decimal?  @map("combined_mpg") @db.Decimal(6, 1)
+  co2EmissionsGKm             Int?      @map("co2_emissions_g_km")
+  co2Rating                   Int?      @map("co2_rating")
+  smogRating                  Int?      @map("smog_rating")
+  electricConsumptionKwh100Km Decimal?  @map("electric_consumption_kwh_100_km") @db.Decimal(6, 2)
+  electricRangeKm             Int?      @map("electric_range_km")
+  /// Capacité réservoir (L) si connue — NRCan ne fournit pas ce champ.
+  fuelTankCapacityL           Decimal?  @map("fuel_tank_capacity_l") @db.Decimal(6, 2)
+  sourceName                  String    @map("source_name") @db.VarChar(120)
+  sourceDataset               String?   @map("source_dataset") @db.VarChar(200)
+  sourceResourceUrl           String?   @map("source_resource_url") @db.Text
+  sourceYear                  Int?      @map("source_year")
+  importedAt                  DateTime  @map("imported_at") @db.Timestamptz(6)
+  createdAt                   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  isActive                    Boolean   @default(true) @map("is_active")
+  rawData                     Json?     @map("raw_data") @db.JsonB
+
+  userVehicles UserVehicle[]
+
+  @@index([modelYear])
+  @@index([modelYear, makeNormalized])
+  @@index([modelYear, makeNormalized, modelNormalized])
+  @@index([normalizedFuelType])
+  @@index([isActive])
+  @@map("vehicle_catalog_entries")
+}
+
+/// Journal de synchronisation du catalogue NRCan.
+model VehicleCatalogSync {
+  id                String    @id @default(uuid(4)) @db.Uuid
+  status            String    @db.VarChar(30)
+  startedAt         DateTime  @map("started_at") @db.Timestamptz(6)
+  completedAt       DateTime? @map("completed_at") @db.Timestamptz(6)
+  sourceDataset     String?   @map("source_dataset") @db.VarChar(200)
+  sourceResourceUrl String?   @map("source_resource_url") @db.Text
+  sourceChecksum    String?   @map("source_checksum") @db.VarChar(128)
+  sourceModifiedAt  DateTime? @map("source_modified_at") @db.Timestamptz(6)
+  recordsRead       Int       @default(0) @map("records_read")
+  recordsCreated    Int       @default(0) @map("records_created")
+  recordsUpdated    Int       @default(0) @map("records_updated")
+  recordsUnchanged  Int       @default(0) @map("records_unchanged")
+  recordsRejected   Int       @default(0) @map("records_rejected")
+  errorMessage      String?   @map("error_message") @db.Text
+  metadata          Json?     @db.JsonB
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([startedAt])
+  @@index([status, startedAt])
+  @@map("vehicle_catalog_syncs")
 }
 
 /// Plein carburant (suivi conso réelle) — Partie 13 / Doc 4 §5 (dérivé).
@@ -442,22 +577,31 @@ model MaintenanceHistory {
   id                 String    @id @default(uuid(4)) @db.Uuid
   vehicleId          String    @map("vehicle_id") @db.Uuid
   templateId         String?   @map("template_id") @db.Uuid
+  /// Tâche synchronisée depuis un fournisseur d’entretien.
+  taskDefinitionId   String?   @map("task_definition_id") @db.Uuid
   performedDate      DateTime  @map("performed_date") @db.Date
   performedOdometer  Int       @map("performed_odometer")
+  /// completed | partial | cancelled
+  status             String    @default("completed") @db.VarChar(20)
   provider           String?   @db.VarChar(200)
+  invoiceNumber      String?   @map("invoice_number") @db.VarChar(100)
   cost               Decimal?  @db.Decimal(10, 2)
   currency           String?   @db.Char(3)
   notes              String?   @db.Text
+  attachmentUrl      String?   @map("attachment_url") @db.Text
   createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt          DateTime? @map("deleted_at") @db.Timestamptz(6)
 
-  vehicle   UserVehicle            @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
-  template  MaintenanceTemplate?   @relation(fields: [templateId], references: [id], onDelete: Restrict)
-  documents MaintenanceDocument[]
+  vehicle        UserVehicle              @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  template       MaintenanceTemplate?     @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  taskDefinition MaintenanceTaskDefinition? @relation(fields: [taskDefinitionId], references: [id], onDelete: Restrict)
+  documents      MaintenanceDocument[]
+  completedReminders VehicleMaintenanceReminder[]
 
   @@index([vehicleId])
   @@index([templateId])
+  @@index([taskDefinitionId])
   @@index([vehicleId, performedDate])
   @@index([vehicleId, performedOdometer])
   @@index([deletedAt])
@@ -500,6 +644,157 @@ model MaintenanceNotification {
   @@index([scheduleId])
   @@index([sent, notificationDate])
   @@map("maintenance_notifications")
+}
+
+/// Calendrier d’entretien importé d’un fournisseur (MOTOR, DataOne, mock, manuel…).
+model ProviderMaintenanceSchedule {
+  id                 String   @id @default(uuid(4)) @db.Uuid
+  vehicleId          String   @map("vehicle_id") @db.Uuid
+  /// Identifiant logique du fournisseur (mock | commercial | manual | …).
+  provider           String   @db.VarChar(50)
+  providerVehicleId  String?  @map("provider_vehicle_id") @db.VarChar(120)
+  /// commercial | mock | manual | cached
+  sourceType         String   @map("source_type") @db.VarChar(30)
+  sourceReference    String?  @map("source_reference") @db.VarChar(255)
+  sourceRetrievedAt  DateTime @map("source_retrieved_at") @db.Timestamptz(6)
+  sourceVersion      String?  @map("source_version") @db.VarChar(80)
+  normalConditions   Boolean  @default(true) @map("normal_conditions")
+  severeConditions   Boolean  @default(false) @map("severe_conditions")
+  rawDataHash        String?  @map("raw_data_hash") @db.VarChar(64)
+  /// true si la dernière sync a échoué et que l’on sert le cache local.
+  isStale            Boolean  @default(false) @map("is_stale")
+  lastSyncError      String?  @map("last_sync_error") @db.VarChar(500)
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  vehicle UserVehicle                 @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  tasks   MaintenanceTaskDefinition[]
+
+  @@unique([vehicleId, provider])
+  @@index([vehicleId])
+  @@index([provider])
+  @@index([sourceRetrievedAt])
+  @@map("provider_maintenance_schedules")
+}
+
+/// Recommandation d’entretien normalisée (issue d’un calendrier fournisseur).
+model MaintenanceTaskDefinition {
+  id                                 String   @id @default(uuid(4)) @db.Uuid
+  scheduleId                         String   @map("schedule_id") @db.Uuid
+  externalId                         String?  @map("external_id") @db.VarChar(120)
+  category                           String   @db.VarChar(50)
+  title                              String   @db.VarChar(200)
+  description                        String?  @db.Text
+  actionType                         String   @map("action_type") @db.VarChar(30)
+  intervalKm                         Int?     @map("interval_km")
+  intervalMonths                     Int?     @map("interval_months")
+  firstDueKm                         Int?     @map("first_due_km")
+  firstDueMonths                     Int?     @map("first_due_months")
+  /// normal | severe | both
+  conditionType                      String   @default("both") @map("condition_type") @db.VarChar(20)
+  /// low | medium | high | critical
+  priority                           String   @default("medium") @db.VarChar(20)
+  officialManufacturerRecommendation Boolean  @default(false) @map("official_manufacturer_recommendation")
+  inspectionOnly                     Boolean  @default(false) @map("inspection_only")
+  estimatedDurationMinutes           Int?     @map("estimated_duration_minutes")
+  notes                              String?  @db.Text
+  createdAt                          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                          DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  schedule  ProviderMaintenanceSchedule  @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  histories MaintenanceHistory[]
+  reminders VehicleMaintenanceReminder[]
+
+  @@unique([scheduleId, externalId])
+  @@index([scheduleId])
+  @@index([category])
+  @@index([priority])
+  @@map("maintenance_task_definitions")
+}
+
+/// Rappel d’entretien généré automatiquement à partir d’une tâche normalisée.
+model VehicleMaintenanceReminder {
+  id                 String    @id @default(uuid(4)) @db.Uuid
+  vehicleId          String    @map("vehicle_id") @db.Uuid
+  taskDefinitionId   String    @map("task_definition_id") @db.Uuid
+  dueDate            DateTime? @map("due_date") @db.Date
+  dueOdometerKm      Int?      @map("due_odometer_km")
+  /// overdue | due_now | due_soon | upcoming | completed | dismissed | unknown
+  status             String    @default("upcoming") @db.VarChar(20)
+  /// low | medium | high | critical
+  priority           String    @default("medium") @db.VarChar(20)
+  /// provider | calculated | manual
+  calculationSource  String    @default("calculated") @map("calculation_source") @db.VarChar(30)
+  dismissedUntil     DateTime? @map("dismissed_until") @db.Timestamptz(6)
+  completedEventId   String?   @map("completed_event_id") @db.Uuid
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  vehicle        UserVehicle               @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  taskDefinition MaintenanceTaskDefinition @relation(fields: [taskDefinitionId], references: [id], onDelete: Cascade)
+  completedEvent MaintenanceHistory?       @relation(fields: [completedEventId], references: [id], onDelete: SetNull)
+
+  @@unique([vehicleId, taskDefinitionId])
+  @@index([vehicleId, status])
+  @@index([dueDate])
+  @@index([dueOdometerKm])
+  @@index([dismissedUntil])
+  @@map("vehicle_maintenance_reminders")
+}
+
+/// Rappel de sécurité officiel (Transport Canada / sources publiques).
+model VehicleSafetyRecall {
+  id                String    @id @default(uuid(4)) @db.Uuid
+  vehicleId         String    @map("vehicle_id") @db.Uuid
+  externalRecallId  String    @map("external_recall_id") @db.VarChar(120)
+  /// transport_canada | nhtsa | other
+  source            String    @db.VarChar(40)
+  manufacturer      String?   @db.VarChar(150)
+  model             String?   @db.VarChar(150)
+  year              Int?
+  title             String    @db.VarChar(300)
+  summary           String?   @db.Text
+  riskDescription   String?   @map("risk_description") @db.Text
+  correctiveAction  String?   @map("corrective_action") @db.Text
+  recallDate        DateTime? @map("recall_date") @db.Date
+  officialUrl       String?   @map("official_url") @db.Text
+  /// open | possibly_applicable | repaired | not_applicable | dismissed
+  status            String    @default("possibly_applicable") @db.VarChar(30)
+  /// true si le VIN n’a pas pu confirmer l’applicabilité exacte.
+  vinMatchUncertain Boolean   @default(true) @map("vin_match_uncertain")
+  lastCheckedAt     DateTime  @map("last_checked_at") @db.Timestamptz(6)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  vehicle UserVehicle @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+
+  @@unique([vehicleId, source, externalRecallId])
+  @@index([vehicleId, status])
+  @@index([lastCheckedAt])
+  @@map("vehicle_safety_recalls")
+}
+
+/// Cache persistant des réponses fournisseurs d’entretien.
+model MaintenanceProviderCache {
+  id             String   @id @default(uuid(4)) @db.Uuid
+  cacheKey       String   @unique @map("cache_key") @db.VarChar(128)
+  provider       String   @db.VarChar(50)
+  vinNormalized  String?  @map("vin_normalized") @db.VarChar(17)
+  year           Int?
+  make           String?  @db.VarChar(150)
+  model          String?  @db.VarChar(150)
+  trim           String?  @db.VarChar(150)
+  engine         String?  @db.VarChar(150)
+  payload        Json     @db.JsonB
+  sourceVersion  String?  @map("source_version") @db.VarChar(80)
+  expiresAt      DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([provider])
+  @@index([expiresAt])
+  @@index([vinNormalized])
+  @@map("maintenance_provider_cache")
 }
 
 /// Document véhicule utilisateur (URL saisie — pas d'upload). Table distincte du catalogue.
@@ -644,8 +939,24 @@ model Trip {
   status         String    @default("planned") @db.VarChar(20)
   departureDate  DateTime  @map("departure_date") @db.Timestamptz(6)
   returnDate     DateTime? @map("return_date") @db.Timestamptz(6)
+  /// Adresse affichée départ (saisie manuelle ou Google Places).
   origin         String    @db.Text
-  destination    String    @db.Text
+  originPlaceId  String?   @map("origin_place_id") @db.VarChar(255)
+  originLatitude Decimal?  @map("origin_latitude") @db.Decimal(10, 7)
+  originLongitude Decimal? @map("origin_longitude") @db.Decimal(10, 7)
+  originCity     String?   @map("origin_city") @db.VarChar(120)
+  originProvince String?   @map("origin_province") @db.VarChar(120)
+  originPostalCode String? @map("origin_postal_code") @db.VarChar(20)
+  originCountry  String?   @map("origin_country") @db.VarChar(2)
+  /// Adresse affichée destination (saisie manuelle ou Google Places).
+  destination         String    @db.Text
+  destinationPlaceId  String?   @map("destination_place_id") @db.VarChar(255)
+  destinationLatitude Decimal?  @map("destination_latitude") @db.Decimal(10, 7)
+  destinationLongitude Decimal? @map("destination_longitude") @db.Decimal(10, 7)
+  destinationCity     String?   @map("destination_city") @db.VarChar(120)
+  destinationProvince String?   @map("destination_province") @db.VarChar(120)
+  destinationPostalCode String? @map("destination_postal_code") @db.VarChar(20)
+  destinationCountry  String?   @map("destination_country") @db.VarChar(2)
   plannedBudget  Decimal?  @map("planned_budget") @db.Decimal(10, 2)
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -654,11 +965,14 @@ model Trip {
   user         User         @relation(fields: [userId], references: [id], onDelete: Restrict)
   vehicle      UserVehicle  @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
   travelGroup  TravelGroup? @relation(fields: [travelGroupId], references: [id], onDelete: Restrict)
-  stops        TripStop[]
-  route        TripRoute?
+  stops            TripStop[]
+  route            TripRoute?
   /// Source de vérité budget voyage (miroir : planned_budget).
-  budget       TripBudget?
-  expenses     Expense[]
+  budget           TripBudget?
+  expenses         Expense[]
+  travelerProfile  TripTravelerProfile?
+  tripActivities   TripActivity[]
+  locations        TripLocation[]
 
   @@index([userId, status])
   @@index([vehicleId])
@@ -668,30 +982,149 @@ model Trip {
   @@map("trips")
 }
 
-/// Étape d'itinéraire — adresse texte ; lat/lng nullable (cartes = Partie 12).
+/// Points GPS immuables pendant un voyage in_progress (purge hard à la clôture).
+model TripLocation {
+  id            String   @id @default(uuid(4)) @db.Uuid
+  tripId        String   @map("trip_id") @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  /// UUID généré côté client — idempotence retries / flush hors ligne.
+  clientPointId String   @map("client_point_id") @db.Uuid
+  latitude      Decimal  @db.Decimal(10, 7)
+  longitude     Decimal  @db.Decimal(10, 7)
+  accuracyM     Decimal? @map("accuracy_m") @db.Decimal(10, 2)
+  heading       Decimal? @db.Decimal(6, 2)
+  speedMps      Decimal? @map("speed_mps") @db.Decimal(8, 3)
+  recordedAt    DateTime @map("recorded_at") @db.Timestamptz(6)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([tripId, clientPointId])
+  @@index([tripId, recordedAt])
+  @@index([userId, recordedAt])
+  @@map("trip_locations")
+}
+
+/// Profil voyageurs / préférences d'activités (suggestions Places).
+model TripTravelerProfile {
+  id                     String   @id @default(uuid(4)) @db.Uuid
+  tripId                 String   @unique @map("trip_id") @db.Uuid
+  /// solo | couple | family | friends | business
+  purpose                String   @db.VarChar(20)
+  adultCount             Int      @map("adult_count")
+  childCount             Int      @default(0) @map("child_count")
+  /// Ages exacts [0..17], longueur = child_count.
+  childAges              Json     @default("[]") @map("child_ages")
+  /// ActivityInterest[]
+  interests              Json     @default("[]")
+  /// free | budget | moderate | any
+  budgetPreference       String?  @map("budget_preference") @db.VarChar(20)
+  /// under_1h | 1_2h | 2_4h | half_day | any
+  durationPreference     String?  @map("duration_preference") @db.VarChar(20)
+  maxDetourMinutes       Int      @default(15) @map("max_detour_minutes")
+  /// indoor | outdoor | both
+  environmentPreference  String?  @map("environment_preference") @db.VarChar(20)
+  /// very_low | low | moderate | high
+  activityLevel          String?  @map("activity_level") @db.VarChar(20)
+  /// mobility | stroller | none[]
+  accessibilityNeeds     Json     @default("[]") @map("accessibility_needs")
+  travelingWithPet       Boolean  @default(false) @map("traveling_with_pet")
+  /// true si l'utilisateur a choisi « Je déciderai plus tard »
+  deferred               Boolean  @default(false)
+  suggestionsGeneratedAt DateTime? @map("suggestions_generated_at") @db.Timestamptz(6)
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@map("trip_traveler_profiles")
+}
+
+/// Activité suggérée / planifiée pour un voyage (Google Places).
+model TripActivity {
+  id                     String    @id @default(uuid(4)) @db.Uuid
+  tripId                 String    @map("trip_id") @db.Uuid
+  googlePlaceId          String    @map("google_place_id") @db.VarChar(255)
+  /// suggested | saved | added_to_trip | rejected | completed
+  status                 String    @default("suggested") @db.VarChar(30)
+  name                   String    @db.VarChar(300)
+  address                String?   @db.Text
+  city                   String?   @db.VarChar(120)
+  latitude               Decimal   @db.Decimal(10, 7)
+  longitude              Decimal   @db.Decimal(10, 7)
+  primaryType            String?   @map("primary_type") @db.VarChar(80)
+  types                  Json?
+  rating                 Decimal?  @db.Decimal(3, 2)
+  reviewCount            Int?      @map("review_count")
+  priceLevel             String?   @map("price_level") @db.VarChar(40)
+  websiteUrl             String?   @map("website_url") @db.Text
+  googleMapsUrl          String?   @map("google_maps_url") @db.Text
+  photoReference         String?   @map("photo_reference") @db.Text
+  /// destination | along_route | stop | return
+  suggestedForSegment    String?   @map("suggested_for_segment") @db.VarChar(40)
+  routePositionKm        Decimal?  @map("route_position_km") @db.Decimal(10, 2)
+  detourDistanceKm       Decimal?  @map("detour_distance_km") @db.Decimal(10, 2)
+  detourDurationMinutes  Int?      @map("detour_duration_minutes")
+  estimatedVisitMinutes  Int?      @map("estimated_visit_minutes")
+  suitabilityScore       Decimal?  @map("suitability_score") @db.Decimal(5, 2)
+  suitabilityReasons     Json?     @map("suitability_reasons")
+  warningReasons         Json?     @map("warning_reasons")
+  /// reject reason when status=rejected
+  rejectReason           String?   @map("reject_reason") @db.VarChar(80)
+  plannedDate            DateTime? @map("planned_date") @db.Timestamptz(6)
+  plannedStartTime       DateTime? @map("planned_start_time") @db.Timestamptz(6)
+  plannedEndTime         DateTime? @map("planned_end_time") @db.Timestamptz(6)
+  sequence               Int?
+  /// trip_stop créé lors de l'ajout comme arrêt routier
+  linkedStopId           String?   @map("linked_stop_id") @db.Uuid
+  /// outbound | destination | return | day
+  insertPlacement        String?   @map("insert_placement") @db.VarChar(30)
+  rawMetadata            Json?     @map("raw_metadata")
+  createdAt              DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@unique([tripId, googlePlaceId])
+  @@index([tripId, status])
+  @@index([tripId, suitabilityScore])
+  @@map("trip_activities")
+}
+
+/// Étape / waypoint d'itinéraire (détour, activité, etc.) — jamais destination finale.
+/// La destination canonique reste sur Trip.destination* ; les fuel stops ne sont pas persistés ici.
 model TripStop {
-  id            String    @id @default(uuid(4)) @db.Uuid
-  tripId        String    @map("trip_id") @db.Uuid
-  sequence      Int
-  name          String    @db.VarChar(200)
+  id              String    @id @default(uuid(4)) @db.Uuid
+  tripId          String    @map("trip_id") @db.Uuid
+  sequence        Int
+  name            String    @db.VarChar(200)
   /// Lieu / adresse en texte (pas de géocodage à cette étape).
-  address       String?   @db.Text
-  latitude      Decimal?  @db.Decimal(10, 7)
-  longitude     Decimal?  @db.Decimal(10, 7)
-  arrivalTime   DateTime? @map("arrival_time") @db.Timestamptz(6)
-  departureTime DateTime? @map("departure_time") @db.Timestamptz(6)
-  stopType      String    @default("stop") @map("stop_type") @db.VarChar(50)
+  address         String?   @db.Text
+  latitude        Decimal?  @db.Decimal(10, 7)
+  longitude       Decimal?  @db.Decimal(10, 7)
+  arrivalTime     DateTime? @map("arrival_time") @db.Timestamptz(6)
+  departureTime   DateTime? @map("departure_time") @db.Timestamptz(6)
+  /// detour | pass_through | activity | lodging | camping | rest | stop | other
+  stopType        String    @default("stop") @map("stop_type") @db.VarChar(50)
+  /// outbound = aller ; return = retour (indépendant de l'aller).
+  direction       String    @default("outbound") @db.VarChar(20)
+  placeId         String?   @map("place_id") @db.VarChar(255)
+  /// Durée facultative sur place (minutes) — impacte la durée totale du voyage.
+  durationMinutes Int       @default(0) @map("duration_minutes")
+  notes           String?   @db.Text
   /// Camping planifié pour la nuit (Doc 4 — trip_stops → campgrounds).
-  campgroundId  String?   @map("campground_id") @db.Uuid
-  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  campgroundId    String?   @map("campground_id") @db.Uuid
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   trip           Trip               @relation(fields: [tripId], references: [id], onDelete: Restrict)
   campground     Campground?        @relation(fields: [campgroundId], references: [id], onDelete: Restrict)
   stopActivities TripStopActivity[]
 
-  @@unique([tripId, sequence])
+  @@unique([tripId, direction, sequence])
   @@index([tripId, sequence])
+  @@index([tripId, direction, sequence])
   @@index([campgroundId])
   @@map("trip_stops")
 }
@@ -838,17 +1271,25 @@ model TripStopActivity {
 
 /// Tracé / estimations 1:1 — Google Maps (Partie 12) / carburant (Partie 13).
 model TripRoute {
-  id                   String   @id @default(uuid(4)) @db.Uuid
-  tripId               String   @unique @map("trip_id") @db.Uuid
-  provider             String?  @db.VarChar(50)
-  distanceKm           Decimal? @map("distance_km") @db.Decimal(10, 2)
-  estimatedDurationMin Int?     @map("estimated_duration_min")
-  estimatedFuelCost    Decimal? @map("estimated_fuel_cost") @db.Decimal(10, 2)
-  polyline             String?  @db.Text
+  id                          String   @id @default(uuid(4)) @db.Uuid
+  tripId                      String   @unique @map("trip_id") @db.Uuid
+  provider                    String?  @db.VarChar(50)
+  distanceKm                  Decimal? @map("distance_km") @db.Decimal(10, 2)
+  estimatedDurationMin        Int?     @map("estimated_duration_min")
+  estimatedFuelCost           Decimal? @map("estimated_fuel_cost") @db.Decimal(10, 2)
+  polyline                    String?  @db.Text
+  /// Trajet retour distinct (destination → waypoints return → origin).
+  returnDistanceKm            Decimal? @map("return_distance_km") @db.Decimal(10, 2)
+  returnEstimatedDurationMin  Int?     @map("return_estimated_duration_min")
+  returnPolyline              String?  @map("return_polyline") @db.Text
   /// Hash des waypoints au moment du calcul — périmé si les étapes changent.
-  waypointsHash        String?  @map("waypoints_hash") @db.VarChar(64)
-  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  waypointsHash               String?  @map("waypoints_hash") @db.VarChar(64)
+  /// Snapshot des specs véhicule utilisées pour le dernier calcul / voyage terminé.
+  vehicleSpecsSnapshot        Json?    @map("vehicle_specs_snapshot") @db.JsonB
+  /// true si le véhicule a changé depuis le dernier calcul (voyages planned / in_progress).
+  fuelEstimateStale           Boolean  @default(false) @map("fuel_estimate_stale")
+  createdAt                   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   trip Trip @relation(fields: [tripId], references: [id], onDelete: Restrict)
 
@@ -965,6 +1406,12 @@ model NotificationPreference {
   pushBudget        Boolean  @default(false) @map("push_budget")
   pushWeather       Boolean  @default(false) @map("push_weather")
   pushFuel          Boolean  @default(false) @map("push_fuel")
+  /// Délai (jours) avant échéance pour notifier un entretien.
+  maintenanceLeadDays Int @default(30) @map("maintenance_lead_days")
+  /// Délai (km) avant échéance pour notifier un entretien.
+  maintenanceLeadKm   Int @default(500) @map("maintenance_lead_km")
+  /// Fréquence minimale entre deux rappels pour la même échéance (jours).
+  maintenanceReminderFrequencyDays Int @default(7) @map("maintenance_reminder_frequency_days")
   createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
