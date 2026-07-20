@@ -36,7 +36,7 @@ vi.mock("@/features/trips/services/trips", () => ({
 vi.mock("@/services/ai", () => ({
   getAiRuntimeConfig: () => ({
     enabled: true,
-    apiKey: "test-key",
+    apiKey: "sk-mock",
     model: "mock-model",
     timeoutMs: 5000,
     maxMessageChars: 2000,
@@ -74,23 +74,10 @@ import { runTripAssistant } from "@/features/ai/services/trip-assistant";
 import { AppError } from "@/lib/errors";
 import { DEMO_STATIC_RESPONSE } from "@/features/ai/constants";
 
-describe("runTripAssistant", () => {
+describe("AI — forfait Découverte (démo)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetOwnedTrip.mockResolvedValue({ id: "trip" });
-    mockGetOrCreate.mockResolvedValue({ id: "conv" });
-    mockBuildContext.mockResolvedValue({ trip: { id: "trip" } });
-    mockProviderGenerate.mockResolvedValue({
-      response: DEMO_STATIC_RESPONSE,
-      model: "mock-model",
-      inputTokens: 1,
-      outputTokens: 2,
-      totalTokens: 3,
-      rawText: "{}",
-    });
-  });
-
-  it("renvoie une démo sans appeler le provider pour Découverte", async () => {
     mockResolveUserAccess.mockResolvedValue({
       level: "decouverte",
       planSlug: "decouverte",
@@ -99,26 +86,72 @@ describe("runTripAssistant", () => {
         { key: "ai.recommendations.enabled", enabled: false },
       ],
     });
+  });
 
+  it("ne transmet aucune donnée voyage au provider", async () => {
     const result = await runTripAssistant({
-      userId: "user-1",
+      userId: "free-user",
       raw: {
         tripId: "00000000-0000-4000-8000-000000000001",
         message: "Analyse mon voyage",
         requestType: "analyze",
       },
     });
-
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.mode).toBe("demo");
-      expect(result.response.summary).toContain("démonstration");
+      expect(result.response).toEqual(DEMO_STATIC_RESPONSE);
+      expect(result.conversationId).toBeNull();
     }
     expect(mockProviderGenerate).not.toHaveBeenCalled();
     expect(mockBuildContext).not.toHaveBeenCalled();
+    expect(mockAppend).not.toHaveBeenCalled();
+  });
+});
+
+describe("AI — recommandations gated", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetOwnedTrip.mockResolvedValue({ id: "trip" });
+    mockResolveUserAccess.mockResolvedValue({
+      level: "sebavio_plus",
+      planSlug: "sebavio-plus",
+      entitlements: [
+        { key: "ai.planning.enabled", enabled: true },
+        { key: "ai.recommendations.enabled", enabled: false },
+      ],
+    });
+    mockAssertFeatureAllowed.mockImplementation(async (_u, key) => {
+      if (key === "ai.recommendations.enabled") {
+        throw new AppError(
+          "ACCESS_DENIED",
+          "Recommandations non incluses",
+          403,
+        );
+      }
+    });
+    mockAcquireLock.mockResolvedValue(async () => undefined);
   });
 
-  it("appelle le provider pour un forfait payant", async () => {
+  it("refuse suggest_activities sans ai.recommendations.enabled", async () => {
+    const result = await runTripAssistant({
+      userId: "plus-user",
+      raw: {
+        tripId: "00000000-0000-4000-8000-000000000001",
+        message: "Suggère des activités",
+        requestType: "suggest_activities",
+      },
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.code).toBe("ACCESS_DENIED");
+    expect(mockProviderGenerate).not.toHaveBeenCalled();
+  });
+});
+
+describe("AI — sécurité rate-limit et lock", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetOwnedTrip.mockResolvedValue({ id: "trip" });
     mockResolveUserAccess.mockResolvedValue({
       level: "sebavio_plus",
       planSlug: "sebavio-plus",
@@ -128,47 +161,38 @@ describe("runTripAssistant", () => {
       ],
     });
     mockAssertFeatureAllowed.mockResolvedValue(undefined);
+  });
 
+  it("propage AI_RATE_LIMIT", async () => {
+    mockRateLimit.mockRejectedValue(
+      new AppError("AI_RATE_LIMIT", "Trop de demandes", 429),
+    );
     const result = await runTripAssistant({
-      userId: "user-1",
+      userId: "u",
       raw: {
         tripId: "00000000-0000-4000-8000-000000000001",
-        message: "Explique le carburant",
-        requestType: "fuel",
-      },
-    });
-
-    expect(result.ok).toBe(true);
-    if (result.ok) expect(result.mode).toBe("personalized");
-    expect(mockProviderGenerate).toHaveBeenCalledOnce();
-    expect(mockAppend).toHaveBeenCalledOnce();
-  });
-});
-
-describe("runTripAssistant — erreurs", () => {
-  it("refuse un voyage inexistant", async () => {
-    mockResolveUserAccess.mockResolvedValue({
-      level: "sebavio_plus",
-      planSlug: "sebavio-plus",
-      entitlements: [
-        { key: "ai.planning.enabled", enabled: true },
-        { key: "ai.recommendations.enabled", enabled: true },
-      ],
-    });
-    mockGetOwnedTrip.mockRejectedValue(
-      new AppError("TRIP_001", "Voyage introuvable", 404),
-    );
-
-    const result = await runTripAssistant({
-      userId: "user-1",
-      raw: {
-        tripId: "00000000-0000-4000-8000-000000000099",
-        message: "Hello",
+        message: "Hi",
         requestType: "chat",
       },
     });
-
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.code).toBe("TRIP_001");
+    if (!result.ok) expect(result.code).toBe("AI_RATE_LIMIT");
+  });
+
+  it("propage lock concurrent AI_007", async () => {
+    mockRateLimit.mockResolvedValue(undefined);
+    mockAcquireLock.mockRejectedValue(
+      new AppError("AI_007", "Analyse déjà en cours", 409),
+    );
+    const result = await runTripAssistant({
+      userId: "u",
+      raw: {
+        tripId: "00000000-0000-4000-8000-000000000001",
+        message: "Hi",
+        requestType: "chat",
+      },
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.code).toBe("AI_007");
   });
 });

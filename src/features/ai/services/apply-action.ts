@@ -113,6 +113,48 @@ export async function applyProposedTripAction(params: {
             params.ipAddress,
           );
         } else {
+          const trip = await getOwnedTripOrThrow(params.userId, params.tripId);
+          const direction = action.direction ?? "outbound";
+          let sequence: number | undefined;
+
+          if (
+            direction === "outbound" &&
+            action.latitude != null &&
+            action.longitude != null &&
+            trip.originLatitude != null &&
+            trip.originLongitude != null &&
+            trip.destinationLatitude != null &&
+            trip.destinationLongitude != null
+          ) {
+            const { computeOutboundInsertSequence } =
+              await import("@/features/trips/services/route-stop-order");
+            sequence = computeOutboundInsertSequence({
+              activity: {
+                lat: action.latitude,
+                lng: action.longitude,
+              },
+              origin: {
+                lat: Number(trip.originLatitude),
+                lng: Number(trip.originLongitude),
+              },
+              destination: {
+                lat: Number(trip.destinationLatitude),
+                lng: Number(trip.destinationLongitude),
+              },
+              existingStops: trip.stops
+                .filter(
+                  (s) =>
+                    s.direction === "outbound" &&
+                    s.latitude != null &&
+                    s.longitude != null,
+                )
+                .map((s) => ({
+                  latitude: Number(s.latitude),
+                  longitude: Number(s.longitude),
+                })),
+            });
+          }
+
           await addStop(
             params.userId,
             params.tripId,
@@ -120,11 +162,12 @@ export async function applyProposedTripAction(params: {
               name: action.title,
               stopType: "activity",
               durationMinutes: action.durationMinutes,
-              direction: action.direction ?? "outbound",
+              direction,
               address: action.address ?? undefined,
               latitude: action.latitude ?? undefined,
               longitude: action.longitude ?? undefined,
               notes: action.description ?? undefined,
+              ...(sequence != null ? { sequence } : {}),
             },
             params.ipAddress,
           );
@@ -132,6 +175,48 @@ export async function applyProposedTripAction(params: {
         break;
       }
       case "add_pause": {
+        const trip = await getOwnedTripOrThrow(params.userId, params.tripId);
+        const direction = action.direction ?? "outbound";
+        let sequence: number | undefined;
+
+        if (
+          direction === "outbound" &&
+          action.latitude != null &&
+          action.longitude != null &&
+          trip.originLatitude != null &&
+          trip.originLongitude != null &&
+          trip.destinationLatitude != null &&
+          trip.destinationLongitude != null
+        ) {
+          const { computeOutboundInsertSequence } =
+            await import("@/features/trips/services/route-stop-order");
+          sequence = computeOutboundInsertSequence({
+            activity: {
+              lat: action.latitude,
+              lng: action.longitude,
+            },
+            origin: {
+              lat: Number(trip.originLatitude),
+              lng: Number(trip.originLongitude),
+            },
+            destination: {
+              lat: Number(trip.destinationLatitude),
+              lng: Number(trip.destinationLongitude),
+            },
+            existingStops: trip.stops
+              .filter(
+                (s) =>
+                  s.direction === "outbound" &&
+                  s.latitude != null &&
+                  s.longitude != null,
+              )
+              .map((s) => ({
+                latitude: Number(s.latitude),
+                longitude: Number(s.longitude),
+              })),
+          });
+        }
+
         await addStop(
           params.userId,
           params.tripId,
@@ -139,10 +224,11 @@ export async function applyProposedTripAction(params: {
             name: action.title,
             stopType: "rest",
             durationMinutes: action.durationMinutes,
-            direction: action.direction ?? "outbound",
+            direction,
             address: action.address ?? undefined,
             latitude: action.latitude ?? undefined,
             longitude: action.longitude ?? undefined,
+            ...(sequence != null ? { sequence } : {}),
           },
           params.ipAddress,
         );

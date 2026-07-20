@@ -120,9 +120,11 @@ export async function runTripAssistant(params: {
     };
   }
 
+  let release: (() => Promise<void>) | null = null;
   try {
     await assertTripAssistantEntitlements(params.userId, input.requestType);
     await assertAiRateLimit(params.userId);
+    release = await acquireAiRequestLock(params.userId, input.tripId);
   } catch (error) {
     const code = isAppError(error) ? error.code : "ACCESS_DENIED";
     const message = isAppError(error) ? error.message : "Accès refusé.";
@@ -137,8 +139,6 @@ export async function runTripAssistant(params: {
     });
     return { ok: false, message, code };
   }
-
-  const release = await acquireAiRequestLock(params.userId, input.tripId);
 
   try {
     const context = await buildTripAssistantContext({
@@ -231,7 +231,7 @@ export async function runTripAssistant(params: {
     });
     return { ok: false, message, code };
   } finally {
-    await release();
+    if (release) await release();
   }
 }
 

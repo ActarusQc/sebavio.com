@@ -35,6 +35,12 @@ vi.mock("@/features/auth/services/audit", () => ({
   writeAuditLog: (...args: unknown[]) => writeAuditLog(...args),
 }));
 
+vi.mock("@/features/trips/services/access-gate", () => ({
+  assertCanCreateTrip: async () => undefined,
+  assertFullTripAccess: async () => undefined,
+  assertTripFeature: async () => undefined,
+}));
+
 describe("trip schemas", () => {
   it("accepte un voyage valide", () => {
     const parsed = tripCreateSchema.parse({
@@ -47,6 +53,18 @@ describe("trip schemas", () => {
       plannedBudget: 1200,
     });
     expect(parsed.title).toBe("Gaspésie");
+  });
+
+  it("accepte une étape avec longitude Ouest (Québec)", () => {
+    const parsed = stopCreateSchema.parse({
+      name: "Strøm spa nordique",
+      address: "Vieux-Québec",
+      latitude: 46.812,
+      longitude: -71.205,
+      stopType: "activity",
+    });
+    expect(parsed.longitude).toBe(-71.205);
+    expect(parsed.stopType).toBe("activity");
   });
 
   it("refuse return_date < departure_date", () => {
@@ -87,6 +105,55 @@ describe("trip schemas", () => {
     expect(tripUpdateSchema.safeParse({ status: "cancelled" }).success).toBe(
       false,
     );
+  });
+
+  it("accepte une adresse Google complète avec placeId et coords", () => {
+    const parsed = tripCreateSchema.parse({
+      vehicleId,
+      title: "Gaspésie",
+      origin: "100 Rue Notre-Dame E, Montréal, QC",
+      originPlaceId: "ChIJplaceOrigin",
+      originLatitude: 45.5088,
+      originLongitude: -73.554,
+      originCity: "Montréal",
+      originProvince: "QC",
+      originPostalCode: "H2Y1C1",
+      originCountry: "CA",
+      destination: "Percé, QC",
+      destinationPlaceId: "ChIJplaceDest",
+      destinationLatitude: 48.5244,
+      destinationLongitude: -64.2123,
+      destinationCity: "Percé",
+      destinationProvince: "QC",
+      destinationCountry: "CA",
+      departureDate: "2026-08-01",
+    });
+    expect(parsed.originPlaceId).toBe("ChIJplaceOrigin");
+    expect(parsed.destinationLatitude).toBe(48.5244);
+  });
+
+  it("accepte une saisie manuelle sans placeId", () => {
+    const parsed = tripCreateSchema.parse({
+      vehicleId,
+      title: "Manuel",
+      origin: "Mon coin de rue",
+      destination: "Camping du lac",
+      departureDate: "2026-08-01",
+    });
+    expect(parsed.originPlaceId).toBeNull();
+    expect(parsed.originLatitude).toBeNull();
+  });
+
+  it("refuse un placeId Google sans coordonnées", () => {
+    const result = tripCreateSchema.safeParse({
+      vehicleId,
+      title: "Incomplet",
+      origin: "Montréal",
+      originPlaceId: "ChIJpartial",
+      destination: "Percé",
+      departureDate: "2026-08-01",
+    });
+    expect(result.success).toBe(false);
   });
 });
 

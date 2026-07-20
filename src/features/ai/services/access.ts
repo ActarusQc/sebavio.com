@@ -5,7 +5,7 @@ import {
   assertFeatureAllowed,
   resolveUserAccess,
   type UserAccessSnapshot,
-} from "@/features/subscriptions";
+} from "@/features/subscriptions/services/access-resolve";
 import type { TripAssistantRequestType } from "@/features/ai/schemas/request";
 import { requestTypeNeedsRecommendations } from "@/features/ai/lib/request-types";
 
