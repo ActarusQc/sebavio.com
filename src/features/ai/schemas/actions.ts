@@ -2,6 +2,29 @@ import { z } from "zod";
 
 const directionSchema = z.enum(["outbound", "return"]);
 
+export const locationSourceSchema = z.enum([
+  "catalog",
+  "user_confirmed",
+  "geocoded",
+  "ai_suggested",
+]);
+
+export type LocationSource = z.infer<typeof locationSourceSchema>;
+
+const locationFields = {
+  address: z.string().max(500).nullable().optional(),
+  latitude: z.number().min(-90).max(90).nullable().optional(),
+  longitude: z.number().min(-180).max(180).nullable().optional(),
+  /** Source de la position — ai_suggested exige confirmation utilisateur. */
+  locationSource: locationSourceSchema.optional(),
+  /** true si l'utilisateur a confirmé l'emplacement dans l'UI. */
+  locationConfirmed: z.boolean().optional(),
+  /** Étape existante ciblée (coords du stop). */
+  targetStopId: z.string().uuid().nullable().optional(),
+  /** Confirmation renforcée pour détour important. */
+  confirmLargeDetour: z.boolean().optional(),
+};
+
 export const proposedTripActionSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("add_activity"),
@@ -9,9 +32,6 @@ export const proposedTripActionSchema = z.discriminatedUnion("type", [
     description: z.string().max(2000).nullable().optional(),
     durationMinutes: z.number().int().min(15).max(720),
     direction: directionSchema.optional().default("outbound"),
-    address: z.string().max(500).nullable().optional(),
-    latitude: z.number().min(-90).max(90).nullable().optional(),
-    longitude: z.number().min(-180).max(180).nullable().optional(),
     /** Si présent : activité catalogue Sebavio. */
     activityId: z.string().uuid().nullable().optional(),
     placement: z
@@ -19,16 +39,15 @@ export const proposedTripActionSchema = z.discriminatedUnion("type", [
       .optional()
       .default("outbound"),
     estimatedImpact: z.string().max(500).nullable().optional(),
+    ...locationFields,
   }),
   z.object({
     type: z.literal("add_pause"),
     title: z.string().min(1).max(150),
     durationMinutes: z.number().int().min(5).max(240),
     direction: directionSchema.optional().default("outbound"),
-    address: z.string().max(500).nullable().optional(),
-    latitude: z.number().min(-90).max(90).nullable().optional(),
-    longitude: z.number().min(-180).max(180).nullable().optional(),
     estimatedImpact: z.string().max(500).nullable().optional(),
+    ...locationFields,
   }),
   z.object({
     type: z.literal("update_activity_duration"),
@@ -56,7 +75,6 @@ export const proposedTripActionSchema = z.discriminatedUnion("type", [
     title: z.string().min(1).max(150),
     description: z.string().max(2000).nullable().optional(),
     estimatedImpact: z.string().max(500).nullable().optional(),
-    /** v1 : jamais applicable automatiquement. */
     applicableInV1: z.literal(false).default(false),
   }),
   z.object({

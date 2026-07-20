@@ -14,7 +14,15 @@ import type { TripAssistantResponse } from "@/features/ai/schemas/response";
 import type { AiConversationDto } from "@/features/ai/services/conversations";
 
 export type AiActionResult<T = unknown> =
-  { ok: true; data: T } | { ok: false; message: string; code?: string };
+  | { ok: true; data: T }
+  | {
+      ok: false;
+      message: string;
+      code?: string;
+      estimatedAddedKm?: number;
+      requiresLocationConfirmation?: boolean;
+      requiresLargeDetourConfirmation?: boolean;
+    };
 
 export async function getTripAssistantBootstrapAction(tripId: string): Promise<
   AiActionResult<{
@@ -124,7 +132,14 @@ export async function applyTripAssistantActionAction(raw: {
     });
 
     if (!result.ok) {
-      return { ok: false, message: result.message, code: result.code };
+      return {
+        ok: false,
+        message: result.message,
+        code: result.code,
+        estimatedAddedKm: result.estimatedAddedKm,
+        requiresLocationConfirmation: result.requiresLocationConfirmation,
+        requiresLargeDetourConfirmation: result.requiresLargeDetourConfirmation,
+      };
     }
 
     if (result.applied) {

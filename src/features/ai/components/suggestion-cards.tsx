@@ -6,6 +6,7 @@ import type {
   TripAssistantWarning,
 } from "@/features/ai/schemas/response";
 import type { ProposedTripAction } from "@/features/ai/schemas/actions";
+import { actionNeedsLocationConfirmation } from "@/features/ai/services/apply-action-client";
 
 export function TripAssistantSuggestions({
   suggestions,
@@ -33,6 +34,8 @@ export function TripAssistantSuggestions({
         const action = s.proposedAction;
         const deferred =
           action?.type === "create_detour" || action?.type === "other";
+        const needsLocation =
+          action != null && actionNeedsLocationConfirmation(action);
         return (
           <article
             key={s.id}
@@ -79,6 +82,17 @@ export function TripAssistantSuggestions({
                 À confirmer — information non vérifiée par Sebavio.
               </p>
             ) : null}
+            {needsLocation ? (
+              <p
+                className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-amber-950"
+                role="status"
+              >
+                <span className="font-medium">Emplacement requis</span>
+                <br />
+                Sebavio doit confirmer l’emplacement de cette suggestion avant
+                de pouvoir l’ajouter au trajet.
+              </p>
+            ) : null}
             {action ? (
               deferred ? (
                 <Button
@@ -97,9 +111,12 @@ export function TripAssistantSuggestions({
                   className="mt-2"
                   onClick={() => onProposeAction(action)}
                 >
-                  {action.type === "add_activity" || action.type === "add_pause"
-                    ? "Ajouter au voyage"
-                    : "Appliquer cette suggestion"}
+                  {needsLocation
+                    ? "Confirmer l’emplacement"
+                    : action.type === "add_activity" ||
+                        action.type === "add_pause"
+                      ? "Ajouter au voyage"
+                      : "Appliquer cette suggestion"}
                 </Button>
               )
             ) : null}

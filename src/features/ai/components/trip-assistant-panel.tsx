@@ -67,6 +67,8 @@ export function TripAssistantPanel({
   const [pendingAction, setPendingAction] = useState<ProposedTripAction | null>(
     null,
   );
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [largeDetourKm, setLargeDetourKm] = useState<number | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const abortVisual = useRef(false);
 
@@ -167,10 +169,9 @@ export function TripAssistantPanel({
     });
   }
 
-  async function confirmApply() {
-    if (!pendingAction) return;
-    const action = pendingAction;
+  async function confirmApply(action: ProposedTripAction) {
     setPendingAction(null);
+    setLocationError(null);
     startTransition(async () => {
       const result = await applyTripAssistantActionAction({
         tripId,
@@ -178,9 +179,29 @@ export function TripAssistantPanel({
         confirm: true,
       });
       if (!result.ok) {
+        if (
+          result.code === "AI_ACTION_LOCATION_REQUIRED" ||
+          result.code === "AI_ACTION_LOCATION_OUT_OF_CORRIDOR"
+        ) {
+          setPendingAction(action);
+          setLocationError(result.message);
+          return;
+        }
+        if (result.code === "AI_ACTION_LARGE_DETOUR") {
+          setPendingAction(action);
+          setLargeDetourKm(
+            "estimatedAddedKm" in result &&
+              typeof result.estimatedAddedKm === "number"
+              ? result.estimatedAddedKm
+              : null,
+          );
+          setLocationError(result.message);
+          return;
+        }
         setError(result.message);
         return;
       }
+      setLargeDetourKm(null);
       setMessages((prev) => [
         ...prev,
         {
@@ -395,12 +416,18 @@ export function TripAssistantPanel({
         action={pendingAction}
         open={pendingAction != null}
         onOpenChange={(next) => {
-          if (!next) setPendingAction(null);
+          if (!next) {
+            setPendingAction(null);
+            setLocationError(null);
+            setLargeDetourKm(null);
+          }
         }}
-        onConfirm={() => void confirmApply()}
+        onConfirm={(action) => void confirmApply(action)}
         description={
           pendingAction ? describeProposedAction(pendingAction) : null
         }
+        locationError={locationError}
+        largeDetourKm={largeDetourKm}
       />
     </>
   );

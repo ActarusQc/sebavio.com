@@ -114,7 +114,10 @@ export type AppErrorCode =
   | "AI_007"
   | "AI_RATE_LIMIT"
   | "AI_DISABLED"
-  | "AI_INVALID_RESPONSE";
+  | "AI_INVALID_RESPONSE"
+  | "AI_ACTION_LOCATION_REQUIRED"
+  | "AI_ACTION_LOCATION_OUT_OF_CORRIDOR"
+  | "AI_ACTION_LARGE_DETOUR";
 
 export class AppError extends Error {
   readonly code: AppErrorCode;
