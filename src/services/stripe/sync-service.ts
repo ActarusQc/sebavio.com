@@ -464,15 +464,21 @@ export async function syncStripeRefund(
     throw new StripeObjectNotFoundError("Remboursement Stripe introuvable.");
   }
 
-  assertModeConsistency(
-    Boolean((refund as Stripe.Refund & { livemode?: boolean }).livemode),
-    mode,
-  );
-
   const paymentIntentId = expandId(refund.payment_intent);
   if (!paymentIntentId) {
     throw new StripeSyncError("Remboursement sans PaymentIntent associé.");
   }
+
+  // Refund n'expose plus `livemode` dans les types Dahlia — dériver via PaymentIntent.
+  let paymentIntent: Stripe.PaymentIntent;
+  try {
+    paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+  } catch {
+    throw new StripeObjectNotFoundError(
+      "PaymentIntent associé au remboursement introuvable.",
+    );
+  }
+  assertModeConsistency(paymentIntent.livemode, mode);
 
   const payment = await syncStripePaymentIntent(paymentIntentId, options);
   const incomingUpdatedAt = stripeObjectUpdatedAt(

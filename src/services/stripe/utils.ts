@@ -17,22 +17,32 @@ export function expandId(
 }
 
 /**
- * Basil API : current_period_* peut vivre sur items[0].
+ * Période de facturation — depuis Basil/Dahlia sur SubscriptionItem
+ * (plus sur Subscription). Mono-item : item[0]. Multi-item : min start / max end.
  */
 export function getSubscriptionPeriod(subscription: Stripe.Subscription): {
   start: Date | null;
   end: Date | null;
 } {
-  const sub = subscription as Stripe.Subscription & {
-    current_period_start?: number | null;
-    current_period_end?: number | null;
-  };
-  const item = subscription.items?.data?.[0];
-  const start = sub.current_period_start ?? item?.current_period_start ?? null;
-  const end = sub.current_period_end ?? item?.current_period_end ?? null;
+  const items = subscription.items?.data ?? [];
+  if (items.length === 0) {
+    return { start: null, end: null };
+  }
+
+  let startSec = items[0].current_period_start;
+  let endSec = items[0].current_period_end;
+  for (const item of items) {
+    if (item.current_period_start < startSec) {
+      startSec = item.current_period_start;
+    }
+    if (item.current_period_end > endSec) {
+      endSec = item.current_period_end;
+    }
+  }
+
   return {
-    start: fromUnixSeconds(start),
-    end: fromUnixSeconds(end),
+    start: fromUnixSeconds(startSec),
+    end: fromUnixSeconds(endSec),
   };
 }
 
@@ -46,15 +56,18 @@ export function getSubscriptionPriceFields(subscription: Stripe.Subscription): {
 } {
   const item = subscription.items?.data?.[0];
   const price = item?.price;
-  const productId =
-    price && typeof price.product === "string"
-      ? price.product
-      : price &&
-          typeof price.product === "object" &&
-          price.product &&
-          "id" in price.product
-        ? (price.product as { id: string }).id
-        : null;
+  let productId: string | null = null;
+  if (price) {
+    if (typeof price.product === "string") {
+      productId = price.product;
+    } else if (
+      price.product &&
+      typeof price.product === "object" &&
+      !("deleted" in price.product && price.product.deleted)
+    ) {
+      productId = price.product.id;
+    }
+  }
 
   return {
     stripePriceId: price?.id ?? null,

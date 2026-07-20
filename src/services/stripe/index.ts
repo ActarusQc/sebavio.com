@@ -17,8 +17,27 @@ export {
   StripeWebhookAlreadyProcessingError,
   StripeRefundNotAllowedError,
   StripeSubscriptionActionNotAllowedError,
+  StripeSebavioProductError,
   isStripeAppError,
 } from "./errors";
+
+export {
+  createSebavioProduct,
+  retrieveSebavioProduct,
+  updateSebavioProductMetadata,
+  archiveStripeProduct,
+  listSebavioProducts,
+  type CreateSebavioProductInput,
+  type UpdateSebavioProductMetadataInput,
+} from "./product-service";
+
+export {
+  createSebavioPrice,
+  retrieveSebavioPrice,
+  deactivateStripePrice,
+  listPricesForProduct,
+  type CreateSebavioPriceInput,
+} from "./price-service";
 
 export {
   buildDashboardUrl,

@@ -61,6 +61,15 @@ export class StripeSubscriptionActionNotAllowedError extends AppError {
   }
 }
 
+export class StripeSebavioProductError extends AppError {
+  constructor(
+    message = "Produit Stripe non géré par Sebavio ou métadonnées invalides.",
+  ) {
+    super("STRIPE_009", message, 400);
+    this.name = "StripeSebavioProductError";
+  }
+}
+
 export function isStripeAppError(error: unknown): error is AppError {
   return (
     error instanceof AppError &&

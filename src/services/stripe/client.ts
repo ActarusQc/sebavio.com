@@ -8,14 +8,18 @@ import Stripe from "stripe";
 
 import { loadStripeConfig } from "./config";
 
-const STRIPE_API_VERSION = "2025-08-27.basil" as const;
+const STRIPE_API_VERSION = "2026-06-24.dahlia" as const;
 
 const globalForStripe = globalThis as unknown as {
   __sebavioStripe?: Stripe;
+  __sebavioStripeApiVersion?: string;
 };
 
 export function getStripeClient(): Stripe {
-  if (globalForStripe.__sebavioStripe) {
+  if (
+    globalForStripe.__sebavioStripe &&
+    globalForStripe.__sebavioStripeApiVersion === STRIPE_API_VERSION
+  ) {
     return globalForStripe.__sebavioStripe;
   }
 
@@ -32,6 +36,7 @@ export function getStripeClient(): Stripe {
   });
 
   globalForStripe.__sebavioStripe = client;
+  globalForStripe.__sebavioStripeApiVersion = STRIPE_API_VERSION;
   return client;
 }
 

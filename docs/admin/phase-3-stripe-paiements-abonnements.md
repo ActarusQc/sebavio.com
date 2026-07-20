@@ -24,8 +24,8 @@ Stripe API  ←→  src/services/stripe/*  ←→  PostgreSQL (projection)
 | Webhook | `src/services/stripe/webhook-service.ts` + `src/app/api/webhooks/stripe` |
 | Admin | `src/features/billing/*`, pages `/admin/subscriptions|payments|invoices|webhooks/stripe` |
 
-- SDK : `stripe@18.5.0`
-- Version API : `2025-08-27.basil`
+- SDK : `stripe@22.3.0`
+- Version API : `2026-06-24.dahlia`
 
 ## Variables d’environnement
 
@@ -43,7 +43,9 @@ Exigences :
 - aucun secret dans logs, réponses API, props client, `.env.example`
 - badge Test/Live visible en admin ; confirmations renforcées en Live
 
-## Différence Test / Live
+## Périodes d’abonnement (Basil → Dahlia)
+
+Depuis `2025-03-31.basil`, `current_period_start` / `current_period_end` ne sont plus sur `Subscription` mais sur chaque `SubscriptionItem`. Sebavio lit ces champs via `getSubscriptionPeriod()` (min start / max end). La facture lie l’abonnement via `invoice.parent.subscription_details.subscription` (plus `invoice.subscription`).
 
 | | Test | Live |
 |---|------|------|

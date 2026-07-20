@@ -169,21 +169,57 @@ describe("getStripeClient ne fuit pas le secret", () => {
     delete process.env.STRIPE_MODE;
   });
 
-  it("retourne un client sans exposer la clé dans les propriétés inspectables", async () => {
-    const { getStripeClient } = await import("@/services/stripe/client");
+  it("retourne un client piné sur 2026-06-24.dahlia sans exposer la clé", async () => {
+    const { getStripeClient, STRIPE_API_VERSION } =
+      await import("@/services/stripe/client");
+    expect(STRIPE_API_VERSION).toBe("2026-06-24.dahlia");
     const client = getStripeClient();
     expect(client).toBeTruthy();
+    expect(client.getApiField("version")).toBe("2026-06-24.dahlia");
     const asRecord = client as unknown as Record<string, unknown>;
     expect(asRecord.secretKey).toBeUndefined();
-    expect(
-      JSON.stringify({ apiVersion: client.getApiField?.("version") }),
-    ).not.toContain("sk_test_");
-    // La clé vit dans un champ privé du SDK — vérifier qu'elle n'est pas une prop publique
     for (const key of Object.keys(client)) {
       const value = (client as unknown as Record<string, unknown>)[key];
       if (typeof value === "string") {
         expect(value).not.toContain("sk_test_51ExampleSecretKeyForUnitTests");
       }
     }
+  });
+});
+
+describe("Subscription period (Dahlia — items)", () => {
+  it("lit current_period_* sur les SubscriptionItems", async () => {
+    const { getSubscriptionPeriod } = await import("@/services/stripe/utils");
+    const subscription = {
+      items: {
+        data: [
+          {
+            current_period_start: 1_700_000_000,
+            current_period_end: 1_700_086_400,
+          },
+          {
+            current_period_start: 1_699_900_000,
+            current_period_end: 1_700_200_000,
+          },
+        ],
+      },
+    } as unknown as Parameters<typeof getSubscriptionPeriod>[0];
+
+    const period = getSubscriptionPeriod(subscription);
+    expect(period.start?.toISOString()).toBe(
+      new Date(1_699_900_000 * 1000).toISOString(),
+    );
+    expect(period.end?.toISOString()).toBe(
+      new Date(1_700_200_000 * 1000).toISOString(),
+    );
+  });
+
+  it("retourne null sans items", async () => {
+    const { getSubscriptionPeriod } = await import("@/services/stripe/utils");
+    const period = getSubscriptionPeriod({
+      items: { data: [] },
+    } as unknown as Parameters<typeof getSubscriptionPeriod>[0]);
+    expect(period.start).toBeNull();
+    expect(period.end).toBeNull();
   });
 });

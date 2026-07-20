@@ -65,7 +65,7 @@ export const ADMIN_NAV_ITEMS: readonly AdminNavItem[] = [
     label: "Forfaits",
     permission: "plans.read",
     phase: 4,
-    available: false,
+    available: true,
   },
   {
     href: "/admin/analytics",

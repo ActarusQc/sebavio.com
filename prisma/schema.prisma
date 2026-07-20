@@ -1680,3 +1680,133 @@ model StripeWebhookEvent {
   @@index([objectId])
   @@map("stripe_webhook_events")
 }
+
+/// Forfait commercial Sebavio (métadonnées locales + lien produit Stripe).
+model Plan {
+  id                  String    @id @default(uuid(4)) @db.Uuid
+  /// Clé interne stable (slug) — unique par mode
+  internalName        String    @map("internal_name") @db.VarChar(100)
+  /// Nom affiché aux utilisateurs
+  publicName          String    @map("public_name") @db.VarChar(150)
+  shortDescription    String?   @map("short_description") @db.VarChar(500)
+  fullDescription     String?   @map("full_description") @db.Text
+  displayOrder        Int       @default(0) @map("display_order")
+  isFeatured          Boolean   @default(false) @map("is_featured")
+  /// Visible sur les écrans d’inscription / pricing publics
+  isVisibleOnSignup   Boolean   @default(true) @map("is_visible_on_signup")
+  /// active | hidden | archived | pending_reconciliation
+  status              String    @db.VarChar(40)
+  archivedAt          DateTime? @map("archived_at") @db.Timestamptz(6)
+  /// Essai commercial (jours) — appliqué à Checkout / création d’abonnement, PAS une propriété Price Stripe
+  defaultTrialDays    Int?      @map("default_trial_days")
+  stripeProductId     String?   @map("stripe_product_id") @db.VarChar(255)
+  /// test | live — aligné sur StripeMode projet
+  stripeMode          String    @map("stripe_mode") @db.VarChar(10)
+  lastSyncedAt        DateTime? @map("last_synced_at") @db.Timestamptz(6)
+  /// Dernière erreur de réconciliation (message sûr, sans secrets)
+  reconciliationError String?   @map("reconciliation_error") @db.Text
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  prices       PlanPrice[]
+  entitlements PlanEntitlement[]
+
+  @@unique([stripeProductId, stripeMode])
+  @@unique([internalName, stripeMode])
+  @@index([status])
+  @@index([stripeMode])
+  @@index([displayOrder])
+  @@index([isVisibleOnSignup])
+  @@map("plans")
+}
+
+/// Miroir local d’un Price Stripe (immuable en montant une fois créé).
+model PlanPrice {
+  id            String    @id @default(uuid(4)) @db.Uuid
+  planId        String    @map("plan_id") @db.Uuid
+  stripePriceId String    @map("stripe_price_id") @db.VarChar(255)
+  /// day | week | month | year (UI Phase 4 : month | year)
+  interval      String    @db.VarChar(20)
+  /// Nombre d’intervalles (ex. 1 = mensuel, 1 annuel ; extensible)
+  intervalCount Int       @default(1) @map("interval_count")
+  currency      String    @db.VarChar(10)
+  /// Montant en cents (source Stripe)
+  unitAmount    Int       @map("unit_amount")
+  /// active | archived (miroir / décision Sebavio pour nouveaux abonnés)
+  status        String    @db.VarChar(20)
+  /// Un seul true par (planId, interval, intervalCount, currency) — index partiel SQL
+  isCurrent     Boolean   @default(false) @map("is_current")
+  /// test | live
+  stripeMode    String    @map("stripe_mode") @db.VarChar(10)
+  archivedAt    DateTime? @map("archived_at") @db.Timestamptz(6)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  plan Plan @relation(fields: [planId], references: [id], onDelete: Restrict)
+
+  @@unique([stripePriceId, stripeMode])
+  @@index([planId])
+  @@index([stripeMode])
+  @@index([status])
+  @@index([planId, interval, intervalCount, currency])
+  @@map("plan_prices")
+}
+
+/// Entitlement / limite associée à un forfait (clés du registre typé uniquement).
+model PlanEntitlement {
+  id        String   @id @default(uuid(4)) @db.Uuid
+  planId    String   @map("plan_id") @db.Uuid
+  /// Clé du registre typé uniquement
+  key       String   @db.VarChar(100)
+  enabled   Boolean  @default(false)
+  /// null = illimité si enabled ; sinon limite numérique (>= 0)
+  limit     Int?
+  /// Valeur libre optionnelle (ex. niveau support)
+  value     String?  @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  plan Plan @relation(fields: [planId], references: [id], onDelete: Restrict)
+
+  @@unique([planId, key])
+  @@index([key])
+  @@map("plan_entitlements")
+}
+
+/// Run d’idempotence durable pour applyPlanSync (preview / applying / completed / failed).
+model PlanSyncRun {
+  id          String    @id @default(uuid(4)) @db.Uuid
+  /// test | live
+  stripeMode  String    @map("stripe_mode") @db.VarChar(10)
+  /// preview | applying | completed | failed
+  status      String    @db.VarChar(30)
+  report      Json?     @db.JsonB
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(6)
+
+  actions PlanSyncAction[]
+
+  @@index([stripeMode])
+  @@index([status])
+  @@map("plan_sync_runs")
+}
+
+/// Action atomique d’un PlanSyncRun (idempotence par action_key).
+model PlanSyncAction {
+  id         String   @id @default(uuid(4)) @db.Uuid
+  syncRunId  String   @map("sync_run_id") @db.Uuid
+  actionKey  String   @map("action_key") @db.VarChar(255)
+  actionType String   @map("action_type") @db.VarChar(50)
+  /// pending | applied | skipped | failed
+  status     String   @db.VarChar(30)
+  payload    Json?    @db.JsonB
+  result     Json?    @db.JsonB
+  error      String?  @db.Text
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  syncRun PlanSyncRun @relation(fields: [syncRunId], references: [id], onDelete: Restrict)
+
+  @@unique([syncRunId, actionKey])
+  @@index([status])
+  @@map("plan_sync_actions")
+}

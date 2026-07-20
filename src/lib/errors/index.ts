@@ -100,6 +100,7 @@ export type AppErrorCode =
   | "STRIPE_006"
   | "STRIPE_007"
   | "STRIPE_008"
+  | "STRIPE_009"
   | "VALIDATION_ERROR"
   | "INTERNAL_ERROR";
 
