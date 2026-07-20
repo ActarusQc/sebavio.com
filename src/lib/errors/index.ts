@@ -101,8 +101,20 @@ export type AppErrorCode =
   | "STRIPE_007"
   | "STRIPE_008"
   | "STRIPE_009"
+  | "ACCESS_DENIED"
+  | "PASS_EXPIRED"
   | "VALIDATION_ERROR"
-  | "INTERNAL_ERROR";
+  | "INTERNAL_ERROR"
+  | "AI_001"
+  | "AI_002"
+  | "AI_003"
+  | "AI_004"
+  | "AI_005"
+  | "AI_006"
+  | "AI_007"
+  | "AI_RATE_LIMIT"
+  | "AI_DISABLED"
+  | "AI_INVALID_RESPONSE";
 
 export class AppError extends Error {
   readonly code: AppErrorCode;

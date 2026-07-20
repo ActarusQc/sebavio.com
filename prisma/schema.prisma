@@ -56,6 +56,12 @@ model User {
   stripeInvoices          StripeInvoice[]
   stripeRefunds           StripeRefund[]  @relation("StripeRefundUser")
   stripeRefundsCreated    StripeRefund[]  @relation("StripeRefundAdmin")
+  planPurchases           PlanPurchase[]
+  planAccessGrants        PlanAccessGrant[]
+  planAccessGrantsRevoked PlanAccessGrant[] @relation("PlanAccessGrantRevoker")
+  planAccessGrantsExtended PlanAccessGrant[] @relation("PlanAccessGrantExtender")
+  aiConversations         AiConversation[]
+  aiUsages                AiUsage[]
 
   @@index([status])
   @@index([role])
@@ -1019,6 +1025,8 @@ model Trip {
   travelerProfile  TripTravelerProfile?
   tripActivities   TripActivity[]
   locations        TripLocation[]
+  aiConversations  AiConversation[]
+  aiUsages         AiUsage[]
 
   @@index([userId, status])
   @@index([vehicleId])
@@ -1694,6 +1702,8 @@ model Plan {
   isFeatured          Boolean   @default(false) @map("is_featured")
   /// Visible sur les écrans d’inscription / pricing publics
   isVisibleOnSignup   Boolean   @default(true) @map("is_visible_on_signup")
+  /// Forfait officiel protégé contre suppression accidentelle
+  isSystemProtected   Boolean   @default(false) @map("is_system_protected")
   /// active | hidden | archived | pending_reconciliation
   status              String    @db.VarChar(40)
   archivedAt          DateTime? @map("archived_at") @db.Timestamptz(6)
@@ -1710,6 +1720,8 @@ model Plan {
 
   prices       PlanPrice[]
   entitlements PlanEntitlement[]
+  purchases    PlanPurchase[]
+  accessGrants PlanAccessGrant[]
 
   @@unique([stripeProductId, stripeMode])
   @@unique([internalName, stripeMode])
@@ -1722,34 +1734,115 @@ model Plan {
 
 /// Miroir local d’un Price Stripe (immuable en montant une fois créé).
 model PlanPrice {
-  id            String    @id @default(uuid(4)) @db.Uuid
-  planId        String    @map("plan_id") @db.Uuid
-  stripePriceId String    @map("stripe_price_id") @db.VarChar(255)
-  /// day | week | month | year (UI Phase 4 : month | year)
-  interval      String    @db.VarChar(20)
+  id                 String    @id @default(uuid(4)) @db.Uuid
+  planId             String    @map("plan_id") @db.Uuid
+  stripePriceId      String    @map("stripe_price_id") @db.VarChar(255)
+  /// recurring | one_time
+  billingType        String    @default("recurring") @map("billing_type") @db.VarChar(20)
+  /// day | week | month | year | one_time (sentinel pour achat unique)
+  interval           String    @db.VarChar(20)
   /// Nombre d’intervalles (ex. 1 = mensuel, 1 annuel ; extensible)
-  intervalCount Int       @default(1) @map("interval_count")
-  currency      String    @db.VarChar(10)
+  intervalCount      Int       @default(1) @map("interval_count")
+  /// Durée d’accès en jours pour un prix one_time (ex. Pass 30 jours)
+  accessDurationDays Int?      @map("access_duration_days")
+  currency           String    @db.VarChar(10)
   /// Montant en cents (source Stripe)
-  unitAmount    Int       @map("unit_amount")
+  unitAmount         Int       @map("unit_amount")
   /// active | archived (miroir / décision Sebavio pour nouveaux abonnés)
-  status        String    @db.VarChar(20)
+  status             String    @db.VarChar(20)
   /// Un seul true par (planId, interval, intervalCount, currency) — index partiel SQL
-  isCurrent     Boolean   @default(false) @map("is_current")
+  isCurrent          Boolean   @default(false) @map("is_current")
   /// test | live
-  stripeMode    String    @map("stripe_mode") @db.VarChar(10)
-  archivedAt    DateTime? @map("archived_at") @db.Timestamptz(6)
-  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  stripeMode         String    @map("stripe_mode") @db.VarChar(10)
+  archivedAt         DateTime? @map("archived_at") @db.Timestamptz(6)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  plan Plan @relation(fields: [planId], references: [id], onDelete: Restrict)
+  plan      Plan           @relation(fields: [planId], references: [id], onDelete: Restrict)
+  purchases PlanPurchase[]
 
   @@unique([stripePriceId, stripeMode])
   @@index([planId])
   @@index([stripeMode])
   @@index([status])
+  @@index([billingType])
   @@index([planId, interval, intervalCount, currency])
   @@map("plan_prices")
+}
+
+/// Achat unique (Checkout payment mode) — ex. Pass 30 jours.
+model PlanPurchase {
+  id                      String    @id @default(uuid(4)) @db.Uuid
+  userId                  String    @map("user_id") @db.Uuid
+  planId                  String    @map("plan_id") @db.Uuid
+  planPriceId             String    @map("plan_price_id") @db.Uuid
+  /// pending_payment | paid | failed | refunded
+  status                  String    @db.VarChar(40)
+  stripeCheckoutSessionId String?   @map("stripe_checkout_session_id") @db.VarChar(255)
+  stripePaymentIntentId   String?   @map("stripe_payment_intent_id") @db.VarChar(255)
+  /// Événement Stripe ayant activé l’achat (idempotence)
+  activationStripeEventId String?   @map("activation_stripe_event_id") @db.VarChar(255)
+  amountCents             Int       @map("amount_cents")
+  currency                String    @db.VarChar(10)
+  stripeMode              String    @map("stripe_mode") @db.VarChar(10)
+  paidAt                  DateTime? @map("paid_at") @db.Timestamptz(6)
+  refundedAt              DateTime? @map("refunded_at") @db.Timestamptz(6)
+  /// Contexte optionnel (ex. tripId) pour retour post-paiement
+  returnContext           Json?     @map("return_context") @db.JsonB
+  createdAt               DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt               DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user        User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  plan        Plan             @relation(fields: [planId], references: [id], onDelete: Restrict)
+  planPrice   PlanPrice        @relation(fields: [planPriceId], references: [id], onDelete: Restrict)
+  accessGrant PlanAccessGrant?
+
+  @@unique([stripeCheckoutSessionId, stripeMode])
+  @@unique([activationStripeEventId, stripeMode])
+  @@index([userId])
+  @@index([planId])
+  @@index([status])
+  @@index([stripeMode])
+  @@index([createdAt])
+  @@map("plan_purchases")
+}
+
+/// Droit d’accès temporaire (Pass) — prolongement possible sans perdre les jours restants.
+model PlanAccessGrant {
+  id                    String    @id @default(uuid(4)) @db.Uuid
+  userId                String    @map("user_id") @db.Uuid
+  planId                String    @map("plan_id") @db.Uuid
+  sourcePurchaseId      String?   @unique @map("source_purchase_id") @db.Uuid
+  /// pending_payment | active | expired | refunded | revoked | payment_failed
+  status                String    @db.VarChar(40)
+  startsAt              DateTime  @map("starts_at") @db.Timestamptz(6)
+  endsAt                DateTime  @map("ends_at") @db.Timestamptz(6)
+  /// Dernier événement Stripe ayant prolongé / activé (anti double-prolongation)
+  lastExtensionEventId  String?   @map("last_extension_event_id") @db.VarChar(255)
+  revokedAt             DateTime? @map("revoked_at") @db.Timestamptz(6)
+  revokedReason         String?   @map("revoked_reason") @db.Text
+  revokedByAdminId      String?   @map("revoked_by_admin_id") @db.Uuid
+  lastAdminExtendAt     DateTime? @map("last_admin_extend_at") @db.Timestamptz(6)
+  lastAdminExtendById   String?   @map("last_admin_extend_by_id") @db.Uuid
+  lastAdminExtendDays   Int?      @map("last_admin_extend_days")
+  lastAdminExtendReason String?   @map("last_admin_extend_reason") @db.Text
+  stripeMode            String    @map("stripe_mode") @db.VarChar(10)
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user              User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  plan              Plan          @relation(fields: [planId], references: [id], onDelete: Restrict)
+  sourcePurchase    PlanPurchase? @relation(fields: [sourcePurchaseId], references: [id], onDelete: Restrict)
+  revokedByAdmin    User?         @relation("PlanAccessGrantRevoker", fields: [revokedByAdminId], references: [id], onDelete: Restrict)
+  lastAdminExtendBy User?         @relation("PlanAccessGrantExtender", fields: [lastAdminExtendById], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([planId])
+  @@index([status])
+  @@index([endsAt])
+  @@index([stripeMode])
+  @@index([userId, planId, status])
+  @@map("plan_access_grants")
 }
 
 /// Entitlement / limite associée à un forfait (clés du registre typé uniquement).
@@ -1809,4 +1902,71 @@ model PlanSyncAction {
   @@unique([syncRunId, actionKey])
   @@index([status])
   @@map("plan_sync_actions")
+}
+
+/// Conversation assistant IA liée à un voyage (Phase IA 1).
+model AiConversation {
+  id        String   @id @default(uuid(4)) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  tripId    String   @map("trip_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trip     Trip        @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  messages AiMessage[]
+
+  @@unique([userId, tripId])
+  @@index([tripId])
+  @@index([userId, updatedAt])
+  @@map("ai_conversations")
+}
+
+/// Message d’une conversation assistant (user | assistant | system).
+model AiMessage {
+  id                String   @id @default(uuid(4)) @db.Uuid
+  conversationId    String   @map("conversation_id") @db.Uuid
+  /// user | assistant | system
+  role              String   @db.VarChar(20)
+  content           String   @db.Text
+  /// Réponse structurée validée Zod (assistant) — JsonB
+  structuredPayload Json?    @map("structured_payload") @db.JsonB
+  model             String?  @db.VarChar(100)
+  promptVersion     String?  @map("prompt_version") @db.VarChar(60)
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  conversation AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@map("ai_messages")
+}
+
+/// Métriques d’utilisation IA (sans secrets ni GPS précis).
+model AiUsage {
+  id           String   @id @default(uuid(4)) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  tripId       String?  @map("trip_id") @db.Uuid
+  /// chat | analyze | suggest_activities | weather | schedule | fuel | apply_action
+  requestType  String   @map("request_type") @db.VarChar(40)
+  model        String?  @db.VarChar(100)
+  promptVersion String? @map("prompt_version") @db.VarChar(60)
+  inputTokens  Int?     @map("input_tokens")
+  outputTokens Int?     @map("output_tokens")
+  totalTokens  Int?     @map("total_tokens")
+  durationMs   Int      @map("duration_ms")
+  success      Boolean
+  errorCode    String?  @map("error_code") @db.VarChar(60)
+  /// Slug forfait au moment de la requête (métriques admin)
+  planSlug     String?  @map("plan_slug") @db.VarChar(100)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trip Trip? @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([tripId, createdAt])
+  @@index([requestType, createdAt])
+  @@index([success, createdAt])
+  @@index([createdAt])
+  @@map("ai_usages")
 }

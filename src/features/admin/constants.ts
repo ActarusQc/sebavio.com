@@ -68,6 +68,13 @@ export const ADMIN_NAV_ITEMS: readonly AdminNavItem[] = [
     available: true,
   },
   {
+    href: "/admin/passes",
+    label: "Pass 30 jours",
+    permission: "plans.read",
+    phase: 4,
+    available: true,
+  },
+  {
     href: "/admin/analytics",
     label: "Statistiques",
     permission: "analytics.read",
@@ -79,7 +86,7 @@ export const ADMIN_NAV_ITEMS: readonly AdminNavItem[] = [
     label: "Intelligence artificielle",
     permission: "ai.read",
     phase: 5,
-    available: false,
+    available: true,
   },
   {
     href: "/admin/audit",

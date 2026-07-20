@@ -1,5 +1,6 @@
 /**
  * Feature `ai` / schemas.
- * Socle architectural — aucune logique métier.
  */
-export {};
+export * from "./response";
+export * from "./actions";
+export * from "./request";

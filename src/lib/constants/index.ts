@@ -59,6 +59,14 @@ export const WEATHER_MAX_DAILY_CALLS_DEFAULT = 900;
 export const FDE_RATE_LIMIT_MAX = 30;
 export const FDE_RATE_LIMIT_WINDOW_SECONDS = 60 * 60;
 
+/** Rate-limit assistant IA par utilisateur (anti-abus, ajustable via env). */
+export const AI_RATE_LIMIT_MAX_DEFAULT = 30;
+export const AI_RATE_LIMIT_WINDOW_SECONDS_DEFAULT = 60 * 60;
+export const AI_MAX_MESSAGE_CHARS_DEFAULT = 2000;
+export const AI_REQUEST_TIMEOUT_MS_DEFAULT = 45_000;
+export const AI_MAX_CONTEXT_CHARS_DEFAULT = 24_000;
+export const AI_LOCK_TTL_SECONDS = 90;
+
 /**
  * Consommation L/100 km par défaut pour l'estimation automatique.
  * Laisser `undefined` = aucun défaut inventé (l'utilisateur doit renseigner
