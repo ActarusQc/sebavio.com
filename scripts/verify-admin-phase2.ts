@@ -84,7 +84,7 @@ async function main() {
     notes: detail.notesCount,
   });
 
-  const notes = await listAdminUserNotes(target.id);
+  const notes = await listAdminUserNotes(target.id, actor);
   console.log("NOTES_COUNT", notes.length);
 
   const audits = await prisma.auditLog.findMany({
