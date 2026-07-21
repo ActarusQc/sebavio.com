@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, afterEach } from "vitest";
 import { getAiRuntimeConfig } from "@/services/ai/config";
 import { MockAiProvider } from "@/services/ai/mock-provider";
 import { tripAssistantResponseSchema } from "@/features/ai/schemas/response";
@@ -21,14 +21,18 @@ describe("AiProvider mock", () => {
 });
 
 describe("getAiRuntimeConfig", () => {
-  it("reste désactivé sans clé même si AI_ENABLED=true", () => {
-    const prevEnabled = process.env.AI_ENABLED;
-    const prevKey = process.env.OPENAI_API_KEY;
+  const envBackup = { ...process.env };
+
+  afterEach(() => {
+    process.env = { ...envBackup };
+  });
+
+  it("reste désactivé sans clé même si AI_ENABLED=true (openai)", () => {
+    process.env.AI_PROVIDER = "openai";
     process.env.AI_ENABLED = "true";
     delete process.env.OPENAI_API_KEY;
     const config = getAiRuntimeConfig();
     expect(config.enabled).toBe(false);
-    process.env.AI_ENABLED = prevEnabled;
-    if (prevKey != null) process.env.OPENAI_API_KEY = prevKey;
+    expect(config.provider).toBe("openai");
   });
 });

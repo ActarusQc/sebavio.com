@@ -40,6 +40,10 @@ const DEFAULT_MOCK: TripAssistantResponse = {
     suggestions: ["Prévoir une pause"],
     missing: [],
   },
+  knowledgeMode: "trip_context",
+  webSearchUsed: false,
+  sources: [],
+  restaurantRecommendations: [],
 };
 
 /**
@@ -71,13 +75,23 @@ export class MockAiProvider implements AiProvider {
     if (this.shouldFail) {
       throw new Error("mock_openai_failure");
     }
+    const enableWeb = Boolean(input.enableWebSearch);
+    const response: TripAssistantResponse = {
+      ...this.fixture,
+      knowledgeMode: input.knowledgeMode ?? this.fixture.knowledgeMode,
+      webSearchUsed: enableWeb,
+      sources: enableWeb ? (this.fixture.sources ?? []) : [],
+    };
     return {
-      response: this.fixture,
+      response,
       model: input.model || "mock-model",
       inputTokens: 10,
       outputTokens: 20,
       totalTokens: 30,
-      rawText: JSON.stringify(this.fixture),
+      rawText: JSON.stringify(response),
+      webSearchUsed: enableWeb,
+      webSearchCallCount: enableWeb ? 1 : 0,
+      citationSources: enableWeb ? (response.sources ?? []) : [],
     };
   }
 }

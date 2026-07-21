@@ -42,6 +42,15 @@ vi.mock("@/services/ai", () => ({
     maxMessageChars: 2000,
     rateLimitMax: 30,
     rateLimitWindowSeconds: 3600,
+    provider: "mock",
+    apiKeyPresent: true,
+    baseUrl: null,
+    webSearchEnabled: true,
+    webSearchDailyLimit: 20,
+    webSearchMaxPerConversation: 5,
+    webSearchTimeoutMs: 90000,
+    routeSearchRadiusKm: 50,
+    routeMaxDetourKm: 30,
   }),
   createAiProvider: () => ({
     name: "mock",
@@ -64,6 +73,7 @@ vi.mock("@/features/ai/services/conversations", () => ({
 vi.mock("@/features/ai/services/rate-limit", () => ({
   assertAiRateLimit: mockRateLimit,
   acquireAiRequestLock: mockAcquireLock,
+  assertAiWebSearchLimits: vi.fn(),
 }));
 
 vi.mock("@/features/ai/services/context-builder", () => ({

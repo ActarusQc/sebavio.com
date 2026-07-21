@@ -1,5 +1,10 @@
 import { z } from "zod";
 import { proposedTripActionSchema } from "@/features/ai/schemas/actions";
+import {
+  aiKnowledgeModeSchema,
+  aiSourceSchema,
+  restaurantRecommendationSchema,
+} from "@/features/ai/schemas/sources";
 
 export const tripAssistantWarningSchema = z.object({
   code: z.string().min(1).max(80),
@@ -50,6 +55,14 @@ export const tripAssistantResponseSchema = z.object({
     })
     .nullable()
     .optional(),
+  knowledgeMode: aiKnowledgeModeSchema.default("trip_context"),
+  webSearchUsed: z.boolean().default(false),
+  sources: z.array(aiSourceSchema).max(30).default([]),
+  restaurantRecommendations: z
+    .array(restaurantRecommendationSchema)
+    .max(10)
+    .optional()
+    .default([]),
 });
 
 export type TripAssistantResponse = z.infer<typeof tripAssistantResponseSchema>;
@@ -57,3 +70,9 @@ export type TripAssistantSuggestion = z.infer<
   typeof tripAssistantSuggestionSchema
 >;
 export type TripAssistantWarning = z.infer<typeof tripAssistantWarningSchema>;
+
+export type {
+  AiKnowledgeMode,
+  AiSource,
+  RestaurantRecommendation,
+} from "@/features/ai/schemas/sources";

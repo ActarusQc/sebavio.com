@@ -16,6 +16,11 @@ export type RecordAiUsageInput = {
   success: boolean;
   errorCode?: string | null;
   planSlug?: string | null;
+  knowledgeMode?: string | null;
+  webSearchUsed?: boolean;
+  webSearchCallCount?: number;
+  intent?: string | null;
+  sourceCount?: number | null;
 };
 
 export async function recordAiUsage(input: RecordAiUsageInput): Promise<void> {
@@ -28,6 +33,11 @@ export async function recordAiUsage(input: RecordAiUsageInput): Promise<void> {
         provider: input.provider ?? null,
         model: input.model ?? null,
         promptVersion: input.promptVersion ?? null,
+        knowledgeMode: input.knowledgeMode ?? null,
+        intent: input.intent ?? null,
+        webSearchUsed: input.webSearchUsed ?? false,
+        webSearchCallCount: input.webSearchCallCount ?? 0,
+        sourceCount: input.sourceCount ?? null,
         inputTokens: input.inputTokens ?? null,
         outputTokens: input.outputTokens ?? null,
         totalTokens: input.totalTokens ?? null,
@@ -43,6 +53,7 @@ export async function recordAiUsage(input: RecordAiUsageInput): Promise<void> {
       success: input.success,
       errorCode: input.errorCode,
       provider: input.provider,
+      webSearchUsed: input.webSearchUsed,
     });
   }
 }
@@ -60,9 +71,13 @@ export type AiAdminMetrics = {
     inputTokens: number;
     outputTokens: number;
     totalTokens: number;
+    webSearches: number;
+    webSearchSuccesses: number;
+    avgSourceCount: number | null;
   };
   byDay: Array<{ day: string; count: number; successes: number }>;
   byRequestType: Array<{ requestType: string; count: number }>;
+  byIntent: Array<{ intent: string; count: number }>;
   byPlanSlug: Array<{ planSlug: string; count: number }>;
   byPromptVersion: Array<{ promptVersion: string; count: number }>;
 };
@@ -90,9 +105,17 @@ export async function getAiAdminMetrics(
       inputTokens: true,
       outputTokens: true,
       totalTokens: true,
+      webSearchUsed: true,
+      sourceCount: true,
+      intent: true,
     },
     orderBy: { createdAt: "asc" },
   });
+
+  const webRows = rows.filter((r) => r.webSearchUsed);
+  const sourceCounts = webRows
+    .map((r) => r.sourceCount)
+    .filter((n): n is number => typeof n === "number");
 
   const totals = {
     requests: rows.length,
@@ -107,10 +130,20 @@ export async function getAiAdminMetrics(
     inputTokens: rows.reduce((sum, r) => sum + (r.inputTokens ?? 0), 0),
     outputTokens: rows.reduce((sum, r) => sum + (r.outputTokens ?? 0), 0),
     totalTokens: rows.reduce((sum, r) => sum + (r.totalTokens ?? 0), 0),
+    webSearches: webRows.length,
+    webSearchSuccesses: webRows.filter((r) => r.success).length,
+    avgSourceCount:
+      sourceCounts.length === 0
+        ? null
+        : Math.round(
+            (sourceCounts.reduce((a, b) => a + b, 0) / sourceCounts.length) *
+              10,
+          ) / 10,
   };
 
   const dayMap = new Map<string, { count: number; successes: number }>();
   const typeMap = new Map<string, number>();
+  const intentMap = new Map<string, number>();
   const planMap = new Map<string, number>();
   const promptMap = new Map<string, number>();
 
@@ -122,6 +155,8 @@ export async function getAiAdminMetrics(
     dayMap.set(day, dayEntry);
 
     typeMap.set(row.requestType, (typeMap.get(row.requestType) ?? 0) + 1);
+    const intent = row.intent ?? "inconnu";
+    intentMap.set(intent, (intentMap.get(intent) ?? 0) + 1);
     const plan = row.planSlug ?? "inconnu";
     planMap.set(plan, (planMap.get(plan) ?? 0) + 1);
     const prompt = row.promptVersion ?? "inconnu";
@@ -133,6 +168,10 @@ export async function getAiAdminMetrics(
     byDay: [...dayMap.entries()].map(([day, v]) => ({ day, ...v })),
     byRequestType: [...typeMap.entries()].map(([requestType, count]) => ({
       requestType,
+      count,
+    })),
+    byIntent: [...intentMap.entries()].map(([intent, count]) => ({
+      intent,
       count,
     })),
     byPlanSlug: [...planMap.entries()].map(([planSlug, count]) => ({

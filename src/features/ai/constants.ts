@@ -1,4 +1,4 @@
-export const TRIP_ASSISTANT_PROMPT_VERSION = "trip-assistant-v1";
+export const TRIP_ASSISTANT_PROMPT_VERSION = "trip-assistant-v2-web-grounded";
 
 export const QUICK_ACTIONS = [
   {
@@ -76,4 +76,8 @@ export const DEMO_STATIC_RESPONSE = {
     suggestions: ["Exemple : ajouter une pause à mi-parcours"],
     missing: ["Exemple : véhicule ou météo non renseignés"],
   },
+  knowledgeMode: "trip_context" as const,
+  webSearchUsed: false,
+  sources: [],
+  restaurantRecommendations: [],
 };

@@ -1952,6 +1952,12 @@ model AiUsage {
   provider     String?  @db.VarChar(40)
   model        String?  @db.VarChar(100)
   promptVersion String? @map("prompt_version") @db.VarChar(60)
+  /// trip_context | web_grounded
+  knowledgeMode String? @map("knowledge_mode") @db.VarChar(40)
+  intent       String?  @db.VarChar(60)
+  webSearchUsed Boolean @default(false) @map("web_search_used")
+  webSearchCallCount Int @default(0) @map("web_search_call_count")
+  sourceCount  Int?     @map("source_count")
   inputTokens  Int?     @map("input_tokens")
   outputTokens Int?     @map("output_tokens")
   totalTokens  Int?     @map("total_tokens")
@@ -1970,6 +1976,8 @@ model AiUsage {
   @@index([requestType, createdAt])
   @@index([success, createdAt])
   @@index([provider, createdAt])
+  @@index([webSearchUsed, createdAt])
+  @@index([intent, createdAt])
   @@index([createdAt])
   @@map("ai_usages")
 }

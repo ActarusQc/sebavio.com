@@ -1,6 +1,6 @@
 import "server-only";
 
-import { isAppError } from "@/lib/errors";
+import { isAppError, AppError } from "@/lib/errors";
 import { getAiRuntimeConfig, createAiProvider } from "@/services/ai";
 import {
   TRIP_ASSISTANT_PROMPT_VERSION,
@@ -20,6 +20,7 @@ import {
 import {
   acquireAiRequestLock,
   assertAiRateLimit,
+  assertAiWebSearchLimits,
 } from "@/features/ai/services/rate-limit";
 import {
   appendConversationMessages,
@@ -28,6 +29,13 @@ import {
   type AiConversationDto,
 } from "@/features/ai/services/conversations";
 import { recordAiUsage } from "@/features/ai/services/usage";
+import { routeTripAssistantRequest } from "@/features/ai/services/intent-router";
+import { buildRouteSearchContext } from "@/features/ai/services/route-search-context";
+import {
+  enforceMichelinVerification,
+  mergeAndSanitizeSources,
+} from "@/features/ai/services/verify-claims";
+import { enrichRestaurantRouteImpacts } from "@/features/ai/services/enrich-route-impact";
 import { getOwnedTripOrThrow } from "@/features/trips/services/trips";
 
 export type TripAssistantRunResult =
@@ -80,7 +88,6 @@ export async function runTripAssistant(params: {
 
   const access = await resolveTripAssistantAccess(params.userId);
 
-  // Forfait gratuit : démo statique, aucune donnée voyage vers l’IA
   if (!access.canUsePersonalizedAi) {
     await recordAiUsage({
       userId: params.userId,
@@ -90,7 +97,11 @@ export async function runTripAssistant(params: {
       success: true,
       planSlug: access.access.planSlug,
       promptVersion: TRIP_ASSISTANT_PROMPT_VERSION,
+      provider: "demo",
       model: "demo-static",
+      knowledgeMode: "trip_context",
+      webSearchUsed: false,
+      intent: "general_question",
     });
     return {
       ok: true,
@@ -111,6 +122,8 @@ export async function runTripAssistant(params: {
       success: false,
       errorCode: "AI_DISABLED",
       planSlug: access.access.planSlug,
+      provider: config.provider,
+      model: config.model || null,
     });
     return {
       ok: false,
@@ -136,6 +149,8 @@ export async function runTripAssistant(params: {
       success: false,
       errorCode: code,
       planSlug: access.access.planSlug,
+      provider: config.provider,
+      model: config.model || null,
     });
     return { ok: false, message, code };
   }
@@ -150,30 +165,127 @@ export async function runTripAssistant(params: {
       liveLongitude: input.liveLongitude,
     });
 
-    const systemPrompt = buildTripAssistantSystemPrompt();
+    const routing = routeTripAssistantRequest({
+      message: input.message,
+      requestType: input.requestType,
+      hasExistingActivitiesInContext: (context.activities?.length ?? 0) > 0,
+    });
+
+    if (
+      routing.requiresRecommendationsEntitlement &&
+      !access.canUseRecommendations
+    ) {
+      throw new AppError(
+        "ACCESS_DENIED",
+        "Les recommandations IA ne sont pas incluses dans votre forfait.",
+        403,
+      );
+    }
+
+    const knowledgeMode = routing.knowledgeMode;
+    let enableWebSearch = false;
+    let routeSearchJson: string | null = null;
+    let routeSearch = null;
+
+    if (routing.knowledgeMode === "web_grounded") {
+      if (!config.webSearchEnabled) {
+        await recordAiUsage({
+          userId: params.userId,
+          tripId: input.tripId,
+          requestType: input.requestType,
+          provider: config.provider,
+          model: config.model,
+          promptVersion: TRIP_ASSISTANT_PROMPT_VERSION,
+          durationMs: Date.now() - started,
+          success: false,
+          errorCode: "AI_WEB_SEARCH_DISABLED",
+          planSlug: access.access.planSlug,
+          knowledgeMode: "web_grounded",
+          webSearchUsed: false,
+          intent: routing.intent,
+        });
+        return {
+          ok: false,
+          message:
+            "Je ne peux pas rechercher des établissements en ligne pour le moment.",
+          code: "AI_WEB_SEARCH_DISABLED",
+        };
+      }
+
+      const conversation = await getOrCreateConversation(
+        params.userId,
+        input.tripId,
+      );
+      await assertAiWebSearchLimits({
+        userId: params.userId,
+        conversationId: conversation.id,
+        tripId: input.tripId,
+      });
+      enableWebSearch = true;
+
+      if (routing.needsRouteSearchContext) {
+        routeSearch = await buildRouteSearchContext({
+          tripId: input.tripId,
+          userId: params.userId,
+          searchRadiusKm: config.routeSearchRadiusKm,
+          maxDetourKm: config.routeMaxDetourKm,
+        });
+        if (routeSearch) {
+          routeSearchJson = JSON.stringify(routeSearch);
+        }
+      }
+    }
+
+    const systemPrompt = buildTripAssistantSystemPrompt({
+      knowledgeMode,
+      webSearchEnabled: enableWebSearch,
+    });
     const userPayload = wrapUserPayload({
       requestType: input.requestType,
       message: input.message,
       contextJson: JSON.stringify(context),
+      routeSearchJson,
+      intent: routing.intent,
+      knowledgeMode,
     });
 
     const provider = createAiProvider();
+    const providerInput = {
+      systemPrompt,
+      userPayload,
+      requestType: input.requestType,
+      model: config.model,
+      timeoutMs: enableWebSearch ? config.webSearchTimeoutMs : config.timeoutMs,
+      knowledgeMode,
+      enableWebSearch,
+    };
+
     const result =
       input.requestType === "analyze"
-        ? await provider.analyzeTrip({
-            systemPrompt,
-            userPayload,
-            requestType: input.requestType,
-            model: config.model,
-            timeoutMs: config.timeoutMs,
-          })
-        : await provider.generateTripAssistantResponse({
-            systemPrompt,
-            userPayload,
-            requestType: input.requestType,
-            model: config.model,
-            timeoutMs: config.timeoutMs,
-          });
+        ? await provider.analyzeTrip(providerInput)
+        : await provider.generateTripAssistantResponse(providerInput);
+
+    const mergedSources = mergeAndSanitizeSources(
+      result.response.sources,
+      result.citationSources,
+    );
+
+    let response: TripAssistantResponse = {
+      ...result.response,
+      knowledgeMode,
+      webSearchUsed: enableWebSearch && result.webSearchUsed,
+      sources: mergedSources,
+      restaurantRecommendations:
+        result.response.restaurantRecommendations ?? [],
+    };
+
+    response = enforceMichelinVerification(response, mergedSources);
+    response = await enrichRestaurantRouteImpacts({
+      tripId: input.tripId,
+      userId: params.userId,
+      response,
+      routeSearch,
+    });
 
     const conversation = await getOrCreateConversation(
       params.userId,
@@ -182,8 +294,8 @@ export async function runTripAssistant(params: {
     await appendConversationMessages({
       conversationId: conversation.id,
       userContent: input.message,
-      assistantContent: result.response.answer,
-      structured: result.response,
+      assistantContent: response.answer,
+      structured: response,
       model: result.model,
       promptVersion: TRIP_ASSISTANT_PROMPT_VERSION,
     });
@@ -192,6 +304,7 @@ export async function runTripAssistant(params: {
       userId: params.userId,
       tripId: input.tripId,
       requestType: input.requestType,
+      provider: provider.name,
       model: result.model,
       promptVersion: TRIP_ASSISTANT_PROMPT_VERSION,
       inputTokens: result.inputTokens,
@@ -200,12 +313,17 @@ export async function runTripAssistant(params: {
       durationMs: Date.now() - started,
       success: true,
       planSlug: access.access.planSlug,
+      knowledgeMode,
+      webSearchUsed: response.webSearchUsed,
+      webSearchCallCount: result.webSearchCallCount,
+      intent: routing.intent,
+      sourceCount: response.sources.length,
     });
 
     return {
       ok: true,
       mode: "personalized",
-      response: result.response,
+      response,
       conversationId: conversation.id,
       promptVersion: TRIP_ASSISTANT_PROMPT_VERSION,
       model: result.model,
@@ -223,6 +341,7 @@ export async function runTripAssistant(params: {
       userId: params.userId,
       tripId: input.tripId,
       requestType: input.requestType,
+      provider: config.provider,
       durationMs: Date.now() - started,
       success: false,
       errorCode: code,

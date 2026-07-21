@@ -42,6 +42,15 @@ vi.mock("@/services/ai", () => ({
     maxMessageChars: 2000,
     rateLimitMax: 30,
     rateLimitWindowSeconds: 3600,
+    provider: "mock",
+    apiKeyPresent: true,
+    baseUrl: null,
+    webSearchEnabled: true,
+    webSearchDailyLimit: 20,
+    webSearchMaxPerConversation: 5,
+    webSearchTimeoutMs: 90000,
+    routeSearchRadiusKm: 50,
+    routeMaxDetourKm: 30,
   }),
   createAiProvider: () => ({
     name: "mock",
@@ -64,6 +73,7 @@ vi.mock("@/features/ai/services/conversations", () => ({
 vi.mock("@/features/ai/services/rate-limit", () => ({
   assertAiRateLimit: mockRateLimit,
   acquireAiRequestLock: mockAcquireLock,
+  assertAiWebSearchLimits: vi.fn(),
 }));
 
 vi.mock("@/features/ai/services/context-builder", () => ({
@@ -79,7 +89,10 @@ describe("runTripAssistant", () => {
     vi.clearAllMocks();
     mockGetOwnedTrip.mockResolvedValue({ id: "trip" });
     mockGetOrCreate.mockResolvedValue({ id: "conv" });
-    mockBuildContext.mockResolvedValue({ trip: { id: "trip" } });
+    mockBuildContext.mockResolvedValue({
+      trip: { id: "trip" },
+      activities: [],
+    });
     mockProviderGenerate.mockResolvedValue({
       response: DEMO_STATIC_RESPONSE,
       model: "mock-model",
@@ -87,6 +100,9 @@ describe("runTripAssistant", () => {
       outputTokens: 2,
       totalTokens: 3,
       rawText: "{}",
+      webSearchUsed: false,
+      webSearchCallCount: 0,
+      citationSources: [],
     });
   });
 

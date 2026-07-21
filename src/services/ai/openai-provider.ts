@@ -1,51 +1,20 @@
 import "server-only";
 
 import { AppError } from "@/lib/errors";
-import { tripAssistantResponseSchema } from "@/features/ai/schemas/response";
+import { parseStructuredWithRetry } from "@/services/ai/parse-structured";
+import { normalizeProviderError } from "@/services/ai/normalize-provider-error";
 import type {
   AiGenerateTripAssistantInput,
   AiGenerateTripAssistantResult,
   AiProvider,
 } from "@/services/ai/types";
 
-function extractJsonObject(text: string): unknown {
-  const trimmed = text.trim();
-  try {
-    return JSON.parse(trimmed) as unknown;
-  } catch {
-    const start = trimmed.indexOf("{");
-    const end = trimmed.lastIndexOf("}");
-    if (start >= 0 && end > start) {
-      return JSON.parse(trimmed.slice(start, end + 1)) as unknown;
-    }
-    throw new AppError(
-      "AI_INVALID_RESPONSE",
-      "Réponse de l’assistant invalide.",
-      502,
-    );
-  }
-}
-
-function parseStructured(
-  rawText: string,
-): AiGenerateTripAssistantResult["response"] {
-  const parsed = extractJsonObject(rawText);
-  const result = tripAssistantResponseSchema.safeParse(parsed);
-  if (!result.success) {
-    throw new AppError(
-      "AI_INVALID_RESPONSE",
-      "Réponse de l’assistant invalide.",
-      502,
-    );
-  }
-  return result.data;
-}
-
 /**
  * Provider OpenAI — API Responses uniquement, serveur.
+ * Conservé pour retour arrière via AI_PROVIDER=openai.
  */
 export class OpenAiResponsesProvider implements AiProvider {
-  readonly name = "openai-responses";
+  readonly name = "openai";
 
   constructor(
     private readonly apiKey: string,
@@ -67,7 +36,16 @@ export class OpenAiResponsesProvider implements AiProvider {
   private async call(
     input: AiGenerateTripAssistantInput,
   ): Promise<AiGenerateTripAssistantResult> {
+    if (!this.apiKey.trim()) {
+      throw new AppError(
+        "AI_CONFIGURATION",
+        "L’Assistant Sebavio ne peut pas répondre pour le moment. Veuillez réessayer dans quelques instants.",
+        503,
+      );
+    }
+
     const model = input.model || this.defaultModel;
+    const started = Date.now();
     const OpenAI = (await import("openai")).default;
     const client = new OpenAI({
       apiKey: this.apiKey,
@@ -87,6 +65,7 @@ export class OpenAiResponsesProvider implements AiProvider {
           { role: "system", content: input.systemPrompt },
           { role: "user", content: input.userPayload },
         ],
+        store: false,
         text: { format: { type: "json_object" } },
       });
 
@@ -107,48 +86,22 @@ export class OpenAiResponsesProvider implements AiProvider {
               : null;
       }
     } catch (error) {
-      if (error instanceof AppError) throw error;
-      const message = error instanceof Error ? error.message.toLowerCase() : "";
-      if (message.includes("timeout") || message.includes("timed out")) {
-        throw new AppError(
-          "AI_005",
-          "L’assistant met trop de temps à répondre. Réessayez.",
-          504,
-        );
-      }
-      console.error("[ai] openai provider error", {
-        name: error instanceof Error ? error.name : "unknown",
+      throw normalizeProviderError(error, {
+        provider: this.name,
+        model,
+        durationMs: Date.now() - started,
       });
-      throw new AppError(
-        "AI_003",
-        "L’assistant est temporairement indisponible.",
-        503,
-      );
     }
 
     if (!rawText.trim()) {
       throw new AppError(
         "AI_INVALID_RESPONSE",
-        "Réponse de l’assistant invalide.",
+        "L’Assistant Sebavio ne peut pas répondre pour le moment. Veuillez réessayer dans quelques instants.",
         502,
       );
     }
 
-    let structured;
-    try {
-      structured = parseStructured(rawText);
-    } catch (first) {
-      // Une seule tentative contrôlée : re-parse après nettoyage markdown
-      const cleaned = rawText
-        .replace(/^```json\s*/i, "")
-        .replace(/^```\s*/i, "")
-        .replace(/\s*```$/i, "");
-      try {
-        structured = parseStructured(cleaned);
-      } catch {
-        throw first;
-      }
-    }
+    const structured = parseStructuredWithRetry(rawText);
 
     return {
       response: structured,
@@ -157,6 +110,9 @@ export class OpenAiResponsesProvider implements AiProvider {
       outputTokens,
       totalTokens,
       rawText,
+      webSearchUsed: false,
+      webSearchCallCount: 0,
+      citationSources: [],
     };
   }
 }

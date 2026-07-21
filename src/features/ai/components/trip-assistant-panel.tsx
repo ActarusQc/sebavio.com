@@ -15,6 +15,10 @@ import {
 import { SebavioAssistantIcon } from "@/features/ai/components/sebavio-assistant-icon";
 import { useTripAssistant } from "@/features/ai/components/trip-assistant-context";
 import { TripAssistantAnalysis } from "@/features/ai/components/analysis-sections";
+import {
+  AssistantSourcesList,
+  WebSearchBadge,
+} from "@/features/ai/components/assistant-sources";
 import { ApplyActionDialog } from "@/features/ai/components/apply-action-dialog";
 import { describeProposedAction } from "@/features/ai/services/apply-action-client";
 import { QUICK_ACTIONS } from "@/features/ai/constants";
@@ -224,7 +228,13 @@ export function TripAssistantSheet() {
                   </p>
                   {m.role === "assistant" && m.structured ? (
                     <div className="mt-3 space-y-3">
+                      <WebSearchBadge
+                        used={Boolean(m.structured.webSearchUsed)}
+                      />
                       <TripAssistantAnalysis response={m.structured} />
+                      <AssistantSourcesList
+                        sources={m.structured.sources ?? []}
+                      />
                       {m.mode === "demo" ? (
                         <Button
                           render={<Link href="/pricing" />}

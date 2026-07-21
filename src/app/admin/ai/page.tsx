@@ -1,5 +1,8 @@
 import { requirePermission } from "@/features/auth";
-import { getAiRuntimeConfig } from "@/services/ai/config";
+import {
+  getAiRuntimeConfig,
+  getAiProviderDisplayName,
+} from "@/services/ai/config";
 import { getAiAdminMetrics } from "@/features/ai/services/usage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +12,7 @@ export default async function AdminAiPage() {
   await requirePermission("ai.read");
   const config = getAiRuntimeConfig();
   const metrics = await getAiAdminMetrics(30);
+  const providerLabel = getAiProviderDisplayName(config.provider);
 
   return (
     <div className="space-y-6">
@@ -17,8 +21,7 @@ export default async function AdminAiPage() {
           Intelligence artificielle
         </h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          Suivi d’usage de l’Assistant Sebavio. La clé OpenAI n’est jamais
-          affichée.
+          Suivi d’usage de l’Assistant Sebavio. Aucune clé API n’est affichée.
         </p>
       </div>
 
@@ -34,18 +37,21 @@ export default async function AdminAiPage() {
               {config.enabled ? "Activée" : "Désactivée"}
             </Badge>
             <p className="text-muted-foreground mt-2 text-xs">
-              AI_ENABLED + présence de clé
+              AI_ENABLED + clé + modèle ({providerLabel})
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Modèle</CardTitle>
+            <CardTitle className="text-sm font-medium">Fournisseur</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="font-mono text-sm">{config.model}</p>
+            <p className="font-mono text-sm">{providerLabel}</p>
             <p className="text-muted-foreground mt-2 text-xs">
-              Clé configurée : {config.apiKey ? "oui" : "non"}
+              Modèle : {config.model || "—"}
+            </p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              Clé configurée : {config.apiKeyPresent ? "oui" : "non"}
             </p>
           </CardContent>
         </Card>
@@ -74,6 +80,97 @@ export default async function AdminAiPage() {
             </p>
             <p className="text-muted-foreground mt-1 text-xs">
               Prompt : {TRIP_ASSISTANT_PROMPT_VERSION}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Jetons entrée</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold">
+              {metrics.totals.inputTokens.toLocaleString("fr-CA")}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Jetons sortie</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold">
+              {metrics.totals.outputTokens.toLocaleString("fr-CA")}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Total jetons</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold">
+              {metrics.totals.totalTokens.toLocaleString("fr-CA")}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">
+              Recherches Web
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold">
+              {metrics.totals.webSearches}
+            </p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              {metrics.totals.webSearchSuccesses} réussies
+              {metrics.totals.webSearches > 0
+                ? ` · ${Math.round(
+                    (metrics.totals.webSearchSuccesses /
+                      metrics.totals.webSearches) *
+                      100,
+                  )} %`
+                : ""}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">
+              Sources moyennes
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-semibold">
+              {metrics.totals.avgSourceCount != null
+                ? metrics.totals.avgSourceCount
+                : "—"}
+            </p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              Par recherche Web
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">
+              Recherche Web config
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Badge variant={config.webSearchEnabled ? "default" : "secondary"}>
+              {config.webSearchEnabled ? "Activée" : "Désactivée"}
+            </Badge>
+            <p className="text-muted-foreground mt-2 text-xs">
+              Rayon {config.routeSearchRadiusKm} km · max détour{" "}
+              {config.routeMaxDetourKm} km
             </p>
           </CardContent>
         </Card>
@@ -119,6 +216,28 @@ export default async function AdminAiPage() {
                     className="border-border/60 flex justify-between border-b py-1"
                   >
                     <span className="font-mono text-xs">{d.requestType}</span>
+                    <span>{d.count}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Par intention</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {metrics.byIntent.length === 0 ? (
+              <p className="text-muted-foreground text-sm">Aucune donnée.</p>
+            ) : (
+              <ul className="space-y-1 text-sm">
+                {metrics.byIntent.map((d) => (
+                  <li
+                    key={d.intent}
+                    className="border-border/60 flex justify-between border-b py-1"
+                  >
+                    <span className="font-mono text-xs">{d.intent}</span>
                     <span>{d.count}</span>
                   </li>
                 ))}

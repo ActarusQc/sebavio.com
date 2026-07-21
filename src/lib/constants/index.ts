@@ -66,6 +66,11 @@ export const AI_MAX_MESSAGE_CHARS_DEFAULT = 2000;
 export const AI_REQUEST_TIMEOUT_MS_DEFAULT = 45_000;
 export const AI_MAX_CONTEXT_CHARS_DEFAULT = 24_000;
 export const AI_LOCK_TTL_SECONDS = 90;
+export const AI_WEB_SEARCH_DAILY_LIMIT_DEFAULT = 20;
+export const AI_WEB_SEARCH_MAX_PER_CONVERSATION_DEFAULT = 5;
+export const AI_WEB_SEARCH_TIMEOUT_MS_DEFAULT = 90_000;
+export const AI_ROUTE_SEARCH_RADIUS_KM_DEFAULT = 50;
+export const AI_ROUTE_MAX_DETOUR_KM_DEFAULT = 30;
 
 /**
  * Consommation L/100 km par défaut pour l'estimation automatique.

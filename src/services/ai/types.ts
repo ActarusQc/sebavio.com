@@ -1,5 +1,6 @@
 import type { TripAssistantResponse } from "@/features/ai/schemas/response";
 import type { TripAssistantRequestType } from "@/features/ai/schemas/request";
+import type { AiKnowledgeMode } from "@/features/ai/schemas/sources";
 
 export type AiGenerateTripAssistantInput = {
   systemPrompt: string;
@@ -7,6 +8,8 @@ export type AiGenerateTripAssistantInput = {
   requestType: TripAssistantRequestType;
   model: string;
   timeoutMs: number;
+  knowledgeMode?: AiKnowledgeMode;
+  enableWebSearch?: boolean;
 };
 
 export type AiGenerateTripAssistantResult = {
@@ -16,6 +19,9 @@ export type AiGenerateTripAssistantResult = {
   outputTokens: number | null;
   totalTokens: number | null;
   rawText: string;
+  webSearchUsed: boolean;
+  webSearchCallCount: number;
+  citationSources: TripAssistantResponse["sources"];
 };
 
 export type AiAnalyzeTripInput = AiGenerateTripAssistantInput;
