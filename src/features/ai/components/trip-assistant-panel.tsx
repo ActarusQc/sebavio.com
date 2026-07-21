@@ -1,263 +1,144 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, useTransition } from "react";
-import { Sparkles, SendHorizonal, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Loader2, Paperclip, SendHorizonal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Sheet,
   SheetBody,
   SheetContent,
-  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-  applyTripAssistantActionAction,
-  getTripAssistantBootstrapAction,
-  sendTripAssistantMessageAction,
-} from "@/features/ai/actions";
-import { QUICK_ACTIONS } from "@/features/ai/constants";
-import type { TripAssistantResponse } from "@/features/ai/schemas/response";
-import type { ProposedTripAction } from "@/features/ai/schemas/actions";
-import { describeProposedAction } from "@/features/ai/services/apply-action-client";
+import { SebavioAssistantIcon } from "@/features/ai/components/sebavio-assistant-icon";
+import { useTripAssistant } from "@/features/ai/components/trip-assistant-context";
 import { TripAssistantAnalysis } from "@/features/ai/components/analysis-sections";
-import { TripAssistantSuggestions } from "@/features/ai/components/suggestion-cards";
 import { ApplyActionDialog } from "@/features/ai/components/apply-action-dialog";
+import { describeProposedAction } from "@/features/ai/services/apply-action-client";
+import { QUICK_ACTIONS } from "@/features/ai/constants";
 import { cn } from "@/lib/utils";
+import type { TripAssistantSuggestion } from "@/features/ai/schemas/response";
+import type { ProposedTripAction } from "@/features/ai/schemas/actions";
 
-type ChatItem =
-  | { id: string; role: "user"; content: string }
-  | {
-      id: string;
-      role: "assistant";
-      content: string;
-      structured: TripAssistantResponse | null;
-      mode?: "personalized" | "demo";
-    };
+export function TripAssistantFab() {
+  const { open, openPanel } = useTripAssistant();
 
-type TripAssistantPanelProps = {
-  tripId: string;
-  liveLatitude?: number | null;
-  liveLongitude?: number | null;
-  tripActive?: boolean;
-};
-
-export function TripAssistantPanel({
-  tripId,
-  liveLatitude,
-  liveLongitude,
-  tripActive = false,
-}: TripAssistantPanelProps) {
-  const router = useRouter();
-  const titleId = useId();
-  const [open, setOpen] = useState(false);
-  const [booted, setBooted] = useState(false);
-  const [canUsePersonalizedAi, setCanUsePersonalizedAi] = useState(false);
-  const [canUseRecommendations, setCanUseRecommendations] = useState(false);
-  const [aiEnabled, setAiEnabled] = useState(false);
-  const [messages, setMessages] = useState<ChatItem[]>([]);
-  const [draft, setDraft] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
-  const [pendingAction, setPendingAction] = useState<ProposedTripAction | null>(
-    null,
+  return (
+    <button
+      type="button"
+      data-testid="trip-assistant-open"
+      onClick={() => openPanel()}
+      className={cn(
+        "bg-sebavio-navy hover:bg-sebavio-navy/90 focus-visible:ring-sebavio-navy fixed z-40 flex h-[52px] items-center gap-2 rounded-full px-6 text-[15px] font-semibold text-white shadow-[0_10px_28px_rgb(14_45_70/0.28)] transition focus-visible:ring-2 focus-visible:outline-none",
+        "right-7 bottom-[max(1.5rem,env(safe-area-inset-bottom))]",
+        open && "sm:right-[calc(26.5rem+1.75rem)]",
+        "max-sm:right-4 max-sm:left-4 max-sm:justify-center",
+      )}
+      aria-haspopup="dialog"
+      aria-expanded={open}
+    >
+      <span aria-hidden className="text-sebavio-gold">
+        ✦
+      </span>
+      Demander à l’assistant
+    </button>
   );
-  const [locationError, setLocationError] = useState<string | null>(null);
-  const [largeDetourKm, setLargeDetourKm] = useState<number | null>(null);
-  const listRef = useRef<HTMLDivElement>(null);
-  const abortVisual = useRef(false);
+}
 
-  useEffect(() => {
-    if (!open || booted) return;
-    startTransition(async () => {
-      const result = await getTripAssistantBootstrapAction(tripId);
-      if (!result.ok) {
-        setError(result.message);
-        setBooted(true);
-        return;
-      }
-      setCanUsePersonalizedAi(result.data.canUsePersonalizedAi);
-      setCanUseRecommendations(result.data.canUseRecommendations);
-      setAiEnabled(result.data.aiEnabled);
-      const history = result.data.conversation?.messages ?? [];
-      setMessages(
-        history.map((m) =>
-          m.role === "user"
-            ? { id: m.id, role: "user" as const, content: m.content }
-            : {
-                id: m.id,
-                role: "assistant" as const,
-                content: m.content,
-                structured: m.structuredPayload,
-              },
-        ),
-      );
-      setBooted(true);
-    });
-  }, [open, booted, tripId]);
+export function TripAssistantSheet() {
+  const {
+    open,
+    setOpen,
+    titleId,
+    booted,
+    canUsePersonalizedAi,
+    canUseRecommendations,
+    aiEnabled,
+    messages,
+    draft,
+    setDraft,
+    error,
+    pending,
+    listRef,
+    sendMessage,
+    pendingAction,
+    setPendingAction,
+    locationError,
+    largeDetourKm,
+    clearActionErrors,
+    confirmApply,
+    abortVisual,
+  } = useTripAssistant();
 
-  useEffect(() => {
-    listRef.current?.scrollTo({
-      top: listRef.current.scrollHeight,
-      behavior: "smooth",
-    });
-  }, [messages, pending]);
+  const lastStructured = [...messages]
+    .reverse()
+    .find((m) => m.role === "assistant" && m.structured);
 
-  function sendMessage(
-    message: string,
-    requestType:
-      (typeof QUICK_ACTIONS)[number]["requestType"] | "chat" = "chat",
-  ) {
-    const trimmed = message.trim();
-    if (!trimmed || pending) return;
+  const suggestions =
+    lastStructured && lastStructured.role === "assistant"
+      ? (lastStructured.structured?.suggestions ?? [])
+      : [];
+  const proposed =
+    suggestions.find((s) => s.proposedAction != null)?.proposedAction ?? null;
+  const proposedSuggestion = suggestions.find((s) => s.proposedAction != null);
 
-    if (
-      (requestType === "suggest_activities" || requestType === "weather") &&
-      canUsePersonalizedAi &&
-      !canUseRecommendations
-    ) {
-      setError(
-        "Les recommandations IA ne sont pas incluses dans votre forfait actuel.",
-      );
-      return;
-    }
+  const statusLabel = !booted
+    ? null
+    : !aiEnabled
+      ? "Temporairement indisponible"
+      : canUsePersonalizedAi
+        ? "En ligne"
+        : "Aperçu";
 
-    abortVisual.current = false;
-    setError(null);
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: `u-${prev.length}-${trimmed.length}`,
-        role: "user",
-        content: trimmed,
-      },
-    ]);
-    setDraft("");
-
-    startTransition(async () => {
-      const result = await sendTripAssistantMessageAction({
-        tripId,
-        message: trimmed,
-        requestType,
-        includeLiveLocation: tripActive,
-        liveLatitude: tripActive ? liveLatitude : null,
-        liveLongitude: tripActive ? liveLongitude : null,
-      });
-
-      if (abortVisual.current) return;
-
-      if (!result.ok) {
-        setError(result.message);
-        return;
-      }
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `a-${prev.length}-${result.data.response.summary.length}`,
-          role: "assistant",
-          content: result.data.response.answer,
-          structured: result.data.response,
-          mode: result.data.mode,
-        },
-      ]);
-    });
-  }
-
-  async function confirmApply(action: ProposedTripAction) {
-    setPendingAction(null);
-    setLocationError(null);
-    startTransition(async () => {
-      const result = await applyTripAssistantActionAction({
-        tripId,
-        action,
-        confirm: true,
-      });
-      if (!result.ok) {
-        if (
-          result.code === "AI_ACTION_LOCATION_REQUIRED" ||
-          result.code === "AI_ACTION_LOCATION_OUT_OF_CORRIDOR"
-        ) {
-          setPendingAction(action);
-          setLocationError(result.message);
-          return;
-        }
-        if (result.code === "AI_ACTION_LARGE_DETOUR") {
-          setPendingAction(action);
-          setLargeDetourKm(
-            "estimatedAddedKm" in result &&
-              typeof result.estimatedAddedKm === "number"
-              ? result.estimatedAddedKm
-              : null,
-          );
-          setLocationError(result.message);
-          return;
-        }
-        setError(result.message);
-        return;
-      }
-      setLargeDetourKm(null);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `sys-${prev.length}`,
-          role: "assistant",
-          content: result.data.message,
-          structured: null,
-        },
-      ]);
-      if (result.data.applied) {
-        router.refresh();
-      }
-    });
-  }
+  // Découverte : démo autorisée ; indisponible si AI_ENABLED=false
+  const inputDisabled = pending || (booted && !aiEnabled);
 
   return (
     <>
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetTrigger
-          render={
-            <Button
-              type="button"
-              variant="default"
-              className="bg-sebavio-navy hover:bg-sebavio-navy/90 gap-2 text-white"
-              data-testid="trip-assistant-open"
-            />
-          }
-        >
-          <Sparkles className="size-4" aria-hidden />
-          Demander à l’assistant
-        </SheetTrigger>
         <SheetContent
           side="right"
-          className="bg-[linear-gradient(180deg,#f7fbfd_0%,#ffffff_28%)]"
+          className="w-full max-w-[100vw] border-l bg-[#f7fafc] p-0 sm:max-w-[420px]"
           aria-labelledby={titleId}
+          showCloseButton
         >
-          <SheetHeader>
-            <SheetTitle id={titleId} className="flex items-center gap-2">
-              <span
-                className="bg-sebavio-teal/15 text-sebavio-teal inline-flex size-7 items-center justify-center rounded-full"
-                aria-hidden
-              >
-                <Sparkles className="size-3.5" />
-              </span>
-              Assistant Sebavio
+          <SheetHeader className="border-b border-[rgb(14_45_70/0.08)] bg-white px-4 py-3">
+            <SheetTitle
+              id={titleId}
+              className="flex items-center gap-2.5 text-base"
+            >
+              <SebavioAssistantIcon size={28} />
+              <span className="text-sebavio-navy">Assistant Sebavio</span>
+              {statusLabel ? (
+                <span
+                  className={cn(
+                    "ml-1 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium",
+                    statusLabel === "En ligne"
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "bg-amber-50 text-amber-800",
+                  )}
+                >
+                  {statusLabel === "En ligne" ? (
+                    <span
+                      className="size-1.5 rounded-full bg-emerald-500"
+                      aria-hidden
+                    />
+                  ) : null}
+                  {statusLabel}
+                </span>
+              ) : null}
             </SheetTitle>
-            <SheetDescription>
-              Une étoile pour éclairer votre route — à partir des données de ce
-              voyage.
-            </SheetDescription>
           </SheetHeader>
 
-          <SheetBody ref={listRef} className="space-y-4">
+          <SheetBody
+            ref={listRef}
+            className="flex-1 space-y-4 overflow-y-auto px-4 py-4"
+          >
             {!canUsePersonalizedAi && booted ? (
               <div
-                className="border-sebavio-teal/20 rounded-xl border bg-white/80 p-4 text-sm"
+                className="border-sebavio-teal/20 rounded-xl border bg-white/90 p-4 text-sm"
                 role="status"
               >
                 <p className="text-sebavio-navy font-medium">
@@ -265,8 +146,8 @@ export function TripAssistantPanel({
                 </p>
                 <p className="text-muted-foreground mt-1">
                   En forfait Découverte, aucune donnée de votre voyage n’est
-                  envoyée à l’IA. Passez à un forfait payant pour une analyse
-                  personnalisée.
+                  envoyée à l’IA. Passez à un forfait compatible pour une
+                  analyse personnalisée.
                 </p>
                 <Button
                   render={<Link href="/pricing" />}
@@ -280,7 +161,7 @@ export function TripAssistantPanel({
 
             {canUsePersonalizedAi && !aiEnabled && booted ? (
               <p className="text-muted-foreground text-sm" role="status">
-                L’assistant est temporairement indisponible.
+                L’Assistant Sebavio est temporairement indisponible.
               </p>
             ) : null}
 
@@ -289,7 +170,7 @@ export function TripAssistantPanel({
                 <p className="text-sebavio-navy/80 text-sm">
                   Que souhaitez-vous améliorer dans ce voyage ?
                 </p>
-                <div className="grid gap-2 sm:grid-cols-1">
+                <div className="grid gap-2">
                   {QUICK_ACTIONS.map((action) => {
                     const lockedRec =
                       (action.requestType === "suggest_activities" ||
@@ -300,7 +181,7 @@ export function TripAssistantPanel({
                       <button
                         key={action.id}
                         type="button"
-                        disabled={pending || lockedRec}
+                        disabled={pending || lockedRec || !aiEnabled}
                         onClick={() =>
                           sendMessage(action.prompt, action.requestType)
                         }
@@ -323,34 +204,57 @@ export function TripAssistantPanel({
               <div
                 key={m.id}
                 className={cn(
-                  "max-w-[95%] rounded-2xl px-3 py-2 text-sm",
-                  m.role === "user"
-                    ? "bg-sebavio-navy ml-auto text-white"
-                    : "border-sebavio-navy/10 text-sebavio-navy mr-auto border bg-white",
+                  "flex gap-2",
+                  m.role === "user" ? "justify-end" : "justify-start",
                 )}
               >
-                <p className="whitespace-pre-wrap">{m.content}</p>
-                {m.role === "assistant" && m.structured ? (
-                  <div className="mt-3 space-y-3">
-                    <TripAssistantAnalysis response={m.structured} />
-                    <TripAssistantSuggestions
-                      suggestions={m.structured.suggestions}
-                      warnings={m.structured.warnings}
-                      onProposeAction={setPendingAction}
-                    />
-                    {m.mode === "demo" ? (
-                      <Button
-                        render={<Link href="/pricing" />}
-                        size="sm"
-                        variant="outline"
-                      >
-                        Passer à un forfait payant
-                      </Button>
-                    ) : null}
-                  </div>
+                {m.role === "assistant" ? (
+                  <SebavioAssistantIcon size={22} className="mt-1" />
                 ) : null}
+                <div
+                  className={cn(
+                    "max-w-[90%] rounded-2xl px-3.5 py-2.5 text-sm",
+                    m.role === "user"
+                      ? "text-sebavio-navy bg-sky-50"
+                      : "border-sebavio-navy/10 text-sebavio-navy border bg-white",
+                  )}
+                >
+                  <p className="leading-relaxed whitespace-pre-wrap">
+                    {m.content}
+                  </p>
+                  {m.role === "assistant" && m.structured ? (
+                    <div className="mt-3 space-y-3">
+                      <TripAssistantAnalysis response={m.structured} />
+                      {m.mode === "demo" ? (
+                        <Button
+                          render={<Link href="/pricing" />}
+                          size="sm"
+                          variant="outline"
+                        >
+                          Passer à un forfait payant
+                        </Button>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
               </div>
             ))}
+
+            {suggestions.length > 0 ? (
+              <SuggestionsStrip
+                suggestions={suggestions.slice(0, 3)}
+                onPropose={setPendingAction}
+              />
+            ) : null}
+
+            {proposed && proposedSuggestion ? (
+              <ProposedActionCard
+                suggestion={proposedSuggestion}
+                action={proposed}
+                onConfirm={() => setPendingAction(proposed)}
+                onDetails={() => setPendingAction(proposed)}
+              />
+            ) : null}
 
             {pending ? (
               <p
@@ -369,45 +273,57 @@ export function TripAssistantPanel({
             ) : null}
           </SheetBody>
 
-          <SheetFooter className="space-y-2">
+          <SheetFooter className="gap-2 border-t border-[rgb(14_45_70/0.08)] bg-white px-4 py-3">
             {pending ? (
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => {
-                  abortVisual.current = true;
-                }}
+                onClick={abortVisual}
               >
                 Masquer l’attente
               </Button>
             ) : null}
             <div className="flex items-end gap-2">
-              <Textarea
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                placeholder="Posez votre question…"
-                rows={2}
-                disabled={pending}
-                className="min-h-[64px] resize-none"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage(draft, "chat");
-                  }
-                }}
-                aria-label="Message à l’assistant"
-              />
+              <div className="relative min-w-0 flex-1">
+                <Textarea
+                  id="trip-assistant-input"
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  placeholder="Posez une question…"
+                  rows={2}
+                  disabled={inputDisabled}
+                  className="min-h-[64px] resize-none pr-10"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      sendMessage(draft, "chat");
+                    }
+                  }}
+                  aria-label="Message à l’assistant"
+                />
+                <span
+                  className="text-muted-foreground pointer-events-none absolute right-2.5 bottom-2.5"
+                  aria-hidden
+                >
+                  <Paperclip className="size-4 opacity-40" />
+                </span>
+              </div>
               <Button
                 type="button"
                 size="icon"
-                disabled={pending || !draft.trim()}
+                className="bg-sebavio-navy hover:bg-sebavio-navy/90 size-11 shrink-0 text-white"
+                disabled={inputDisabled || !draft.trim()}
                 onClick={() => sendMessage(draft, "chat")}
                 aria-label="Envoyer"
               >
                 <SendHorizonal className="size-4" />
               </Button>
             </div>
+            <p className="text-muted-foreground text-center text-[10px] leading-snug">
+              Sebavio peut faire des erreurs. Vérifiez les informations
+              importantes.
+            </p>
           </SheetFooter>
         </SheetContent>
       </Sheet>
@@ -418,8 +334,7 @@ export function TripAssistantPanel({
         onOpenChange={(next) => {
           if (!next) {
             setPendingAction(null);
-            setLocationError(null);
-            setLargeDetourKm(null);
+            clearActionErrors();
           }
         }}
         onConfirm={(action) => void confirmApply(action)}
@@ -431,4 +346,123 @@ export function TripAssistantPanel({
       />
     </>
   );
+}
+
+function SuggestionsStrip({
+  suggestions,
+  onPropose,
+}: {
+  suggestions: TripAssistantSuggestion[];
+  onPropose: (a: ProposedTripAction) => void;
+}) {
+  return (
+    <div data-testid="trip-assistant-suggestions-strip">
+      <p className="text-sebavio-navy mb-2 text-sm font-semibold">
+        Suggestions pour vous
+      </p>
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {suggestions.map((s) => {
+          const deferred =
+            s.proposedAction?.type === "create_detour" ||
+            s.proposedAction?.type === "other";
+          return (
+            <button
+              key={s.id}
+              type="button"
+              disabled={!s.proposedAction || deferred}
+              onClick={() => {
+                if (s.proposedAction) onPropose(s.proposedAction);
+              }}
+              className={cn(
+                "min-w-[8.5rem] shrink-0 rounded-xl border px-3 py-2.5 text-left text-xs shadow-sm transition",
+                s.type === "pause" && "border-violet-200 bg-violet-50",
+                s.type === "weather" && "border-sky-200 bg-sky-50",
+                s.type === "fuel_explanation" &&
+                  "border-emerald-200 bg-emerald-50",
+                s.type === "activity" && "border-orange-200 bg-orange-50",
+                (s.type === "schedule" || s.type === "route_suggestion") &&
+                  "border-slate-200 bg-white",
+                (!s.proposedAction || deferred) && "opacity-60",
+              )}
+            >
+              <span className="text-sebavio-navy line-clamp-2 font-semibold">
+                {s.title}
+              </span>
+              {s.estimatedDelayMinutes != null ? (
+                <span className="text-muted-foreground mt-0.5 block">
+                  +{s.estimatedDelayMinutes} min
+                </span>
+              ) : null}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ProposedActionCard({
+  suggestion,
+  action,
+  onConfirm,
+  onDetails,
+}: {
+  suggestion: TripAssistantSuggestion;
+  action: ProposedTripAction;
+  onConfirm: () => void;
+  onDetails: () => void;
+}) {
+  const deferred = action.type === "create_detour" || action.type === "other";
+  return (
+    <div
+      className="border-sebavio-teal/25 rounded-xl border bg-white p-4 shadow-sm"
+      data-testid="trip-assistant-proposed-action"
+    >
+      <p className="text-muted-foreground text-[11px] font-semibold tracking-wide uppercase">
+        Action proposée
+      </p>
+      <p className="text-sebavio-navy mt-1 text-sm font-semibold">
+        {suggestion.title}
+      </p>
+      <p className="text-muted-foreground mt-1 line-clamp-2 text-xs">
+        {suggestion.description}
+      </p>
+      {suggestion.estimatedDelayMinutes != null ? (
+        <p className="text-sebavio-navy mt-2 text-xs font-medium">
+          Impact · +{suggestion.estimatedDelayMinutes} min
+        </p>
+      ) : null}
+      {deferred ? (
+        <p className="mt-3 text-xs text-amber-800">
+          Cette modification ne peut pas encore être appliquée automatiquement.
+        </p>
+      ) : (
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button
+            type="button"
+            size="sm"
+            className="bg-sebavio-navy hover:bg-sebavio-navy/90 text-white"
+            onClick={onConfirm}
+          >
+            Confirmer l’ajout
+          </Button>
+          <Button type="button" size="sm" variant="outline" onClick={onDetails}>
+            Voir les détails
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Compat : ancien export utilisé par la page. */
+export function TripAssistantPanel(props: {
+  tripId: string;
+  liveLatitude?: number | null;
+  liveLongitude?: number | null;
+  tripActive?: boolean;
+}) {
+  // Conservé pour imports legacy — préférer Provider + Fab + Sheet.
+  void props;
+  return null;
 }

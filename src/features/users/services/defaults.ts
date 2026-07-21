@@ -47,5 +47,6 @@ export function defaultPreferencesData(userId: string) {
     fuelUnit: DEFAULT_FUEL_UNIT,
     notificationsEnabled: true,
     aiProactive: false,
+    costcoMember: false,
   };
 }

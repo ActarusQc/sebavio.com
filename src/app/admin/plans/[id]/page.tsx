@@ -111,6 +111,17 @@ export default async function AdminPlanDetailPage({
           planId={plan.id}
           status={plan.status}
           publicName={plan.publicName}
+          internalName={plan.internalName}
+          isSystemProtected={plan.isSystemProtected}
+          prices={plan.prices.map((p) => ({
+            billingType: p.billingType,
+            interval: p.interval,
+            intervalCount: p.intervalCount,
+            unitAmount: p.unitAmount,
+            currency: p.currency,
+            isCurrent: p.isCurrent,
+            accessDurationDays: p.accessDurationDays,
+          }))}
         />
       ) : null}
 

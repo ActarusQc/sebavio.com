@@ -40,15 +40,26 @@ export function computeWaypointsHash(input: {
     address: string | null;
     latitude: string | number | null;
     longitude: string | number | null;
+    direction?: string | null;
+    durationMinutes?: number | null;
+    stopType?: string | null;
   }>;
 }): string {
   const stopParts = [...input.stops]
-    .sort((a, b) => a.sequence - b.sequence)
+    .sort((a, b) => {
+      const dirA = a.direction === "return" ? 1 : 0;
+      const dirB = b.direction === "return" ? 1 : 0;
+      if (dirA !== dirB) return dirA - dirB;
+      return a.sequence - b.sequence;
+    })
     .map((s) => {
       const lat = s.latitude == null ? "" : String(s.latitude);
       const lng = s.longitude == null ? "" : String(s.longitude);
       const addr = normalizeAddress(s.address ?? "");
-      return `${s.sequence}:${lat},${lng}:${addr}`;
+      const dir = s.direction ?? "outbound";
+      const dwell = s.durationMinutes ?? 0;
+      const type = s.stopType ?? "stop";
+      return `${dir}:${s.sequence}:${type}:${lat},${lng}:${addr}:${dwell}`;
     });
   const raw = [
     normalizeAddress(input.origin),

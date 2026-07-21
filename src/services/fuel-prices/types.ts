@@ -5,7 +5,12 @@
  */
 
 export type FuelPriceSourceKind =
-  "regie_quebec" | "personal_average" | "user_default" | "not_applicable";
+  | "fde_station"
+  | "fde_regional"
+  | "regie_quebec"
+  | "personal_average"
+  | "user_default"
+  | "not_applicable";
 
 export type FuelPriceQuote = {
   pricePerLiter: number;
@@ -16,6 +21,12 @@ export type FuelPriceQuote = {
   capturedAt?: string;
   /** Libellé UI (ex. source Régie + fraîcheur). */
   label?: string;
+  pricingMethod?: string;
+  freshness?: string;
+  attribution?: string;
+  fallbackUsed?: boolean;
+  warnings?: string[];
+  selectedStationId?: string;
 };
 
 export type FuelPriceLookupInput = {

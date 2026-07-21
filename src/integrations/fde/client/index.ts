@@ -1,0 +1,42 @@
+export { createClient, type FdeFuelPricesClient } from "./client";
+export {
+  FdeFuelPricesError,
+  FdeFuelPricesForbiddenError,
+  FdeFuelPricesNotFoundError,
+  FdeFuelPricesRateLimitError,
+  FdeFuelPricesResponseValidationError,
+  FdeFuelPricesUnauthorizedError,
+  type FdeFuelPricesErrorBody,
+  type FdeFuelPricesErrorCode,
+} from "./errors";
+export {
+  apiErrorSchema,
+  fuelTypeSchema,
+  fuelTypesListSchema,
+  latestRegionalPricesSchema,
+  paginationSchema,
+  regionalPriceListSchema,
+  regionalPriceSchema,
+  regionSchema,
+  regionsListSchema,
+  sourceSchema,
+  sourcesListSchema,
+  statusSchema,
+} from "./schemas";
+export type {
+  FdeFuelPricesClientOptions,
+  FuelFuelType,
+  FuelFuelTypesList,
+  FuelLatestRegionalPrices,
+  FuelRegionalPrice,
+  FuelRegionalPriceList,
+  FuelRegion,
+  FuelRegionsList,
+  FuelSource,
+  FuelSourcesList,
+  FuelStatus,
+  LatestRegionalPricesParams,
+  ListRegionsParams,
+  RegionalPriceHistoryParams,
+  RequestOptions,
+} from "./types";

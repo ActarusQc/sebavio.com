@@ -1,11 +1,10 @@
-import { AppError } from "@/lib/errors";
 import { WEATHER_FORECAST_HORIZON_DAYS } from "@/lib/constants";
+import { WeatherError } from "./errors";
 import { wmoWeatherSummary } from "./wmo";
 import type {
-  WeatherCurrentResult,
   WeatherDailyForecast,
-  WeatherForecastResult,
-  WeatherLatLng,
+  WeatherForecast,
+  WeatherForecastInput,
   WeatherProvider,
   WeatherProviderAvailability,
 } from "./types";
@@ -31,18 +30,15 @@ type OpenMeteoDailyResponse = {
 };
 
 export type OpenMeteoProviderOptions = {
-  /** Clé offre commerciale ; vide = endpoint public non-commercial. */
   apiKey?: string;
   fetchImpl?: typeof fetch;
 };
 
 /**
- * Open-Meteo Forecast API.
- * Sans clé → api.open-meteo.com (usage non-commercial).
- * Avec clé → customer-api.open-meteo.com?apikey=… (offre commerciale).
+ * Open-Meteo Forecast API — adapté au modèle normalisé Sebavio.
  */
 export class OpenMeteoProvider implements WeatherProvider {
-  readonly name = "open-meteo";
+  readonly name = "open-meteo" as const;
   readonly horizonDays = WEATHER_FORECAST_HORIZON_DAYS;
 
   private readonly apiKey: string;
@@ -57,10 +53,11 @@ export class OpenMeteoProvider implements WeatherProvider {
     return { available: true };
   }
 
-  private buildUrl(
-    location: WeatherLatLng,
-    mode: "forecast" | "current",
-  ): string {
+  async getForecast(input: WeatherForecastInput): Promise<WeatherForecast> {
+    const location = { lat: input.latitude, lng: input.longitude };
+    const wantCurrent = input.parts?.current !== false;
+    const wantDaily = input.parts?.daily !== false;
+
     const base = this.apiKey ? CUSTOMER_BASE : FREE_BASE;
     const params = new URLSearchParams({
       latitude: String(location.lat),
@@ -68,114 +65,146 @@ export class OpenMeteoProvider implements WeatherProvider {
       timezone: "auto",
     });
 
-    if (mode === "forecast") {
+    if (wantDaily) {
       params.set("forecast_days", String(this.horizonDays));
       params.set(
         "daily",
         "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum",
       );
-    } else {
+    }
+    if (wantCurrent) {
       params.set("current", "temperature_2m,weather_code");
     }
-
     if (this.apiKey) {
       params.set("apikey", this.apiKey);
     }
 
-    return `${base}?${params.toString()}`;
-  }
-
-  private async fetchJson(
-    location: WeatherLatLng,
-    mode: "forecast" | "current",
-  ): Promise<OpenMeteoDailyResponse> {
     let response: Response;
     try {
-      response = await this.fetchImpl(this.buildUrl(location, mode), {
+      response = await this.fetchImpl(`${base}?${params.toString()}`, {
         method: "GET",
         headers: { Accept: "application/json" },
         signal: AbortSignal.timeout(12_000),
       });
     } catch {
-      throw new AppError("EXT_003", "Données météo indisponibles", 503);
+      throw new WeatherError("temporary", "Données météo indisponibles", 503, {
+        retryable: true,
+      });
     }
 
     if (!response.ok) {
-      throw new AppError("EXT_003", "Données météo indisponibles", 503);
+      throw new WeatherError(
+        "unavailable",
+        "Données météo indisponibles",
+        503,
+        {
+          retryable: response.status >= 500,
+        },
+      );
     }
 
     let data: OpenMeteoDailyResponse;
     try {
       data = (await response.json()) as OpenMeteoDailyResponse;
     } catch {
-      throw new AppError("EXT_003", "Données météo indisponibles", 503);
+      throw new WeatherError("validation", "Réponse météo invalide", 502);
     }
 
     if (data.error) {
-      throw new AppError("EXT_003", "Données météo indisponibles", 503);
+      throw new WeatherError("unavailable", "Données météo indisponibles", 503);
     }
 
-    return data;
-  }
-
-  async getForecast(location: WeatherLatLng): Promise<WeatherForecastResult> {
-    const data = await this.fetchJson(location, "forecast");
     const times = data.daily?.time ?? [];
     const codes = data.daily?.weather_code ?? [];
     const maxes = data.daily?.temperature_2m_max ?? [];
     const mins = data.daily?.temperature_2m_min ?? [];
     const precip = data.daily?.precipitation_sum ?? [];
 
-    if (times.length === 0) {
-      throw new AppError("EXT_003", "Données météo indisponibles", 503);
-    }
-
     const daily: WeatherDailyForecast[] = times.map((date, i) => {
       const code = Number(codes[i] ?? 0);
+      const summary = wmoWeatherSummary(code);
+      const precipMm =
+        precip[i] == null || Number.isNaN(Number(precip[i]))
+          ? null
+          : Number(precip[i]);
       return {
         date,
-        weatherCode: code,
-        summary: wmoWeatherSummary(code),
+        forecastAt: `${date}T12:00:00.000Z`,
         tempMinC: Number(mins[i] ?? 0),
         tempMaxC: Number(maxes[i] ?? 0),
-        precipitationMm:
-          precip[i] == null || Number.isNaN(Number(precip[i]))
-            ? null
-            : Number(precip[i]),
+        tempDayC: null,
+        feelsLikeDayC: null,
+        precipitationProbability: null,
+        rainMm: precipMm,
+        snowMm: null,
+        humidity: null,
+        pressureHpa: null,
+        windSpeedKmh: null,
+        windDirectionDeg: null,
+        windGustKmh: null,
+        cloudCoverPct: null,
+        uvIndex: null,
+        sunriseAt: null,
+        sunsetAt: null,
+        condition: {
+          code,
+          main: summary,
+          description: summary,
+          iconId: String(code),
+        },
+        weatherCode: code,
+        summary,
+        precipitationMm: precipMm,
       };
     });
 
-    return {
-      location,
-      provider: this.name,
-      horizonDays: this.horizonDays,
-      daily,
-    };
-  }
-
-  async getCurrent(location: WeatherLatLng): Promise<WeatherCurrentResult> {
-    const data = await this.fetchJson(location, "current");
-    const current = data.current;
-    if (
-      !current ||
-      current.temperature_2m == null ||
-      current.weather_code == null
-    ) {
-      throw new AppError("EXT_003", "Données météo indisponibles", 503);
+    if (wantDaily && daily.length === 0 && !data.current) {
+      throw new WeatherError("unavailable", "Données météo indisponibles", 503);
     }
 
-    const code = Number(current.weather_code);
+    const current =
+      wantCurrent &&
+      data.current &&
+      data.current.temperature_2m != null &&
+      data.current.weather_code != null
+        ? {
+            observedAt: data.current.time
+              ? new Date(data.current.time).toISOString()
+              : new Date().toISOString(),
+            temperatureC: Number(data.current.temperature_2m),
+            feelsLikeC: Number(data.current.temperature_2m),
+            humidity: null,
+            pressureHpa: null,
+            windSpeedKmh: null,
+            windDirectionDeg: null,
+            windGustKmh: null,
+            visibilityM: null,
+            cloudCoverPct: null,
+            uvIndex: null,
+            rainMm: null,
+            snowMm: null,
+            sunriseAt: null,
+            sunsetAt: null,
+            condition: {
+              code: Number(data.current.weather_code),
+              main: wmoWeatherSummary(Number(data.current.weather_code)),
+              description: wmoWeatherSummary(Number(data.current.weather_code)),
+              iconId: String(data.current.weather_code),
+            },
+          }
+        : undefined;
+
     return {
-      location,
-      provider: this.name,
-      current: {
-        observedAt: current.time
-          ? new Date(current.time).toISOString()
-          : new Date().toISOString(),
-        weatherCode: code,
-        summary: wmoWeatherSummary(code),
-        temperatureC: Number(current.temperature_2m),
-      },
+      provider: "open-meteo",
+      latitude: location.lat,
+      longitude: location.lng,
+      timezone: "auto",
+      timezoneOffsetSeconds: 0,
+      fetchedAt: new Date().toISOString(),
+      current,
+      hourly: [],
+      daily,
+      alerts: [],
     };
   }
 }

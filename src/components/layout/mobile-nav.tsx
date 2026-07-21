@@ -57,12 +57,22 @@ export function MobileNav({ role }: MobileNavProps) {
                 aria-current={active ? "page" : undefined}
                 onClick={() => setOpen(false)}
                 className={cn(
-                  "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none",
+                  "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none",
                   active &&
-                    "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
+                    "bg-sidebar-accent text-sidebar-accent-foreground before:bg-sebavio-gold relative font-medium before:absolute before:top-1/2 before:left-0 before:h-6 before:w-1 before:-translate-y-1/2 before:rounded-full",
                 )}
               >
-                <NavIcon name={item.icon} />
+                <span
+                  className={cn(
+                    "inline-flex size-5 shrink-0 items-center justify-center [&_svg]:size-4",
+                    active
+                      ? "text-sebavio-gold"
+                      : "text-sebavio-slate dark:text-sebavio-sage",
+                  )}
+                  aria-hidden
+                >
+                  <NavIcon name={item.icon} />
+                </span>
                 <span>{item.label}</span>
               </Link>
             );

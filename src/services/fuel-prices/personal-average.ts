@@ -42,8 +42,8 @@ export class PersonalAverageFuelPriceProvider implements FuelPriceProvider {
     if (fallback == null || !Number.isFinite(fallback) || fallback <= 0) {
       throw new AppError(
         "EXT_004",
-        "Prix du carburant introuvable — saisissez un prix par défaut",
-        400,
+        "Aucun prix de carburant disponible pour ce point de départ.",
+        404,
       );
     }
 

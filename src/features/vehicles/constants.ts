@@ -1,11 +1,23 @@
 /** Constantes module véhicules utilisateurs (Doc 4 / Doc 6). */
 
 export const USER_DOCUMENT_TYPES = [
-  "Insurance",
-  "Registration",
-  "Invoice",
-  "Other",
+  "Assurance",
+  "Immatriculation",
+  "Facture",
+  "Autre",
 ] as const;
+
+/** Libellés d’affichage (y compris anciennes valeurs anglaises en base). */
+export const USER_DOCUMENT_TYPE_LABELS: Record<string, string> = {
+  Assurance: "Assurance",
+  Immatriculation: "Immatriculation",
+  Facture: "Facture",
+  Autre: "Autre",
+  Insurance: "Assurance",
+  Registration: "Immatriculation",
+  Invoice: "Facture",
+  Other: "Autre",
+};
 
 export const TOLL_PREFERENCES = ["avoid", "allow", "prefer"] as const;
 

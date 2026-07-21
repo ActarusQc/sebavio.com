@@ -50,6 +50,7 @@ export type PlanDetail = {
   displayOrder: number;
   isFeatured: boolean;
   isVisibleOnSignup: boolean;
+  isSystemProtected: boolean;
   status: string;
   archivedAt: Date | null;
   defaultTrialDays: number | null;
@@ -62,8 +63,10 @@ export type PlanDetail = {
   prices: Array<{
     id: string;
     stripePriceId: string;
+    billingType: string;
     interval: string;
     intervalCount: number;
+    accessDurationDays: number | null;
     currency: string;
     unitAmount: number;
     status: string;
@@ -174,6 +177,7 @@ export async function getPlan(rawInput: GetPlanInput): Promise<PlanDetail> {
     displayOrder: plan.displayOrder,
     isFeatured: plan.isFeatured,
     isVisibleOnSignup: plan.isVisibleOnSignup,
+    isSystemProtected: plan.isSystemProtected,
     status: plan.status,
     archivedAt: plan.archivedAt,
     defaultTrialDays: plan.defaultTrialDays,
@@ -186,8 +190,10 @@ export async function getPlan(rawInput: GetPlanInput): Promise<PlanDetail> {
     prices: plan.prices.map((p) => ({
       id: p.id,
       stripePriceId: p.stripePriceId,
+      billingType: p.billingType,
       interval: p.interval,
       intervalCount: p.intervalCount,
+      accessDurationDays: p.accessDurationDays,
       currency: p.currency,
       unitAmount: p.unitAmount,
       status: p.status,

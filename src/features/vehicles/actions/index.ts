@@ -48,15 +48,63 @@ function formNumber(
   formData: FormData,
   key: string,
 ): number | null | undefined {
+  if (formData.get(`${key}__reset`) === "1") return null;
   if (!formData.has(key)) return undefined;
   const raw = String(formData.get(key) ?? "").trim();
   if (raw === "") return null;
-  const n = Number(raw);
+  const normalized = raw.replace(/\s/g, "").replace(",", ".");
+  const n = Number(normalized);
   return Number.isFinite(n) ? n : Number.NaN;
+}
+
+/** Override numérique : ignore si égal à la suggestion (évite de marquer comme custom). */
+function formOverrideNumber(
+  formData: FormData,
+  key: string,
+  suggestedKey?: string,
+): number | null | undefined {
+  if (formData.get(`${key}__reset`) === "1") return null;
+  if (!formData.has(key)) return undefined;
+  const raw = String(formData.get(key) ?? "").trim();
+  if (raw === "") return null;
+  const normalized = raw.replace(/\s/g, "").replace(",", ".");
+  const n = Number(normalized);
+  if (!Number.isFinite(n)) return Number.NaN;
+  if (suggestedKey && formData.has(suggestedKey)) {
+    const suggestedRaw = String(formData.get(suggestedKey) ?? "").trim();
+    const suggested = Number(suggestedRaw.replace(/\s/g, "").replace(",", "."));
+    if (Number.isFinite(suggested) && Math.abs(n - suggested) < 0.001) {
+      // Identique à la suggestion → pas d'override (sauf si déjà custom côté UI via __keep)
+      if (formData.get(`${key}__keep`) !== "1") return undefined;
+    }
+  }
+  return Math.round(n * 100) / 100;
+}
+
+function buildSpecOverridesFromForm(formData: FormData) {
+  const keys = [
+    ["lengthM", "specLengthM"],
+    ["widthM", "specWidthM"],
+    ["heightM", "specHeightM"],
+    ["weightKg", "specWeightKg"],
+    ["electricRangeKm", "specElectricRangeKm"],
+    ["batteryCapacityKwh", "specBatteryCapacityKwh"],
+  ] as const;
+  const out: Record<string, number | null> = {};
+  let any = false;
+  for (const [outKey, formKey] of keys) {
+    if (!formData.has(formKey) && formData.get(`${formKey}__reset`) !== "1") {
+      continue;
+    }
+    any = true;
+    out[outKey] = formNumber(formData, formKey) ?? null;
+  }
+  return any ? out : undefined;
 }
 
 function revalidateVehiclePaths(id?: string) {
   revalidatePath("/dashboard/vehicles");
+  revalidatePath("/dashboard/trips");
   if (id) {
     revalidatePath(`/dashboard/vehicles/${id}`);
     revalidatePath(`/dashboard/vehicles/${id}/edit`);
@@ -68,22 +116,59 @@ export async function createVehicleAction(
   formData: FormData,
 ): Promise<VehiclesActionResult> {
   const isManual = formBoolean(formData, "isManualEntry") === true;
+  const catalogEntryId = formNullable(formData, "catalogEntryId");
   const parsed = vehicleCreateSchema.safeParse({
-    modelId: isManual ? null : formNullable(formData, "modelId"),
+    modelId:
+      isManual || catalogEntryId ? null : formNullable(formData, "modelId"),
+    catalogEntryId: isManual ? null : catalogEntryId,
     isManualEntry: isManual,
     manualManufacturerName: formNullable(formData, "manualManufacturerName"),
     manualModelName: formNullable(formData, "manualModelName"),
     manualYear: formNumber(formData, "manualYear"),
     manualCategory: formNullable(formData, "manualCategory"),
     manualTrim: formNullable(formData, "manualTrim"),
+    fuelType: formNullable(formData, "fuelType"),
+    officialCityConsumptionL100: formNumber(
+      formData,
+      "officialCityConsumptionL100",
+    ),
+    officialHighwayConsumptionL100: formNumber(
+      formData,
+      "officialHighwayConsumptionL100",
+    ),
+    officialCombinedConsumptionL100: formNumber(
+      formData,
+      "officialCombinedConsumptionL100",
+    ),
+    consumptionDataSource: formNullable(formData, "consumptionDataSource"),
     nickname: formNullable(formData, "nickname"),
     vin: formNullable(formData, "vin"),
     licensePlate: formNullable(formData, "licensePlate"),
     purchaseDate: formNullable(formData, "purchaseDate"),
     purchasePrice: formNumber(formData, "purchasePrice"),
     currentOdometer: formNumber(formData, "currentOdometer"),
-    realAvgConsumption: formNumber(formData, "realAvgConsumption"),
-    tankCapacityOverride: formNumber(formData, "tankCapacityOverride"),
+    customConsumptionL100: formOverrideNumber(
+      formData,
+      "customConsumptionL100",
+      "manufacturerConsumptionHint",
+    ),
+    tankCapacityOverride: formOverrideNumber(
+      formData,
+      "tankCapacityOverride",
+      "manufacturerTankCapacityL",
+    ),
+    manufacturerTankCapacityL: formNumber(
+      formData,
+      "manufacturerTankCapacityL",
+    ),
+    customFuelType: formNullable(formData, "customFuelType"),
+    manufacturerFuelType: formNullable(formData, "manufacturerFuelType"),
+    engine: formNullable(formData, "engine"),
+    resetAllManufacturerSpecs:
+      formBoolean(formData, "resetAllManufacturerSpecs") === true
+        ? true
+        : undefined,
+    specOverrides: buildSpecOverridesFromForm(formData),
     primaryVehicle: formBoolean(formData, "primaryVehicle") === true,
   });
 
@@ -116,23 +201,59 @@ export async function updateVehicleAction(
 
   const isManual = formBoolean(formData, "isManualEntry") === true;
   const linkModelId = formNullable(formData, "modelId");
+  const catalogEntryId = formNullable(formData, "catalogEntryId");
 
   const parsed = vehicleUpdateSchema.safeParse({
     modelId: isManual ? null : linkModelId,
+    catalogEntryId: isManual ? null : catalogEntryId,
     isManualEntry: isManual,
     manualManufacturerName: formNullable(formData, "manualManufacturerName"),
     manualModelName: formNullable(formData, "manualModelName"),
     manualYear: formNumber(formData, "manualYear"),
     manualCategory: formNullable(formData, "manualCategory"),
     manualTrim: formNullable(formData, "manualTrim"),
+    fuelType: formNullable(formData, "fuelType"),
+    officialCityConsumptionL100: formNumber(
+      formData,
+      "officialCityConsumptionL100",
+    ),
+    officialHighwayConsumptionL100: formNumber(
+      formData,
+      "officialHighwayConsumptionL100",
+    ),
+    officialCombinedConsumptionL100: formNumber(
+      formData,
+      "officialCombinedConsumptionL100",
+    ),
+    consumptionDataSource: formNullable(formData, "consumptionDataSource"),
     nickname: formNullable(formData, "nickname"),
     vin: formNullable(formData, "vin"),
     licensePlate: formNullable(formData, "licensePlate"),
     purchaseDate: formNullable(formData, "purchaseDate"),
     purchasePrice: formNumber(formData, "purchasePrice"),
     currentOdometer: formNumber(formData, "currentOdometer") ?? undefined,
-    realAvgConsumption: formNumber(formData, "realAvgConsumption"),
-    tankCapacityOverride: formNumber(formData, "tankCapacityOverride"),
+    customConsumptionL100: formOverrideNumber(
+      formData,
+      "customConsumptionL100",
+      "manufacturerConsumptionHint",
+    ),
+    tankCapacityOverride: formOverrideNumber(
+      formData,
+      "tankCapacityOverride",
+      "manufacturerTankCapacityL",
+    ),
+    manufacturerTankCapacityL: formNumber(
+      formData,
+      "manufacturerTankCapacityL",
+    ),
+    customFuelType: formNullable(formData, "customFuelType"),
+    manufacturerFuelType: formNullable(formData, "manufacturerFuelType"),
+    engine: formNullable(formData, "engine"),
+    resetAllManufacturerSpecs:
+      formBoolean(formData, "resetAllManufacturerSpecs") === true
+        ? true
+        : undefined,
+    specOverrides: buildSpecOverridesFromForm(formData),
   });
 
   if (!parsed.success) {
@@ -267,7 +388,6 @@ export async function addDocumentAction(
   const parsed = vehicleDocumentCreateSchema.safeParse({
     type: formString(formData, "type"),
     title: formString(formData, "title"),
-    fileUrl: formString(formData, "fileUrl"),
     expiryDate: formNullable(formData, "expiryDate"),
   });
   if (!parsed.success) {

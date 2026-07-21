@@ -7,7 +7,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui";
-import { ProfileForm, PreferencesForm } from "@/features/users/components";
+import {
+  ProfileForm,
+  PreferencesForm,
+  ChangePasswordForm,
+} from "@/features/users/components";
 import {
   getCurrentUserWithProfile,
   getPreferences,
@@ -36,6 +40,18 @@ export default async function SettingsPage() {
         </CardHeader>
         <CardContent>
           <ProfileForm profile={user.profile} email={user.email} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Mot de passe</CardTitle>
+          <CardDescription>
+            Modifiez le mot de passe de votre compte.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ChangePasswordForm />
         </CardContent>
       </Card>
 

@@ -1,2 +1,2 @@
-/** Hooks feature trips — réservés pour mutations client ultérieures. */
-export {};
+export { useTripLocationTracking } from "./use-trip-location-tracking";
+export type { TripLocationUiState } from "./use-trip-location-tracking";

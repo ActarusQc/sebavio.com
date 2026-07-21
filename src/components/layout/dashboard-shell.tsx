@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { UserRole } from "@/lib/constants";
 import { ThemeToggle } from "@/components/common";
@@ -38,14 +37,11 @@ export function DashboardShell({
       header={
         <Header
           brand={
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 md:hidden">
               <MobileNav role={role} />
-              <Link
-                href="/dashboard"
-                className="focus-visible:ring-ring rounded-sm font-semibold tracking-tight focus-visible:ring-2 focus-visible:outline-none"
-              >
+              <span className="font-heading text-sebavio-navy dark:text-foreground text-sm font-semibold tracking-tight">
                 Sebavio
-              </Link>
+              </span>
             </div>
           }
           search={<HeaderSearch />}
@@ -67,7 +63,7 @@ export function DashboardShell({
       }
       footer={<Footer />}
     >
-      <Breadcrumbs items={crumbs} />
+      <Breadcrumbs items={crumbs} className="mb-4" />
       {children}
     </AppShell>
   );

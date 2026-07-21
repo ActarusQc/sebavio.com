@@ -21,8 +21,10 @@ export default async function VerifyEmailPage({ searchParams }: Props) {
   const result = await verifyEmailAction(email, token);
 
   return (
-    <section className="mx-auto w-full max-w-sm text-center">
-      <h1 className="mb-4 text-xl font-semibold">Vérification du courriel</h1>
+    <section className="w-full text-center">
+      <h1 className="font-heading mb-4 text-2xl font-semibold tracking-tight text-[#0E2D46] dark:text-[#0E2D46]">
+        Vérification du courriel
+      </h1>
       <p
         className={
           result.ok ? "text-sm text-emerald-700" : "text-destructive text-sm"
@@ -33,7 +35,7 @@ export default async function VerifyEmailPage({ searchParams }: Props) {
       <p className="mt-6 text-sm">
         <Link
           href="/login"
-          className="text-primary underline-offset-4 hover:underline"
+          className="text-[#4E7F85] underline-offset-4 hover:underline dark:text-[#4E7F85]"
         >
           Se connecter
         </Link>

@@ -48,6 +48,8 @@ describe("vehicleCreateSchema", () => {
       manualManufacturerName: "Winnebago",
       manualModelName: "View",
       manualYear: 2020,
+      officialCombinedConsumptionL100: 12.5,
+      fuelType: "diesel",
       currentOdometer: 0,
     });
     expect(result.success).toBe(true);
@@ -136,12 +138,17 @@ describe("vehiclePhotoCreateSchema / document", () => {
     ).toBe(true);
   });
 
-  it("valide un document utilisateur", () => {
+  it("valide un document utilisateur (champs optionnels)", () => {
     expect(
       vehicleDocumentCreateSchema.safeParse({
-        type: "Insurance",
+        type: "Assurance",
         title: "Assurance 2026",
-        fileUrl: "https://files.example.com/a.pdf",
+      }).success,
+    ).toBe(true);
+    expect(
+      vehicleDocumentCreateSchema.safeParse({
+        type: "",
+        title: "",
       }).success,
     ).toBe(true);
   });
@@ -164,5 +171,23 @@ describe("mappers helpers", () => {
         model: null,
       }),
     ).toBe("Mon VR");
+  });
+
+  it("buildDisplayName utilise le catalogue NRCan", () => {
+    expect(
+      buildDisplayName({
+        nickname: null,
+        isManualEntry: false,
+        manualManufacturerName: null,
+        manualModelName: null,
+        manualYear: null,
+        model: null,
+        catalogEntry: {
+          make: "Acura",
+          model: "ILX",
+          modelYear: 2017,
+        },
+      }),
+    ).toBe("Acura ILX (2017)");
   });
 });

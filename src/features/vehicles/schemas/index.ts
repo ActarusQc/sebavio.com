@@ -19,9 +19,42 @@ const optionalString = (max: number) =>
 
 const optionalDecimal = z.preprocess((v) => {
   if (v === "" || v === null || v === undefined) return null;
-  if (typeof v === "string") return Number(v);
+  if (typeof v === "string") {
+    const normalized = v.trim().replace(/\s/g, "").replace(",", ".");
+    if (normalized === "") return null;
+    return Number(normalized);
+  }
   return v;
 }, z.number().finite().nullable().optional());
+
+/** Consommation thermique personnalisée : 1–100 L/100 km, 2 décimales. */
+const customConsumptionSchema = z.preprocess((v) => {
+  if (v === "" || v === null || v === undefined) return null;
+  if (typeof v === "string") {
+    const normalized = v.trim().replace(/\s/g, "").replace(",", ".");
+    if (normalized === "") return null;
+    const n = Number(normalized);
+    if (!Number.isFinite(n)) return n;
+    return Math.round(n * 100) / 100;
+  }
+  if (typeof v === "number" && Number.isFinite(v)) {
+    return Math.round(v * 100) / 100;
+  }
+  return v;
+}, z.number().min(1).max(100).nullable().optional());
+
+const specOverridesSchema = z
+  .object({
+    lengthM: optionalDecimal,
+    widthM: optionalDecimal,
+    heightM: optionalDecimal,
+    weightKg: optionalDecimal,
+    electricRangeKm: optionalDecimal,
+    batteryCapacityKwh: optionalDecimal,
+  })
+  .partial()
+  .nullable()
+  .optional();
 
 const optionalDate = z.preprocess((v) => {
   if (v === "" || v === null || v === undefined) return null;
@@ -48,21 +81,35 @@ const uuidOrNull = z.preprocess(
 function refineCatalogOrManual(
   data: {
     modelId?: string | null;
+    catalogEntryId?: string | null;
     isManualEntry?: boolean;
     manualManufacturerName?: string | null;
     manualModelName?: string | null;
     manualYear?: number | null;
+    officialCombinedConsumptionL100?: number | null;
+    fuelType?: string | null;
   },
   ctx: z.RefinementCtx,
   mode: "create" | "update",
 ) {
-  const isManual =
-    data.isManualEntry === true ||
-    (data.modelId === null && data.isManualEntry !== false);
+  const isManual = data.isManualEntry === true;
+  const hasNrcan = Boolean(data.catalogEntryId);
+  const hasLegacyModel = Boolean(data.modelId);
 
   if (mode === "create") {
-    if (data.modelId) {
-      if (data.isManualEntry === true) {
+    if (hasNrcan) {
+      if (isManual) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Choisir catalogue NRCan OU saisie manuelle",
+          path: ["isManualEntry"],
+        });
+      }
+      return;
+    }
+
+    if (hasLegacyModel) {
+      if (isManual) {
         ctx.addIssue({
           code: "custom",
           message: "Choisir catalogue OU saisie manuelle",
@@ -72,11 +119,11 @@ function refineCatalogOrManual(
       return;
     }
 
-    if (!isManual && !data.modelId) {
+    if (!isManual) {
       ctx.addIssue({
         code: "custom",
-        message: "Modèle catalogue ou saisie manuelle requis",
-        path: ["modelId"],
+        message: "Configuration catalogue ou saisie manuelle requise",
+        path: ["catalogEntryId"],
       });
       return;
     }
@@ -102,11 +149,22 @@ function refineCatalogOrManual(
         path: ["manualYear"],
       });
     }
+    if (
+      data.officialCombinedConsumptionL100 == null ||
+      data.officialCombinedConsumptionL100 <= 0
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Consommation combinée requise en saisie manuelle",
+        path: ["officialCombinedConsumptionL100"],
+      });
+    }
     return;
   }
 
-  // update : si modelId explicitement null → manuels requis
-  if (data.modelId === null) {
+  if (data.catalogEntryId) return;
+
+  if (data.modelId === null || isManual) {
     if (!data.manualManufacturerName?.trim()) {
       ctx.addIssue({
         code: "custom",
@@ -131,6 +189,23 @@ function refineCatalogOrManual(
   }
 }
 
+const fuelTypeSchema = z.preprocess(
+  (v) => (v === "" || v === undefined ? null : v),
+  z
+    .enum([
+      "regular",
+      "premium",
+      "diesel",
+      "ethanol",
+      "natural_gas",
+      "electric",
+      "hybrid",
+      "plugin_hybrid",
+    ])
+    .nullable()
+    .optional(),
+);
+
 const vehicleBaseFields = {
   nickname: optionalString(100),
   vin: vinSchema,
@@ -138,7 +213,18 @@ const vehicleBaseFields = {
   purchaseDate: optionalDate,
   purchasePrice: optionalDecimal,
   realAvgConsumption: optionalDecimal,
+  customConsumptionL100: customConsumptionSchema,
   tankCapacityOverride: optionalDecimal,
+  manufacturerTankCapacityL: optionalDecimal,
+  fuelType: fuelTypeSchema,
+  manufacturerFuelType: fuelTypeSchema,
+  customFuelType: fuelTypeSchema,
+  officialCityConsumptionL100: optionalDecimal,
+  officialHighwayConsumptionL100: optionalDecimal,
+  officialCombinedConsumptionL100: optionalDecimal,
+  consumptionDataSource: optionalString(40),
+  specOverrides: specOverridesSchema,
+  resetAllManufacturerSpecs: z.boolean().optional(),
   manualManufacturerName: optionalString(150),
   manualModelName: optionalString(150),
   manualYear: z.preprocess((v) => {
@@ -152,11 +238,37 @@ const vehicleBaseFields = {
   ),
   manualTrim: optionalString(150),
   primaryVehicle: z.boolean().optional(),
+  engine: optionalString(150),
+  transmission: optionalString(80),
+  drivetrain: optionalString(80),
+  vehicleType: optionalString(80),
+  bodyClass: optionalString(80),
+  manufacturerName: optionalString(150),
+  plantCountry: optionalString(80),
+  cylinders: z.preprocess((v) => {
+    if (v === "" || v === null || v === undefined) return null;
+    if (typeof v === "string") return Number(v);
+    return v;
+  }, z.number().int().positive().nullable().optional()),
+  displacementL: optionalDecimal,
+  annualEstimatedKm: z.preprocess((v) => {
+    if (v === "" || v === null || v === undefined) return null;
+    if (typeof v === "string") return Number(v);
+    return v;
+  }, z.number().int().min(0).max(200000).nullable().optional()),
+  inServiceDate: optionalDate,
+  identificationSource: optionalString(30),
+  identificationConfidence: optionalString(20),
+  usageProfile: z.preprocess(
+    (v) => (v === "" || v === undefined ? undefined : v),
+    z.enum(["normal", "severe", "automatic"]).optional(),
+  ),
 };
 
 export const vehicleCreateSchema = z
   .object({
     modelId: uuidOrNull,
+    catalogEntryId: uuidOrNull,
     isManualEntry: z.boolean().optional(),
     currentOdometer: z.coerce
       .number()
@@ -169,6 +281,7 @@ export const vehicleCreateSchema = z
 export const vehicleUpdateSchema = z
   .object({
     modelId: uuidOrNull,
+    catalogEntryId: uuidOrNull,
     isManualEntry: z.boolean().optional(),
     currentOdometer: z.coerce
       .number()
@@ -196,9 +309,19 @@ export const vehiclePhotoCreateSchema = z.object({
 });
 
 export const vehicleDocumentCreateSchema = z.object({
-  type: z.enum(USER_DOCUMENT_TYPES, { error: "Type de document invalide" }),
-  title: z.string().trim().min(1, { error: "Titre requis" }).max(150),
-  fileUrl: z.string().trim().url({ error: "URL document invalide" }).max(2000),
+  type: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? "Autre" : v),
+    z.enum(USER_DOCUMENT_TYPES, { error: "Type de document invalide" }),
+  ),
+  title: z.preprocess((v) => {
+    if (v === "" || v === null || v === undefined) return "Sans titre";
+    return v;
+  }, z.string().trim().max(150)),
+  /** Conservé en base (colonne non nulle) — plus saisi dans l’UI. */
+  fileUrl: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? "" : v),
+    z.string().trim().max(2000),
+  ),
   expiryDate: optionalDate,
 });
 

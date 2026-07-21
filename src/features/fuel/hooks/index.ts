@@ -1,5 +1,8 @@
 /**
  * Feature `fuel` / hooks.
- * Socle architectural — aucune logique métier.
  */
-export {};
+export {
+  useTripFuelEstimate,
+  type TripFuelEstimateApi,
+  type UseTripFuelEstimateArgs,
+} from "./use-trip-fuel-estimate";

@@ -3,9 +3,14 @@ import { ForgotPasswordForm } from "@/features/auth";
 export default function ForgotPasswordPage() {
   return (
     <section className="w-full">
-      <h1 className="mb-6 text-center text-xl font-semibold">
-        Mot de passe oublié
-      </h1>
+      <header className="mb-6 text-center">
+        <h1 className="font-heading text-2xl font-semibold tracking-tight text-[#0E2D46] dark:text-[#0E2D46]">
+          Mot de passe oublié
+        </h1>
+        <p className="mt-2 text-sm text-[#5f7076] dark:text-[#5f7076]">
+          Recevez un lien pour réinitialiser votre mot de passe.
+        </p>
+      </header>
       <ForgotPasswordForm />
     </section>
   );

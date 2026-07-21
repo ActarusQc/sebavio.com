@@ -12,12 +12,24 @@ export type DirectionsWaypoint = LatLng & {
   label?: string;
 };
 
+export type DirectionsLegSummary = {
+  distanceKm: number;
+  durationMin: number;
+  start: LatLng;
+  end: LatLng;
+};
+
 export type DirectionsResult = {
   distanceKm: number;
   durationMin: number;
   /** Encoded polyline Google (overview). */
   polyline: string;
   provider: "google";
+  /** Nombre de legs (= waypoints intermédiaires + 1). */
+  legCount: number;
+  legs: DirectionsLegSummary[];
+  /** Fin du dernier leg — doit correspondre à la destination demandée. */
+  finalDestination: LatLng;
 };
 
 export type MapsProviderAvailability = {

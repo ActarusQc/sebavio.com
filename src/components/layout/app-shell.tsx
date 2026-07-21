@@ -12,7 +12,7 @@ export type AppShellProps = {
 };
 
 /**
- * Coquille layout principale (Partie 5 — structure ; navigation câblée en Partie 6).
+ * Coquille layout principale — fond espace client Sebavio.
  */
 export function AppShell({
   header,
@@ -23,14 +23,19 @@ export function AppShell({
   contained = true,
 }: AppShellProps) {
   return (
-    <div className={cn("bg-background flex min-h-full flex-col", className)}>
+    <div
+      className={cn(
+        "workspace-shell text-foreground flex min-h-full flex-col",
+        className,
+      )}
+    >
       {header}
       <div className="flex min-h-0 flex-1">
         {sidebar}
         <main
           id="main-content"
           className={cn(
-            "flex-1 overflow-auto px-4 py-6 sm:px-6",
+            "flex-1 overflow-auto px-3 py-5 sm:px-6 sm:py-6 lg:px-8",
             contained && "mx-auto w-full max-w-[var(--content-max-width)]",
           )}
         >

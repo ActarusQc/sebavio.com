@@ -269,6 +269,15 @@ export const reconcilePlanSchema = z
   })
   .strict();
 
+export const deletePlanSchema = z
+  .object({
+    planId: uuidSchema,
+    confirmPublicName: z.string().trim().min(1),
+    confirmSystemDelete: z.boolean().optional(),
+    reason: z.string().trim().max(500).optional(),
+  })
+  .strict();
+
 export type CreatePlanInput = z.infer<typeof createPlanSchema>;
 export type UpdatePlanMetadataInput = z.infer<typeof updatePlanMetadataSchema>;
 export type SetEntitlementsInput = z.infer<typeof setEntitlementsSchema>;
@@ -280,3 +289,4 @@ export type ListPlansInput = z.infer<typeof listPlansSchema>;
 export type GetPlanInput = z.infer<typeof getPlanSchema>;
 export type DuplicatePlanInput = z.infer<typeof duplicatePlanSchema>;
 export type ReconcilePlanInput = z.infer<typeof reconcilePlanSchema>;
+export type DeletePlanInput = z.infer<typeof deletePlanSchema>;

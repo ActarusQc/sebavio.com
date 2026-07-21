@@ -1,3 +1,7 @@
+import {
+  getEffectiveVehicleSpecifications,
+  parseSpecOverrides,
+} from "@/features/vehicles/lib/effective-specs";
 import type {
   CatalogModelSummaryDto,
   UserVehicleDocumentDto,
@@ -11,6 +15,14 @@ function decimalToString(
 ): string | null {
   if (value == null) return null;
   return value.toString();
+}
+
+function decimalToNumber(
+  value: { toString(): string } | null | undefined,
+): number | null {
+  if (value == null) return null;
+  const n = Number(value.toString());
+  return Number.isFinite(n) ? n : null;
 }
 
 function dateToIsoDate(value: Date | null | undefined): string | null {
@@ -34,10 +46,18 @@ export function buildDisplayName(row: {
     year: number;
     manufacturer: { name: string };
   } | null;
+  catalogEntry?: {
+    make: string;
+    model: string;
+    modelYear: number;
+  } | null;
 }): string {
   if (row.nickname?.trim()) return row.nickname.trim();
   if (row.model) {
     return `${row.model.manufacturer.name} ${row.model.modelName} (${row.model.year})`;
+  }
+  if (row.catalogEntry?.make && row.catalogEntry?.model) {
+    return `${row.catalogEntry.make} ${row.catalogEntry.model} (${row.catalogEntry.modelYear})`;
   }
   if (row.manualManufacturerName && row.manualModelName) {
     const year = row.manualYear ? ` (${row.manualYear})` : "";
@@ -56,8 +76,23 @@ type ModelInclude = {
   fuelType: string | null;
   avgConsumption: { toString(): string } | null;
   fuelCapacityL: { toString(): string } | null;
+  lengthM?: { toString(): string } | null;
+  widthM?: { toString(): string } | null;
+  heightM?: { toString(): string } | null;
+  gvwrKg?: number | null;
   manufacturer: { name: string };
 };
+
+type CatalogEntryInclude = {
+  make?: string;
+  model?: string;
+  modelYear?: number;
+  fuelTankCapacityL?: { toString(): string } | null;
+  electricRangeKm?: number | null;
+  electricConsumptionKwh100Km?: { toString(): string } | null;
+  combinedConsumptionL100Km?: { toString(): string } | null;
+  normalizedFuelType?: string | null;
+} | null;
 
 export function toCatalogModelSummary(
   model: ModelInclude,
@@ -80,6 +115,7 @@ export function toVehicleDto(row: {
   id: string;
   userId: string;
   modelId: string | null;
+  catalogEntryId: string | null;
   isManualEntry: boolean;
   manualManufacturerName: string | null;
   manualModelName: string | null;
@@ -93,16 +129,63 @@ export function toVehicleDto(row: {
   purchasePrice: { toString(): string } | null;
   currentOdometer: number;
   realAvgConsumption: { toString(): string } | null;
+  customConsumptionL100?: { toString(): string } | null;
+  fuelType: string | null;
+  manufacturerFuelType?: string | null;
+  customFuelType?: string | null;
+  officialCityConsumptionL100: { toString(): string } | null;
+  officialHighwayConsumptionL100: { toString(): string } | null;
+  officialCombinedConsumptionL100: { toString(): string } | null;
+  consumptionDataSource: string | null;
   tankCapacityOverride: { toString(): string } | null;
+  manufacturerTankCapacityL?: { toString(): string } | null;
+  specOverrides?: unknown;
+  engine?: string | null;
   primaryVehicle: boolean;
   createdAt: Date;
   updatedAt: Date;
   model: ModelInclude | null;
+  catalogEntry?: CatalogEntryInclude;
 }): UserVehicleDto {
+  const manufacturerConso =
+    decimalToNumber(row.officialCombinedConsumptionL100) ??
+    decimalToNumber(row.model?.avgConsumption) ??
+    decimalToNumber(row.catalogEntry?.combinedConsumptionL100Km);
+
+  const manufacturerTank =
+    decimalToNumber(row.manufacturerTankCapacityL) ??
+    decimalToNumber(row.catalogEntry?.fuelTankCapacityL) ??
+    decimalToNumber(row.model?.fuelCapacityL);
+
+  const overrides = parseSpecOverrides(row.specOverrides);
+  const manufacturerFuel =
+    row.manufacturerFuelType ??
+    row.catalogEntry?.normalizedFuelType ??
+    row.model?.fuelType ??
+    null;
+
+  const effective = getEffectiveVehicleSpecifications({
+    manufacturerConsumptionL100: manufacturerConso,
+    customConsumptionL100: decimalToNumber(row.customConsumptionL100),
+    realAvgConsumption: decimalToNumber(row.realAvgConsumption),
+    manufacturerTankCapacityL: manufacturerTank,
+    customTankCapacityL: decimalToNumber(row.tankCapacityOverride),
+    manufacturerFuelType: manufacturerFuel,
+    customFuelType: row.customFuelType ?? null,
+    fuelType: row.fuelType,
+    manufacturerElectricRangeKm: row.catalogEntry?.electricRangeKm ?? null,
+    manufacturerLengthM: decimalToNumber(row.model?.lengthM),
+    manufacturerWidthM: decimalToNumber(row.model?.widthM),
+    manufacturerHeightM: decimalToNumber(row.model?.heightM),
+    manufacturerWeightKg: row.model?.gvwrKg ?? null,
+    specOverrides: overrides,
+  });
+
   return {
     id: row.id,
     userId: row.userId,
     modelId: row.modelId,
+    catalogEntryId: row.catalogEntryId,
     isManualEntry: row.isManualEntry,
     manualManufacturerName: row.manualManufacturerName,
     manualModelName: row.manualModelName,
@@ -116,10 +199,72 @@ export function toVehicleDto(row: {
     purchasePrice: decimalToString(row.purchasePrice),
     currentOdometer: row.currentOdometer,
     realAvgConsumption: decimalToString(row.realAvgConsumption),
+    customConsumptionL100: decimalToString(row.customConsumptionL100),
+    fuelType: effective.fuelType,
+    manufacturerFuelType: manufacturerFuel,
+    customFuelType: row.customFuelType ?? null,
+    officialCityConsumptionL100: decimalToString(
+      row.officialCityConsumptionL100,
+    ),
+    officialHighwayConsumptionL100: decimalToString(
+      row.officialHighwayConsumptionL100,
+    ),
+    officialCombinedConsumptionL100: decimalToString(
+      row.officialCombinedConsumptionL100,
+    ),
+    consumptionDataSource: row.consumptionDataSource,
     tankCapacityOverride: decimalToString(row.tankCapacityOverride),
+    manufacturerTankCapacityL:
+      manufacturerTank != null ? String(manufacturerTank) : null,
+    specOverrides: overrides,
+    engine: row.engine ?? null,
+    effectiveSpecs: {
+      consumptionLPer100Km: effective.consumptionLPer100Km,
+      consumptionSource: effective.consumption.source,
+      manufacturerConsumptionL100: manufacturerConso,
+      tankCapacityLiters: effective.tankCapacityLiters,
+      tankCapacitySource: effective.tankCapacity.source,
+      manufacturerTankCapacityL: manufacturerTank,
+      fuelType: effective.fuelType,
+      fuelTypeSource: effective.fuelTypeSpec.source,
+      manufacturerFuelType: manufacturerFuel,
+      electricRangeKm: effective.electricRangeKm,
+      batteryCapacityKwh: effective.batteryCapacityKwh,
+      lengthM: effective.lengthM,
+      widthM: effective.widthM,
+      heightM: effective.heightM,
+      weightKg: effective.weightKg,
+    },
     primaryVehicle: row.primaryVehicle,
-    displayName: buildDisplayName(row),
+    displayName: buildDisplayName({
+      nickname: row.nickname,
+      isManualEntry: row.isManualEntry,
+      manualManufacturerName: row.manualManufacturerName,
+      manualModelName: row.manualModelName,
+      manualYear: row.manualYear,
+      model: row.model,
+      catalogEntry:
+        row.catalogEntry?.make &&
+        row.catalogEntry?.model &&
+        row.catalogEntry?.modelYear != null
+          ? {
+              make: row.catalogEntry.make,
+              model: row.catalogEntry.model,
+              modelYear: row.catalogEntry.modelYear,
+            }
+          : null,
+    }),
     model: row.model ? toCatalogModelSummary(row.model) : null,
+    catalogElectricRangeKm: row.catalogEntry?.electricRangeKm ?? null,
+    catalogBatteryHintKwh: decimalToNumber(
+      row.catalogEntry?.electricConsumptionKwh100Km,
+    ),
+    catalogLabel:
+      row.catalogEntry?.make &&
+      row.catalogEntry?.model &&
+      row.catalogEntry?.modelYear != null
+        ? `${row.catalogEntry.make} ${row.catalogEntry.model} (${row.catalogEntry.modelYear})`
+        : null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -183,23 +328,34 @@ export function toSettingsDto(row: {
 
 export function estimateRangeKm(input: {
   tankCapacityOverride: { toString(): string } | null;
+  manufacturerTankCapacityL?: { toString(): string } | null;
+  customConsumptionL100?: { toString(): string } | null;
   realAvgConsumption: { toString(): string } | null;
+  officialCombinedConsumptionL100?: { toString(): string } | null;
   model: {
     fuelCapacityL: { toString(): string } | null;
     avgConsumption: { toString(): string } | null;
   } | null;
+  catalogEntry?: {
+    fuelTankCapacityL?: { toString(): string } | null;
+  } | null;
 }): number | null {
-  const tank =
-    Number(input.tankCapacityOverride?.toString() ?? NaN) ||
-    Number(input.model?.fuelCapacityL?.toString() ?? NaN);
-  const consumption =
-    Number(input.realAvgConsumption?.toString() ?? NaN) ||
-    Number(input.model?.avgConsumption?.toString() ?? NaN);
-  if (
-    !Number.isFinite(tank) ||
-    !Number.isFinite(consumption) ||
-    consumption <= 0
-  ) {
+  const effective = getEffectiveVehicleSpecifications({
+    manufacturerConsumptionL100:
+      decimalToNumber(input.officialCombinedConsumptionL100) ??
+      decimalToNumber(input.model?.avgConsumption),
+    customConsumptionL100: decimalToNumber(input.customConsumptionL100),
+    realAvgConsumption: decimalToNumber(input.realAvgConsumption),
+    manufacturerTankCapacityL:
+      decimalToNumber(input.manufacturerTankCapacityL) ??
+      decimalToNumber(input.catalogEntry?.fuelTankCapacityL) ??
+      decimalToNumber(input.model?.fuelCapacityL),
+    customTankCapacityL: decimalToNumber(input.tankCapacityOverride),
+  });
+
+  const tank = effective.tankCapacityLiters;
+  const consumption = effective.consumptionLPer100Km;
+  if (tank == null || consumption == null || consumption <= 0) {
     return null;
   }
   return Math.round((tank / consumption) * 100);

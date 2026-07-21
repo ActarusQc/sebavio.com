@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { ZodError } from "zod";
 import { prisma } from "@/lib/prisma";
 import { AppError } from "@/lib/errors";
@@ -26,6 +26,7 @@ import {
   toVehicleDto,
 } from "@/features/vehicles/services/mappers";
 import { assertOdometerNotDecreasing } from "@/features/vehicles/services/odometer";
+import { parseSpecOverrides } from "@/features/vehicles/lib/effective-specs";
 import type {
   PaginatedVehicles,
   UserVehicleDetailDto,
@@ -34,16 +35,76 @@ import type {
   VehiclePhotoDto,
 } from "@/features/vehicles/types";
 
+/** Marque les estimations carburant des voyages actifs comme périmées. */
+async function markActiveTripsFuelStale(
+  tx: Prisma.TransactionClient,
+  vehicleId: string,
+) {
+  await tx.tripRoute.updateMany({
+    where: {
+      fuelEstimateStale: false,
+      trip: {
+        vehicleId,
+        deletedAt: null,
+        status: { in: ["planned", "in_progress"] },
+      },
+    },
+    data: { fuelEstimateStale: true },
+  });
+}
+
+function specsAffectingFuelChanged(
+  before: {
+    customConsumptionL100?: { toString(): string } | null;
+    tankCapacityOverride: { toString(): string } | null;
+    fuelType: string | null;
+    customFuelType?: string | null;
+  },
+  after: {
+    customConsumptionL100?: { toString(): string } | null;
+    tankCapacityOverride?: { toString(): string } | null;
+    fuelType?: string | null;
+    customFuelType?: string | null;
+  },
+): boolean {
+  const pairs: Array<[unknown, unknown]> = [
+    [before.customConsumptionL100, after.customConsumptionL100],
+    [before.tankCapacityOverride, after.tankCapacityOverride],
+    [before.fuelType, after.fuelType],
+    [before.customFuelType, after.customFuelType],
+  ];
+  for (const [b, a] of pairs) {
+    if (a === undefined) continue;
+    const bs = b == null ? null : String(b);
+    const as = a == null ? null : String(a);
+    if (bs !== as) return true;
+  }
+  return false;
+}
+
 const modelInclude = {
   manufacturer: { select: { name: true } },
 } as const;
 
+const catalogEntrySelect = {
+  make: true,
+  model: true,
+  modelYear: true,
+  fuelTankCapacityL: true,
+  electricRangeKm: true,
+  electricConsumptionKwh100Km: true,
+  combinedConsumptionL100Km: true,
+  normalizedFuelType: true,
+} as const;
+
 const vehicleListInclude = {
   model: { include: modelInclude },
+  catalogEntry: { select: catalogEntrySelect },
 } as const;
 
 const vehicleDetailInclude = {
   model: { include: modelInclude },
+  catalogEntry: { select: catalogEntrySelect },
   photos: { orderBy: { displayOrder: "asc" as const } },
   documents: { orderBy: { createdAt: "desc" as const } },
   settings: true,
@@ -100,12 +161,34 @@ async function assertModelExists(modelId: string) {
 
 function resolveCreateFlags(input: VehicleCreateInput): {
   modelId: string | null;
+  catalogEntryId: string | null;
   isManualEntry: boolean;
 } {
-  if (input.modelId) {
-    return { modelId: input.modelId, isManualEntry: false };
+  if (input.catalogEntryId) {
+    return {
+      modelId: input.modelId ?? null,
+      catalogEntryId: input.catalogEntryId,
+      isManualEntry: false,
+    };
   }
-  return { modelId: null, isManualEntry: true };
+  if (input.modelId) {
+    return {
+      modelId: input.modelId,
+      catalogEntryId: null,
+      isManualEntry: false,
+    };
+  }
+  return { modelId: null, catalogEntryId: null, isManualEntry: true };
+}
+
+async function assertCatalogEntryExists(catalogEntryId: string) {
+  const entry = await prisma.vehicleCatalogEntry.findFirst({
+    where: { id: catalogEntryId, isActive: true },
+  });
+  if (!entry) {
+    throw new AppError("VEH_003", "Configuration catalogue inexistante", 400);
+  }
+  return entry;
 }
 
 export async function listVehicles(
@@ -185,6 +268,10 @@ export async function createVehicle(
     await assertModelExists(flags.modelId);
   }
 
+  const catalogEntry = flags.catalogEntryId
+    ? await assertCatalogEntryExists(flags.catalogEntryId)
+    : null;
+
   const makePrimary = input.primaryVehicle === true;
 
   try {
@@ -200,22 +287,71 @@ export async function createVehicle(
         where: { userId, deletedAt: null },
       });
 
+      const fromCatalog = catalogEntry
+        ? {
+            catalogEntryId: catalogEntry.id,
+            isManualEntry: false,
+            manualManufacturerName: catalogEntry.make.slice(0, 150),
+            manualModelName: catalogEntry.model.slice(0, 150),
+            manualYear: catalogEntry.modelYear,
+            manualTrim: catalogEntry.configuration?.slice(0, 150) ?? null,
+            manualCategory: null as string | null,
+            fuelType:
+              input.customFuelType ??
+              input.fuelType ??
+              catalogEntry.normalizedFuelType,
+            manufacturerFuelType: catalogEntry.normalizedFuelType,
+            customFuelType: input.customFuelType ?? null,
+            officialCityConsumptionL100: catalogEntry.cityConsumptionL100Km,
+            officialHighwayConsumptionL100:
+              catalogEntry.highwayConsumptionL100Km,
+            officialCombinedConsumptionL100:
+              catalogEntry.combinedConsumptionL100Km,
+            consumptionDataSource: "nrcan_catalog",
+            realAvgConsumption: null,
+            customConsumptionL100: input.customConsumptionL100 ?? null,
+            manufacturerTankCapacityL:
+              input.manufacturerTankCapacityL ??
+              catalogEntry.fuelTankCapacityL ??
+              null,
+          }
+        : {
+            catalogEntryId: null as string | null,
+            isManualEntry: flags.isManualEntry,
+            manualManufacturerName: flags.isManualEntry
+              ? input.manualManufacturerName
+              : (input.manualManufacturerName ?? null),
+            manualModelName: flags.isManualEntry
+              ? input.manualModelName
+              : (input.manualModelName ?? null),
+            manualYear: flags.isManualEntry
+              ? input.manualYear
+              : (input.manualYear ?? null),
+            manualCategory: input.manualCategory ?? null,
+            manualTrim: input.manualTrim ?? null,
+            fuelType: input.customFuelType ?? input.fuelType ?? null,
+            manufacturerFuelType:
+              input.manufacturerFuelType ?? input.fuelType ?? null,
+            customFuelType: input.customFuelType ?? null,
+            officialCityConsumptionL100:
+              input.officialCityConsumptionL100 ?? null,
+            officialHighwayConsumptionL100:
+              input.officialHighwayConsumptionL100 ?? null,
+            officialCombinedConsumptionL100:
+              input.officialCombinedConsumptionL100 ?? null,
+            consumptionDataSource: flags.isManualEntry
+              ? "user_manual"
+              : (input.consumptionDataSource ?? "legacy_model"),
+            realAvgConsumption: null,
+            customConsumptionL100: input.customConsumptionL100 ?? null,
+            manufacturerTankCapacityL: input.manufacturerTankCapacityL ?? null,
+          };
+
       return tx.userVehicle.create({
         data: {
           userId,
           modelId: flags.modelId,
-          isManualEntry: flags.isManualEntry,
-          manualManufacturerName: flags.isManualEntry
-            ? input.manualManufacturerName
-            : (input.manualManufacturerName ?? null),
-          manualModelName: flags.isManualEntry
-            ? input.manualModelName
-            : (input.manualModelName ?? null),
-          manualYear: flags.isManualEntry
-            ? input.manualYear
-            : (input.manualYear ?? null),
-          manualCategory: input.manualCategory ?? null,
-          manualTrim: input.manualTrim ?? null,
+          ...fromCatalog,
           nickname: input.nickname ?? null,
           vin: input.vin ?? null,
           licensePlate: input.licensePlate ?? null,
@@ -223,9 +359,35 @@ export async function createVehicle(
           purchasePrice: input.purchasePrice ?? null,
           currentOdometer: input.currentOdometer,
           odometerUpdatedAt: new Date(),
-          realAvgConsumption: input.realAvgConsumption ?? null,
           tankCapacityOverride: input.tankCapacityOverride ?? null,
+          tankCapacitySource:
+            input.tankCapacityOverride != null ? "user_manual" : null,
+          tankCapacityUpdatedAt:
+            input.tankCapacityOverride != null ? new Date() : null,
+          specOverrides: input.specOverrides
+            ? (parseSpecOverrides(input.specOverrides) ?? undefined)
+            : undefined,
+          specsUpdatedAt:
+            input.customConsumptionL100 != null ||
+            input.tankCapacityOverride != null ||
+            input.customFuelType != null
+              ? new Date()
+              : null,
           primaryVehicle: makePrimary || count === 0,
+          engine: input.engine ?? null,
+          transmission: input.transmission ?? null,
+          drivetrain: input.drivetrain ?? null,
+          vehicleType: input.vehicleType ?? null,
+          bodyClass: input.bodyClass ?? null,
+          manufacturerName: input.manufacturerName ?? null,
+          plantCountry: input.plantCountry ?? null,
+          cylinders: input.cylinders ?? null,
+          displacementL: input.displacementL ?? null,
+          annualEstimatedKm: input.annualEstimatedKm ?? null,
+          inServiceDate: input.inServiceDate ?? input.purchaseDate ?? null,
+          identificationSource: input.identificationSource ?? null,
+          identificationConfidence: input.identificationConfidence ?? null,
+          usageProfile: input.usageProfile ?? "automatic",
           settings: { create: {} },
         },
         include: vehicleListInclude,
@@ -239,6 +401,7 @@ export async function createVehicle(
       action: "create",
       newValue: {
         modelId: created.modelId,
+        catalogEntryId: created.catalogEntryId,
         isManualEntry: created.isManualEntry,
         nickname: created.nickname,
         vin: created.vin,
@@ -269,7 +432,18 @@ export async function updateVehicle(
   const existing = await getOwnedVehicleOrThrow(userId, vehicleId);
 
   let nextModelId = existing.modelId;
+  let nextCatalogEntryId = existing.catalogEntryId;
   let nextIsManual = existing.isManualEntry;
+
+  if (input.catalogEntryId !== undefined) {
+    if (input.catalogEntryId) {
+      await assertCatalogEntryExists(input.catalogEntryId);
+      nextCatalogEntryId = input.catalogEntryId;
+      nextIsManual = false;
+    } else {
+      nextCatalogEntryId = null;
+    }
+  }
 
   if (input.modelId !== undefined) {
     if (input.modelId) {
@@ -278,16 +452,20 @@ export async function updateVehicle(
       nextIsManual = false;
     } else {
       nextModelId = null;
-      nextIsManual = true;
+      if (!nextCatalogEntryId) nextIsManual = true;
     }
   } else if (input.isManualEntry === true) {
     nextModelId = null;
+    nextCatalogEntryId = null;
     nextIsManual = true;
-  } else if (input.isManualEntry === false && existing.modelId) {
+  } else if (
+    input.isManualEntry === false &&
+    (existing.modelId || existing.catalogEntryId)
+  ) {
     nextIsManual = false;
   }
 
-  if (nextIsManual && nextModelId === null) {
+  if (nextIsManual && nextModelId === null && nextCatalogEntryId === null) {
     const manufacturer =
       input.manualManufacturerName !== undefined
         ? input.manualManufacturerName
@@ -328,10 +506,71 @@ export async function updateVehicle(
         });
       }
 
-      return tx.userVehicle.update({
+      const resetAll = input.resetAllManufacturerSpecs === true;
+
+      const nextCustomFuel = resetAll
+        ? null
+        : input.customFuelType !== undefined
+          ? input.customFuelType
+          : undefined;
+      const nextFuelType =
+        resetAll && existing.manufacturerFuelType
+          ? existing.manufacturerFuelType
+          : input.customFuelType !== undefined
+            ? (input.customFuelType ??
+              existing.manufacturerFuelType ??
+              input.fuelType ??
+              existing.fuelType)
+            : input.fuelType !== undefined
+              ? input.fuelType
+              : undefined;
+
+      const nextCustomConso = resetAll
+        ? null
+        : input.customConsumptionL100 !== undefined
+          ? input.customConsumptionL100
+          : undefined;
+
+      const nextTankOverride = resetAll
+        ? null
+        : input.tankCapacityOverride !== undefined
+          ? input.tankCapacityOverride
+          : undefined;
+
+      const nextSpecOverrides = resetAll
+        ? Prisma.DbNull
+        : input.specOverrides !== undefined
+          ? (parseSpecOverrides(input.specOverrides) ?? Prisma.DbNull)
+          : undefined;
+
+      const fuelSpecsTouch =
+        resetAll ||
+        specsAffectingFuelChanged(existing, {
+          customConsumptionL100:
+            nextCustomConso === undefined
+              ? undefined
+              : nextCustomConso == null
+                ? null
+                : ({ toString: () => String(nextCustomConso) } as {
+                    toString(): string;
+                  }),
+          tankCapacityOverride:
+            nextTankOverride === undefined
+              ? undefined
+              : nextTankOverride == null
+                ? null
+                : ({ toString: () => String(nextTankOverride) } as {
+                    toString(): string;
+                  }),
+          fuelType: nextFuelType,
+          customFuelType: nextCustomFuel,
+        });
+
+      const updatedRow = await tx.userVehicle.update({
         where: { id: vehicleId },
         data: {
           modelId: nextModelId,
+          catalogEntryId: nextCatalogEntryId,
           isManualEntry: nextIsManual,
           ...(input.manualManufacturerName !== undefined
             ? { manualManufacturerName: input.manualManufacturerName }
@@ -348,6 +587,35 @@ export async function updateVehicle(
           ...(input.manualTrim !== undefined
             ? { manualTrim: input.manualTrim }
             : {}),
+          ...(nextFuelType !== undefined ? { fuelType: nextFuelType } : {}),
+          ...(input.manufacturerFuelType !== undefined
+            ? { manufacturerFuelType: input.manufacturerFuelType }
+            : {}),
+          ...(nextCustomFuel !== undefined
+            ? { customFuelType: nextCustomFuel }
+            : {}),
+          ...(input.officialCityConsumptionL100 !== undefined
+            ? {
+                officialCityConsumptionL100: input.officialCityConsumptionL100,
+              }
+            : {}),
+          ...(input.officialHighwayConsumptionL100 !== undefined
+            ? {
+                officialHighwayConsumptionL100:
+                  input.officialHighwayConsumptionL100,
+              }
+            : {}),
+          ...(input.officialCombinedConsumptionL100 !== undefined
+            ? {
+                officialCombinedConsumptionL100:
+                  input.officialCombinedConsumptionL100,
+              }
+            : {}),
+          ...(input.consumptionDataSource !== undefined
+            ? { consumptionDataSource: input.consumptionDataSource }
+            : nextIsManual
+              ? { consumptionDataSource: "user_manual" }
+              : {}),
           ...(input.nickname !== undefined ? { nickname: input.nickname } : {}),
           ...(input.vin !== undefined ? { vin: input.vin } : {}),
           ...(input.licensePlate !== undefined
@@ -365,18 +633,79 @@ export async function updateVehicle(
                 odometerUpdatedAt: new Date(),
               }
             : {}),
-          ...(input.realAvgConsumption !== undefined
-            ? { realAvgConsumption: input.realAvgConsumption }
+          ...(nextCustomConso !== undefined
+            ? { customConsumptionL100: nextCustomConso }
             : {}),
-          ...(input.tankCapacityOverride !== undefined
-            ? { tankCapacityOverride: input.tankCapacityOverride }
+          ...(input.manufacturerTankCapacityL !== undefined
+            ? {
+                manufacturerTankCapacityL: input.manufacturerTankCapacityL,
+              }
             : {}),
+          ...(nextTankOverride !== undefined
+            ? {
+                tankCapacityOverride: nextTankOverride,
+                tankCapacitySource:
+                  nextTankOverride != null ? "user_manual" : null,
+                tankCapacityUpdatedAt:
+                  nextTankOverride != null ? new Date() : null,
+              }
+            : {}),
+          ...(nextSpecOverrides !== undefined
+            ? { specOverrides: nextSpecOverrides }
+            : {}),
+          ...(fuelSpecsTouch ? { specsUpdatedAt: new Date() } : {}),
           ...(input.primaryVehicle !== undefined
             ? { primaryVehicle: input.primaryVehicle }
+            : {}),
+          ...(input.engine !== undefined ? { engine: input.engine } : {}),
+          ...(input.transmission !== undefined
+            ? { transmission: input.transmission }
+            : {}),
+          ...(input.drivetrain !== undefined
+            ? { drivetrain: input.drivetrain }
+            : {}),
+          ...(input.vehicleType !== undefined
+            ? { vehicleType: input.vehicleType }
+            : {}),
+          ...(input.bodyClass !== undefined
+            ? { bodyClass: input.bodyClass }
+            : {}),
+          ...(input.manufacturerName !== undefined
+            ? { manufacturerName: input.manufacturerName }
+            : {}),
+          ...(input.plantCountry !== undefined
+            ? { plantCountry: input.plantCountry }
+            : {}),
+          ...(input.cylinders !== undefined
+            ? { cylinders: input.cylinders }
+            : {}),
+          ...(input.displacementL !== undefined
+            ? { displacementL: input.displacementL }
+            : {}),
+          ...(input.annualEstimatedKm !== undefined
+            ? { annualEstimatedKm: input.annualEstimatedKm }
+            : {}),
+          ...(input.inServiceDate !== undefined
+            ? { inServiceDate: input.inServiceDate }
+            : {}),
+          ...(input.identificationSource !== undefined
+            ? { identificationSource: input.identificationSource }
+            : {}),
+          ...(input.identificationConfidence !== undefined
+            ? { identificationConfidence: input.identificationConfidence }
+            : {}),
+          ...(input.usageProfile !== undefined
+            ? { usageProfile: input.usageProfile }
             : {}),
         },
         include: vehicleListInclude,
       });
+
+      if (fuelSpecsTouch) {
+        await markActiveTripsFuelStale(tx, vehicleId);
+      }
+
+      return updatedRow;
     });
 
     await writeAuditLog({
@@ -554,16 +883,12 @@ export async function addVehicleDocument(
     "Document invalide",
   );
 
-  if (!input.fileUrl) {
-    throw new AppError("VEH_005", "Document non valide", 400);
-  }
-
   const doc = await prisma.userVehicleDocument.create({
     data: {
       vehicleId,
       type: input.type,
       title: input.title,
-      fileUrl: input.fileUrl,
+      fileUrl: input.fileUrl ?? "",
       expiryDate: input.expiryDate ?? null,
     },
   });

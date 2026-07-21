@@ -34,3 +34,25 @@ export class NullMapsProvider implements MapsProvider {
     throw new AppError("EXT_001", "Service cartographique indisponible", 503);
   }
 }
+
+/** Helper de test : résultat Directions minimal conforme au contrat. */
+export function mockDirectionsResult(
+  partial: Partial<DirectionsResult> &
+    Pick<DirectionsResult, "distanceKm" | "durationMin" | "polyline">,
+): DirectionsResult {
+  const dest = partial.finalDestination ?? { lat: 0, lng: 0 };
+  return {
+    provider: "google",
+    legCount: partial.legCount ?? 1,
+    legs: partial.legs ?? [
+      {
+        distanceKm: partial.distanceKm,
+        durationMin: partial.durationMin,
+        start: { lat: 0, lng: 0 },
+        end: dest,
+      },
+    ],
+    finalDestination: dest,
+    ...partial,
+  };
+}

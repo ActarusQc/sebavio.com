@@ -1,14 +1,7 @@
 import Link from "next/link";
 import { requireActiveUser } from "@/features/auth";
-import { PageHeader } from "@/components/common";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Button,
-} from "@/components/ui";
+import { AppPageHero } from "@/components/common";
+import { Button } from "@/components/ui";
 import { TripForm } from "@/features/trips/components";
 import { listVehicles } from "@/features/vehicles/services";
 import { listTravelGroups } from "@/features/travel-groups/services";
@@ -22,10 +15,12 @@ export default async function NewTripPage() {
   ]);
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
-      <PageHeader
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+      <AppPageHero
+        variant="trips"
         title="Nouveau voyage"
-        description="Le véhicule est obligatoire (Doc 4). Les lieux sont saisis en texte."
+        description="Le véhicule est obligatoire. Autocomplétion d’adresses sur départ et destination."
+        breadcrumb={<span>Espace client · Voyages · Création</span>}
         actions={
           <Button variant="outline" render={<Link href="/dashboard/trips" />}>
             Retour
@@ -33,26 +28,16 @@ export default async function NewTripPage() {
         }
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Informations</CardTitle>
-          <CardDescription>
-            Statut initial : planifié. Groupe de voyageurs optionnel.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <TripForm
-            vehicles={vehicles.items.map((v) => ({
-              id: v.id,
-              displayName: v.displayName,
-            }))}
-            groups={groups.items.map((g) => ({
-              id: g.id,
-              name: g.name,
-            }))}
-          />
-        </CardContent>
-      </Card>
+      <TripForm
+        vehicles={vehicles.items.map((v) => ({
+          id: v.id,
+          displayName: v.displayName,
+        }))}
+        groups={groups.items.map((g) => ({
+          id: g.id,
+          name: g.name,
+        }))}
+      />
     </div>
   );
 }

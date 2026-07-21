@@ -1,3 +1,50 @@
+import type { WeatherActivityClassification } from "@/services/weather/activity-classifier";
+import type {
+  WeatherAlert,
+  WeatherCurrent,
+  WeatherDailyForecast,
+  WeatherHourlyForecast,
+} from "@/services/weather/types";
+
+export type TripWeatherStatus =
+  | "available"
+  | "too_early"
+  | "temporarily_unavailable"
+  | "provider_limit_reached"
+  | "disabled"
+  | "no_coordinates";
+
+export type TripWeatherLocationType =
+  "origin" | "destination" | "stop" | "live";
+
+export type TripWeatherLocation = {
+  id: string;
+  name: string;
+  type: TripWeatherLocationType;
+  date: string | null;
+  latitude: number;
+  longitude: number;
+  current: WeatherCurrent | null;
+  daily: WeatherDailyForecast[];
+  hourly: WeatherHourlyForecast[];
+  alerts: WeatherAlert[];
+  activity: WeatherActivityClassification | null;
+  updatedAt: string | null;
+  fromCache: boolean;
+  stale: boolean;
+  summary: string | null;
+};
+
+export type TripWeatherResponse = {
+  status: TripWeatherStatus;
+  generatedAt: string;
+  nextRefreshAt?: string;
+  message: string | null;
+  displayWindow: "none" | "too_early_detail" | "daily" | "hourly" | "live";
+  locations: TripWeatherLocation[];
+};
+
+/** @deprecated — compatibilité ancienne UI / tests. */
 export type StopWeatherStatus =
   "ok" | "no_coordinates" | "out_of_range" | "unavailable";
 
@@ -16,7 +63,6 @@ export type StopWeatherDto = {
   sequence: number;
   forecastDate: string | null;
   status: StopWeatherStatus;
-  /** Message UX pour out_of_range / unavailable / no_coordinates. */
   message: string | null;
   forecast: StopWeatherForecastDto | null;
 };
@@ -26,6 +72,8 @@ export type TripWeatherDto = {
   providerAvailable: boolean;
   horizonDays: number;
   stops: StopWeatherDto[];
+  /** Nouveau contrat. */
+  response?: TripWeatherResponse;
 };
 
 export type WeatherForecastApiDto = {

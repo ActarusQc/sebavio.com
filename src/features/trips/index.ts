@@ -11,6 +11,7 @@ export {
   cancelTrip,
   getTripSummary,
   optimizeTrip,
+  rebuildTripRouteFromCanonicalData,
   geocodeStop,
   addStop,
   updateStop,

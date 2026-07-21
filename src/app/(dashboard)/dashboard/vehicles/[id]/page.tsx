@@ -54,6 +54,14 @@ export default async function VehicleDetailPage({ params }: PageProps) {
               Carburant
             </Button>
             <Button
+              variant="outline"
+              render={
+                <Link href={`/dashboard/vehicles/${vehicle.id}/maintenance`} />
+              }
+            >
+              Entretien
+            </Button>
+            <Button
               render={<Link href={`/dashboard/vehicles/${vehicle.id}/edit`} />}
             >
               Modifier

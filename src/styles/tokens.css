@@ -1,39 +1,59 @@
 /**
- * Design tokens Sebavio (Document 7).
+ * Design tokens Sebavio.
  * Source unique : couleurs, typo, espacements, rayons, ombres.
  * Utiliser uniquement via variables CSS / classes Tailwind dérivées.
  */
 
 :root {
-  /* Palette — vert principal, neutres, accents fonctionnels */
-  --sebavio-green-50: oklch(0.97 0.02 155);
-  --sebavio-green-100: oklch(0.93 0.04 155);
-  --sebavio-green-500: oklch(0.52 0.14 155);
-  --sebavio-green-600: oklch(0.45 0.13 155);
-  --sebavio-green-700: oklch(0.38 0.11 155);
-  --sebavio-green-900: oklch(0.28 0.07 155);
+  /* Identité visuelle officielle */
+  --sebavio-navy: #0e2d46;
+  --sebavio-slate: #4e7f85;
+  --sebavio-sage: #6fa8a1;
+  --sebavio-gold: #f0b64d;
+  --sebavio-gold-hover: #e0a63d;
+  --sebavio-coral: #e07a5f;
+  --sebavio-sand: #c9bda6;
+  --sebavio-muted: #6d7c7c;
+  --sebavio-green-gray: #8c9a93;
+  --sebavio-background: #faf9f6;
 
-  --sebavio-gray-50: oklch(0.985 0.002 155);
-  --sebavio-gray-100: oklch(0.96 0.004 155);
-  --sebavio-gray-200: oklch(0.92 0.006 155);
-  --sebavio-gray-400: oklch(0.7 0.01 155);
-  --sebavio-gray-500: oklch(0.55 0.012 155);
-  --sebavio-gray-700: oklch(0.37 0.012 155);
-  --sebavio-gray-900: oklch(0.2 0.01 155);
+  /* Accents tableau de bord voyage (maquette détail) */
+  --sebavio-teal: #2bb8a8;
+  --sebavio-teal-soft: #e8f8f5;
+  --sebavio-teal-border: #9ad9d0;
+  --sebavio-orange: #f08a3c;
+  --sebavio-orange-soft: #fff3e8;
+  --sebavio-surface: #f0f4f8;
 
-  --sebavio-blue-100: oklch(0.94 0.03 240);
-  --sebavio-blue-500: oklch(0.55 0.14 245);
-  --sebavio-blue-700: oklch(0.42 0.12 245);
+  /* Palette héritée (compatibilité Document 7 / tests) — alignée sur l’identité */
+  --sebavio-green-50: #f3f7f7;
+  --sebavio-green-100: #e4eff0;
+  --sebavio-green-500: #4e7f85;
+  --sebavio-green-600: #3f6a70;
+  --sebavio-green-700: #2f5257;
+  --sebavio-green-900: #0e2d46;
 
-  --sebavio-orange-100: oklch(0.95 0.04 65);
-  --sebavio-orange-500: oklch(0.7 0.16 55);
-  --sebavio-orange-700: oklch(0.52 0.14 45);
+  --sebavio-gray-50: #faf9f6;
+  --sebavio-gray-100: #f3f1ec;
+  --sebavio-gray-200: #e5e0d6;
+  --sebavio-gray-400: #a8b0b0;
+  --sebavio-gray-500: #6d7c7c;
+  --sebavio-gray-700: #3d4a4a;
+  --sebavio-gray-900: #0e2d46;
 
-  --sebavio-red-100: oklch(0.94 0.03 25);
-  --sebavio-red-500: oklch(0.55 0.2 25);
-  --sebavio-red-700: oklch(0.45 0.18 25);
+  --sebavio-blue-100: #e8f2f3;
+  --sebavio-blue-500: #4e7f85;
+  --sebavio-blue-700: #0e2d46;
 
-  /* Typographie — base 16 px (Document 7) */
+  --sebavio-orange-100: #fdf6e7;
+  --sebavio-orange-500: #f0b64d;
+  --sebavio-orange-700: #c9922e;
+
+  --sebavio-red-100: #fcebe7;
+  --sebavio-red-500: #e07a5f;
+  --sebavio-red-700: #c45f45;
+
+  /* Typographie — base 16 px */
   --font-size-base: 1rem;
   --line-height-base: 1.5;
   --font-weight-normal: 400;
@@ -47,20 +67,22 @@
   --space-4: 2rem; /* 32 */
   --space-5: 2.5rem; /* 40 */
   --space-6: 3rem; /* 48 */
+  --section-padding-y: 4.5rem;
 
-  /* Rayons — cartes ~16 px */
+  /* Rayons — cartes ~16–18 px */
   --radius: 1rem;
-  --radius-card: 1rem;
+  --radius-card: 1.125rem;
+  --radius-button: 0.875rem;
 
   /* Ombres légères */
-  --shadow-sm: 0 1px 2px oklch(0.2 0.01 155 / 0.06);
-  --shadow-md: 0 4px 12px oklch(0.2 0.01 155 / 0.08);
-  --shadow-lg: 0 12px 28px oklch(0.2 0.01 155 / 0.1);
+  --shadow-sm: 0 1px 2px rgb(14 45 70 / 0.06);
+  --shadow-md: 0 4px 16px rgb(14 45 70 / 0.08);
+  --shadow-lg: 0 12px 32px rgb(14 45 70 / 0.12);
 
   /* Contenu max */
   --content-max-width: 90rem; /* 1440 px */
 
-  /* Transitions Document 7 */
+  /* Transitions */
   --duration-fast: 150ms;
   --duration-normal: 200ms;
   --duration-slow: 250ms;

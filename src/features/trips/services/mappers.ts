@@ -111,7 +111,7 @@ export function clampPageSize(pageSize: number, max: number): number {
 
 export function vehicleDisplayName(row: {
   nickname: string | null;
-  isManualEntry: boolean;
+  isManualEntry?: boolean;
   manualManufacturerName: string | null;
   manualModelName: string | null;
   manualYear: number | null;
@@ -120,10 +120,18 @@ export function vehicleDisplayName(row: {
     year: number;
     manufacturer: { name: string };
   } | null;
+  catalogEntry?: {
+    make: string;
+    model: string;
+    modelYear: number;
+  } | null;
 }): string {
   if (row.nickname?.trim()) return row.nickname.trim();
   if (row.model) {
     return `${row.model.manufacturer.name} ${row.model.modelName} (${row.model.year})`;
+  }
+  if (row.catalogEntry?.make && row.catalogEntry?.model) {
+    return `${row.catalogEntry.make} ${row.catalogEntry.model} (${row.catalogEntry.modelYear})`;
   }
   if (row.manualManufacturerName && row.manualModelName) {
     const year = row.manualYear ? ` (${row.manualYear})` : "";
@@ -143,6 +151,10 @@ export function toStopDto(row: {
   arrivalTime: Date | null;
   departureTime: Date | null;
   stopType: string;
+  direction?: string | null;
+  placeId?: string | null;
+  durationMinutes?: number | null;
+  notes?: string | null;
   campgroundId?: string | null;
   campground?: {
     id: string;
@@ -203,6 +215,10 @@ export function toStopDto(row: {
     arrivalTime: dateToIso(row.arrivalTime),
     departureTime: dateToIso(row.departureTime),
     stopType: row.stopType,
+    direction: row.direction ?? "outbound",
+    placeId: row.placeId ?? null,
+    durationMinutes: Math.max(0, row.durationMinutes ?? 0),
+    notes: row.notes ?? null,
     campgroundId: row.campgroundId ?? null,
     campground,
     distanceKmToCampground,
@@ -223,7 +239,11 @@ export function toRouteDto(
     estimatedDurationMin: number | null;
     estimatedFuelCost: { toString(): string } | null;
     polyline: string | null;
+    returnDistanceKm?: { toString(): string } | null;
+    returnEstimatedDurationMin?: number | null;
+    returnPolyline?: string | null;
     waypointsHash: string | null;
+    fuelEstimateStale?: boolean;
     updatedAt: Date;
   },
   currentHash?: string | null,
@@ -240,8 +260,12 @@ export function toRouteDto(
     estimatedDurationMin: row.estimatedDurationMin,
     estimatedFuelCost: decimalToString(row.estimatedFuelCost),
     polyline: row.polyline,
+    returnDistanceKm: decimalToString(row.returnDistanceKm ?? null),
+    returnEstimatedDurationMin: row.returnEstimatedDurationMin ?? null,
+    returnPolyline: row.returnPolyline ?? null,
     waypointsHash: row.waypointsHash,
     isStale,
+    fuelEstimateStale: Boolean(row.fuelEstimateStale),
     updatedAt: row.updatedAt.toISOString(),
   };
 }
@@ -253,10 +277,18 @@ type VehicleInclude = {
   manualManufacturerName: string | null;
   manualModelName: string | null;
   manualYear: number | null;
+  fuelType: string | null;
+  settings?: { preferredFuelType: string | null } | null;
   model: {
     modelName: string;
     year: number;
+    fuelType?: string | null;
     manufacturer: { name: string };
+  } | null;
+  catalogEntry?: {
+    make: string;
+    model: string;
+    modelYear: number;
   } | null;
 };
 
@@ -271,6 +303,8 @@ function toVehicleSummary(vehicle: VehicleInclude): TripVehicleSummaryDto {
     id: vehicle.id,
     displayName: vehicleDisplayName(vehicle),
     nickname: vehicle.nickname,
+    fuelType: vehicle.fuelType ?? vehicle.model?.fuelType ?? null,
+    preferredFuelType: vehicle.settings?.preferredFuelType ?? null,
   };
 }
 
@@ -295,7 +329,21 @@ export function toTripDto(row: {
   departureDate: Date;
   returnDate: Date | null;
   origin: string;
+  originPlaceId?: string | null;
+  originLatitude?: { toString(): string } | null;
+  originLongitude?: { toString(): string } | null;
+  originCity?: string | null;
+  originProvince?: string | null;
+  originPostalCode?: string | null;
+  originCountry?: string | null;
   destination: string;
+  destinationPlaceId?: string | null;
+  destinationLatitude?: { toString(): string } | null;
+  destinationLongitude?: { toString(): string } | null;
+  destinationCity?: string | null;
+  destinationProvince?: string | null;
+  destinationPostalCode?: string | null;
+  destinationCountry?: string | null;
   plannedBudget: { toString(): string } | null;
   createdAt: Date;
   updatedAt: Date;
@@ -317,7 +365,21 @@ export function toTripDto(row: {
     departureDate: row.departureDate.toISOString(),
     returnDate: dateToIso(row.returnDate),
     origin: row.origin,
+    originPlaceId: row.originPlaceId ?? null,
+    originLatitude: decimalToString(row.originLatitude ?? null),
+    originLongitude: decimalToString(row.originLongitude ?? null),
+    originCity: row.originCity ?? null,
+    originProvince: row.originProvince ?? null,
+    originPostalCode: row.originPostalCode ?? null,
+    originCountry: row.originCountry ?? null,
     destination: row.destination,
+    destinationPlaceId: row.destinationPlaceId ?? null,
+    destinationLatitude: decimalToString(row.destinationLatitude ?? null),
+    destinationLongitude: decimalToString(row.destinationLongitude ?? null),
+    destinationCity: row.destinationCity ?? null,
+    destinationProvince: row.destinationProvince ?? null,
+    destinationPostalCode: row.destinationPostalCode ?? null,
+    destinationCountry: row.destinationCountry ?? null,
     plannedBudget: decimalToString(row.plannedBudget),
     vehicle: row.vehicle ? toVehicleSummary(row.vehicle) : null,
     travelGroup: toGroupSummary(row.travelGroup),
@@ -337,7 +399,21 @@ export function toTripDetailDto(row: {
   departureDate: Date;
   returnDate: Date | null;
   origin: string;
+  originPlaceId?: string | null;
+  originLatitude?: { toString(): string } | null;
+  originLongitude?: { toString(): string } | null;
+  originCity?: string | null;
+  originProvince?: string | null;
+  originPostalCode?: string | null;
+  originCountry?: string | null;
   destination: string;
+  destinationPlaceId?: string | null;
+  destinationLatitude?: { toString(): string } | null;
+  destinationLongitude?: { toString(): string } | null;
+  destinationCity?: string | null;
+  destinationProvince?: string | null;
+  destinationPostalCode?: string | null;
+  destinationCountry?: string | null;
   plannedBudget: { toString(): string } | null;
   createdAt: Date;
   updatedAt: Date;
@@ -349,6 +425,7 @@ export function toTripDetailDto(row: {
         waypointsHash: string | null;
       })
     | null;
+  activityVisitMinutes?: number;
 }): TripDetailDto {
   const currentHash = computeWaypointsHash({
     origin: row.origin,
@@ -358,13 +435,33 @@ export function toTripDetailDto(row: {
       address: s.address,
       latitude: s.latitude == null ? null : s.latitude.toString(),
       longitude: s.longitude == null ? null : s.longitude.toString(),
+      direction: (s as { direction?: string }).direction ?? "outbound",
+      durationMinutes: (s as { durationMinutes?: number }).durationMinutes ?? 0,
+      stopType: s.stopType,
     })),
   });
+
+  const route = row.route ? toRouteDto(row.route, currentHash) : null;
+  const activityVisitMinutes = Math.max(0, row.activityVisitMinutes ?? 0);
+  const stopDwellMinutes = row.stops.reduce((sum, s) => {
+    const d = (s as { durationMinutes?: number | null }).durationMinutes ?? 0;
+    return sum + Math.max(0, d);
+  }, 0);
+  const drivingMin = route?.estimatedDurationMin ?? null;
+  const returnDrivingMin = route?.returnEstimatedDurationMin ?? 0;
+  const totalDriving =
+    drivingMin != null ? drivingMin + (returnDrivingMin || 0) : null;
+  const totalDurationMin =
+    totalDriving != null
+      ? totalDriving + activityVisitMinutes + stopDwellMinutes
+      : null;
 
   return {
     ...toTripDto({ ...row, _count: { stops: row.stops.length } }),
     stops: row.stops.map(toStopDto),
-    route: row.route ? toRouteDto(row.route, currentHash) : null,
+    route,
+    activityVisitMinutes,
+    totalDurationMin,
   };
 }
 

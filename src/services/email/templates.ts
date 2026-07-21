@@ -42,7 +42,7 @@ export function buildAuthEmailContent(
     const html = wrapHtml(subject, [
       "Bienvenue sur Sebavio.",
       `Pour activer votre compte, cliquez sur le lien ci-dessous (valide 24&nbsp;h)&nbsp;:`,
-      `<a href="${safeLink}">Vérifier mon courriel</a>`,
+      `<a href="${safeLink}" data-no-track>Vérifier mon courriel</a>`,
       `Ou copiez cette adresse&nbsp;:<br><span style="word-break:break-all;">${safeLink}</span>`,
       "Si vous n&apos;avez pas créé de compte, ignorez ce message.",
     ]);
@@ -61,7 +61,7 @@ export function buildAuthEmailContent(
   const html = wrapHtml(subject, [
     "Une demande de réinitialisation de mot de passe a été faite pour votre compte Sebavio.",
     `Cliquez sur le lien ci-dessous (valide 1&nbsp;h)&nbsp;:`,
-    `<a href="${safeLink}">Réinitialiser mon mot de passe</a>`,
+    `<a href="${safeLink}" data-no-track>Réinitialiser mon mot de passe</a>`,
     `Ou copiez cette adresse&nbsp;:<br><span style="word-break:break-all;">${safeLink}</span>`,
     "Si vous n&apos;êtes pas à l&apos;origine de cette demande, ignorez ce message.",
   ]);
@@ -96,7 +96,7 @@ export function buildNotificationEmailContent(input: {
   const paragraphs = [
     escapeHtml(input.body),
     absoluteHref
-      ? `<a href="${escapeHtml(absoluteHref)}">Ouvrir dans Sebavio</a>`
+      ? `<a href="${escapeHtml(absoluteHref)}" data-no-track>Ouvrir dans Sebavio</a>`
       : "",
   ].filter(Boolean);
 

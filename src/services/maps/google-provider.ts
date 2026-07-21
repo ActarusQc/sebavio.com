@@ -24,6 +24,8 @@ type GoogleDirectionsResponse = {
     legs?: Array<{
       distance?: { value?: number };
       duration?: { value?: number };
+      start_location?: { lat?: number; lng?: number };
+      end_location?: { lat?: number; lng?: number };
     }>;
   }>;
 };
@@ -143,11 +145,31 @@ export class GoogleMapsProvider implements MapsProvider {
       throw new AppError("EXT_005", "Itinéraire impossible", 400);
     }
 
+    const rawLegs = route.legs ?? [];
     let distanceM = 0;
     let durationS = 0;
-    for (const leg of route.legs ?? []) {
-      distanceM += leg.distance?.value ?? 0;
-      durationS += leg.duration?.value ?? 0;
+    const legs = rawLegs.map((leg) => {
+      const dM = leg.distance?.value ?? 0;
+      const dS = leg.duration?.value ?? 0;
+      distanceM += dM;
+      durationS += dS;
+      return {
+        distanceKm: Math.round((dM / 1000) * 100) / 100,
+        durationMin: Math.max(0, Math.round(dS / 60)),
+        start: {
+          lat: Number(leg.start_location?.lat ?? NaN),
+          lng: Number(leg.start_location?.lng ?? NaN),
+        },
+        end: {
+          lat: Number(leg.end_location?.lat ?? NaN),
+          lng: Number(leg.end_location?.lng ?? NaN),
+        },
+      };
+    });
+
+    const lastLeg = legs[legs.length - 1];
+    if (!lastLeg || !Number.isFinite(lastLeg.end.lat)) {
+      throw new AppError("EXT_005", "Itinéraire impossible", 400);
     }
 
     return {
@@ -155,6 +177,9 @@ export class GoogleMapsProvider implements MapsProvider {
       durationMin: Math.max(1, Math.round(durationS / 60)),
       polyline,
       provider: "google",
+      legCount: legs.length,
+      legs,
+      finalDestination: lastLeg.end,
     };
   }
 }

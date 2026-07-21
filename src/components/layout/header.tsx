@@ -9,24 +9,26 @@ export type HeaderProps = {
 };
 
 /**
- * Header applicatif (logo, recherche, actions) — coquille Partie 5.
+ * Header applicatif (logo mobile, recherche, actions).
  */
 export function Header({ brand, search, actions, className }: HeaderProps) {
   return (
     <header
       className={cn(
-        "border-border bg-background/95 sticky top-0 z-40 flex h-14 items-center gap-4 border-b px-4 backdrop-blur sm:px-6",
+        "border-sebavio-sand/60 bg-sebavio-background/90 sticky top-0 z-40 flex h-14 items-center gap-3 border-b px-3 backdrop-blur-md sm:h-16 sm:gap-4 sm:px-6 dark:border-white/10 dark:bg-[#0b2235]/90",
         className,
       )}
     >
-      <div className="flex min-w-0 flex-1 items-center gap-4">
+      <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
         {brand}
         {search ? (
-          <div className="hidden max-w-md flex-1 md:block">{search}</div>
+          <div className="hidden max-w-lg flex-1 md:block">{search}</div>
         ) : null}
       </div>
       {actions ? (
-        <div className="flex shrink-0 items-center gap-2">{actions}</div>
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          {actions}
+        </div>
       ) : null}
     </header>
   );

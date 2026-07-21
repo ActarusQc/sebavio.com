@@ -22,6 +22,7 @@ import {
   applyPlanSyncSchema,
   listPlansSchema,
   getPlanSchema,
+  deletePlanSchema,
 } from "@/features/plans/lib/schemas";
 import {
   createPlan,
@@ -31,6 +32,11 @@ import {
   duplicatePlan,
   reconcilePlan,
 } from "@/features/plans/services/plan-crud";
+import {
+  deletePlanHard,
+  getPlanDeleteImpact,
+} from "@/features/plans/services/plan-delete";
+import type { PlanDeleteImpact } from "@/features/plans/lib/plan-delete-types";
 import { setPlanEntitlements } from "@/features/plans/services/plan-entitlements";
 import { createNewPlanPrice } from "@/features/plans/services/plan-prices";
 import {
@@ -330,6 +336,43 @@ export async function reconcilePlanAction(
       parsed.data.prices ? { prices: parsed.data.prices } : undefined,
     );
     revalidatePlans(parsed.data.planId);
+    return { ok: true, data: { planId: parsed.data.planId } };
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+export async function getPlanDeleteImpactAction(
+  input: unknown,
+): Promise<ActionResult<PlanDeleteImpact>> {
+  try {
+    await requirePermission("plans.manage");
+    const parsed = getPlanSchema.safeParse(input);
+    if (!parsed.success) {
+      return zodError(parsed.error.issues[0]?.message);
+    }
+    const data = await getPlanDeleteImpact(parsed.data.planId);
+    return { ok: true, data };
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+export async function deletePlanAction(
+  input: unknown,
+): Promise<ActionResult<{ planId: string }>> {
+  try {
+    const actor = await requirePermission("plans.manage");
+    const parsed = deletePlanSchema.safeParse(input);
+    if (!parsed.success) {
+      return zodError(parsed.error.issues[0]?.message);
+    }
+    await deletePlanHard(parsed.data, {
+      id: actor.id,
+      role: actor.role,
+      ipAddress: await actorIp(),
+    });
+    revalidatePlans();
     return { ok: true, data: { planId: parsed.data.planId } };
   } catch (error) {
     return toActionError(error);

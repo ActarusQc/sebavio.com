@@ -17,3 +17,4 @@ export {
   getPreferences,
   updatePreferences,
 } from "./preferences";
+export { changePassword } from "./change-password";

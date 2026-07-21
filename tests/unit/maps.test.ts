@@ -45,6 +45,16 @@ function mockProvider(overrides?: Partial<MapsProvider>): MapsProvider {
       durationMin: 90,
       polyline: "_p~iF~ps|U_ulLnnqC_mqNvxq`@",
       provider: "google",
+      legCount: 1,
+      legs: [
+        {
+          distanceKm: 100,
+          durationMin: 90,
+          start: { lat: 46.8, lng: -71.3 },
+          end: { lat: 46.9, lng: -71.1 },
+        },
+      ],
+      finalDestination: { lat: 46.9, lng: -71.1 },
     }),
     ...overrides,
   };
@@ -148,6 +158,22 @@ describe("maps service (mocked provider)", () => {
       durationMin: 55,
       polyline: "abc",
       provider: "google",
+      legCount: 2,
+      legs: [
+        {
+          distanceKm: 20,
+          durationMin: 25,
+          start: { lat: 45, lng: -73 },
+          end: { lat: 45.5, lng: -72 },
+        },
+        {
+          distanceKm: 22,
+          durationMin: 30,
+          start: { lat: 45.5, lng: -72 },
+          end: { lat: 46, lng: -71 },
+        },
+      ],
+      finalDestination: { lat: 46, lng: -71 },
     }));
     setMapsProviderForTests(mockProvider({ directions }));
     const service = createMapsService();

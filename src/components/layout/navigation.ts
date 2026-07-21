@@ -6,10 +6,10 @@ import type { BreadcrumbItem } from "./breadcrumbs";
  * Navigation principale (Document 3 / 7 / 8 — Partie 6).
  *
  * Modules Document 3 SANS entrée de menu dédiée :
- * météo (`weather`), carburant (`fuel`), campings (`campings`),
- * activités (`activities`) et cartes (`maps`) seront des sections
- * internes du module Voyages (`trips`), conformément à la vision produit.
- * Ne pas ajouter de routes top-level pour ces domaines ici.
+ * météo (`weather`), carburant (`fuel`), campings (`campings`)
+ * et cartes (`maps`) restent des sections internes du module Voyages.
+ * Activités (`activities`) a une entrée dédiée : suggestions + sélection
+ * par voyage ; le détail voyage n'affiche que les activités choisies.
  */
 
 export type NavItemConfig = {
@@ -21,11 +21,14 @@ export type NavItemConfig = {
   feature: string;
   /** Si true, visible uniquement pour admin / super_admin. */
   adminOnly?: boolean;
+  /** Si true, masqué du menu (feature conservée, réactivable plus tard). */
+  hidden?: boolean;
 };
 
 export type NavIconName =
   | "layout-dashboard"
   | "map"
+  | "star"
   | "users"
   | "car"
   | "book-open"
@@ -51,6 +54,12 @@ export const MAIN_NAV_ITEMS: readonly NavItemConfig[] = [
     feature: "trips",
   },
   {
+    href: "/dashboard/activities",
+    label: "Activités",
+    icon: "star",
+    feature: "activities",
+  },
+  {
     href: "/dashboard/travel-groups",
     label: "Groupes",
     icon: "users",
@@ -67,6 +76,7 @@ export const MAIN_NAV_ITEMS: readonly NavItemConfig[] = [
     label: "Catalogue véhicules",
     icon: "book-open",
     feature: "vehicle-catalog",
+    hidden: true,
   },
   {
     href: "/dashboard/maintenance",
@@ -115,7 +125,9 @@ export const MAIN_NAV_ITEMS: readonly NavItemConfig[] = [
 
 /** Filtre les entrées selon le rôle (session Auth.js). */
 export function getVisibleNavItems(role: UserRole): NavItemConfig[] {
-  return MAIN_NAV_ITEMS.filter((item) => !item.adminOnly || isAdminRole(role));
+  return MAIN_NAV_ITEMS.filter(
+    (item) => !item.hidden && (!item.adminOnly || isAdminRole(role)),
+  );
 }
 
 /** Indique si un item est actif pour le pathname courant. */

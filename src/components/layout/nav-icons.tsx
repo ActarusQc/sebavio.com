@@ -9,6 +9,7 @@ import {
   Settings,
   Shield,
   Sparkles,
+  Star,
   Users,
   Wallet,
   Wrench,
@@ -18,6 +19,7 @@ import type { NavIconName } from "./navigation";
 export const NAV_ICONS: Record<NavIconName, LucideIcon> = {
   "layout-dashboard": LayoutDashboard,
   map: Map,
+  star: Star,
   users: Users,
   car: Car,
   "book-open": BookOpen,

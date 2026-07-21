@@ -1,4 +1,5 @@
-import { EmptyState, PageHeader } from "@/components/common";
+import { Compass } from "lucide-react";
+import { AppPageHero, EmptyState } from "@/components/common";
 
 export type ModulePlaceholderProps = {
   title: string;
@@ -13,11 +14,12 @@ export function ModulePlaceholder({
   description = "Ce module sera développé dans une étape ultérieure.",
 }: ModulePlaceholderProps) {
   return (
-    <section>
-      <PageHeader title={title} description={description} />
+    <section className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+      <AppPageHero title={title} description={description} />
       <EmptyState
         title="Bientôt disponible"
         description="Aucune donnée métier pour le moment — navigation et layout uniquement."
+        icon={<Compass />}
       />
     </section>
   );

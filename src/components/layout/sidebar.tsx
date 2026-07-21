@@ -15,17 +15,19 @@ export type SidebarProps = {
   children?: ReactNode;
   collapsed?: boolean;
   className?: string;
+  header?: ReactNode;
   footer?: ReactNode;
 };
 
 /**
- * Sidebar repliable — coquille Partie 5, navigation câblée Partie 6.
+ * Sidebar repliable — coquille espace client Sebavio.
  */
 export function Sidebar({
   items = [],
   children,
   collapsed = false,
   className,
+  header,
   footer,
 }: SidebarProps) {
   return (
@@ -33,12 +35,23 @@ export function Sidebar({
       aria-label="Navigation principale"
       data-collapsed={collapsed || undefined}
       className={cn(
-        "border-border bg-sidebar text-sidebar-foreground hidden shrink-0 border-r md:flex md:flex-col",
-        collapsed ? "w-16" : "w-60",
+        "border-sidebar-border bg-sidebar text-sidebar-foreground hidden shrink-0 border-r md:flex md:flex-col",
+        "transition-[width] duration-200 ease-out motion-reduce:transition-none",
+        collapsed ? "w-[4.5rem]" : "w-64",
         className,
       )}
     >
-      <nav className="flex flex-1 flex-col gap-1 p-3">
+      {header ? (
+        <div
+          className={cn(
+            "border-sidebar-border flex items-center border-b px-3 py-4",
+            collapsed && "justify-center px-2",
+          )}
+        >
+          {header}
+        </div>
+      ) : null}
+      <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
         {children
           ? children
           : items.map((item) => (
@@ -47,9 +60,9 @@ export function Sidebar({
                 href={item.href}
                 aria-current={item.active ? "page" : undefined}
                 className={cn(
-                  "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none",
+                  "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors duration-150 focus-visible:ring-2 focus-visible:outline-none",
                   item.active &&
-                    "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
+                    "bg-sidebar-accent text-sidebar-accent-foreground ring-sebavio-gold/35 font-medium shadow-sm ring-1",
                   collapsed && "justify-center px-2",
                 )}
               >
@@ -62,7 +75,7 @@ export function Sidebar({
             ))}
       </nav>
       {footer ? (
-        <div className="border-border border-t p-3">{footer}</div>
+        <div className="border-sidebar-border border-t p-3">{footer}</div>
       ) : null}
     </aside>
   );

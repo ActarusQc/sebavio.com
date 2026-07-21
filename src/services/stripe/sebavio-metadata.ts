@@ -29,6 +29,30 @@ export function buildSebavioMetadata(
   };
 }
 
+export type SebavioOneTimeMetadataExtras = {
+  planSlug: string;
+  accessDurationDays: number;
+  durationDays?: number;
+};
+
+/**
+ * Métadonnées Price one-time (Pass) — base Sebavio + durée d'accès.
+ */
+export function buildSebavioOneTimeMetadata(
+  planId: string,
+  mode: StripeMode,
+  extras: SebavioOneTimeMetadataExtras,
+): Record<string, string> {
+  const durationDays = extras.durationDays ?? extras.accessDurationDays;
+  return {
+    ...buildSebavioMetadata(planId, mode),
+    planSlug: extras.planSlug,
+    accessType: "temporary",
+    accessDurationDays: String(extras.accessDurationDays),
+    durationDays: String(durationDays),
+  };
+}
+
 export function isSebavioAppMetadata(
   metadata: Stripe.Metadata | null | undefined,
 ): boolean {

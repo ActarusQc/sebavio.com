@@ -39,6 +39,7 @@ export {
   getPlanSchema,
   duplicatePlanSchema,
   reconcilePlanSchema,
+  deletePlanSchema,
 } from "./lib/schemas";
 
 export type {
@@ -53,6 +54,7 @@ export type {
   GetPlanInput,
   DuplicatePlanInput,
   ReconcilePlanInput,
+  DeletePlanInput,
 } from "./lib/schemas";
 
 export {
@@ -84,6 +86,14 @@ export {
 } from "./services/plan-crud";
 export type { PlanActor } from "./services/plan-crud";
 
+export {
+  getPlanDeleteImpact,
+  canHardDeletePlan,
+  deletePlanHard,
+} from "./services/plan-delete";
+export type { CanHardDeleteOptions } from "./services/plan-delete";
+export type { PlanDeleteImpact } from "./lib/plan-delete-types";
+
 export { setPlanEntitlements } from "./services/plan-entitlements";
 export {
   createNewPlanPrice,
@@ -110,6 +120,8 @@ export {
   previewPlanSyncAction,
   applyPlanSyncAction,
   reconcilePlanAction,
+  getPlanDeleteImpactAction,
+  deletePlanAction,
 } from "./actions";
 
 export type { ActionResult, ActionOk, ActionErr } from "./actions";

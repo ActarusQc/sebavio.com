@@ -5,7 +5,9 @@ import path from "node:path";
 export default defineConfig({
   plugins: [react()],
   test: {
-    environment: "jsdom",
+    // Services serveur (`node:crypto`) : environnement Node.
+    // Les fichiers `.tsx` déclarent `/** @vitest-environment jsdom */`.
+    environment: "node",
     globals: true,
     // React 19 : `act` absent du build production CJS
     env: { NODE_ENV: "test" },

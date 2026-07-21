@@ -26,5 +26,7 @@ export type {
   FuelLogDto,
   FuelStatsDto,
   FuelEstimateDto,
+  FuelRefuelPlanDto,
+  FuelRefuelStopDto,
   PaginatedFuelLogs,
 } from "./types";

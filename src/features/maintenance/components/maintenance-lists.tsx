@@ -4,14 +4,19 @@ import type {
   MaintenanceStatsDto,
   OdometerFreshnessDto,
 } from "@/features/maintenance/types";
+import { EmptyState, MetricCard } from "@/components/common";
+import { Badge } from "@/components/ui";
 import {
-  Badge,
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui";
+  AlertCircle,
+  CalendarDays,
+  CircleDollarSign,
+  ClipboardList,
+  Wrench,
+} from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
+import { Button } from "@/components/ui";
+import { BRAND_ASSETS } from "@/features/marketing";
 
 export function OdometerStaleBanner({
   hints,
@@ -21,18 +26,18 @@ export function OdometerStaleBanner({
   if (hints.length === 0) return null;
   return (
     <div
-      className="border-border bg-muted/40 text-muted-foreground rounded-lg border px-4 py-3 text-sm"
+      className="border-sebavio-gold/40 bg-sebavio-gold/10 text-sebavio-navy dark:border-sebavio-gold/30 dark:bg-sebavio-gold/10 dark:text-foreground rounded-[var(--radius-card)] border px-4 py-3 text-sm"
       role="status"
     >
-      <p className="text-foreground font-medium">Odomètre à actualiser</p>
-      <ul className="mt-1 list-inside list-disc">
+      <p className="font-medium">Odomètre à actualiser</p>
+      <ul className="text-muted-foreground mt-1 list-inside list-disc dark:text-[#c5d0d0]">
         {hints.map((h) => (
           <li key={h.vehicleId}>
             {h.vehicleLabel} — dernière mise à jour il y a {h.daysSinceUpdate}{" "}
             jours.{" "}
             <Link
               href={`/dashboard/vehicles/${h.vehicleId}`}
-              className="text-primary underline-offset-2 hover:underline"
+              className="text-sebavio-slate dark:text-sebavio-gold underline-offset-2 hover:underline"
             >
               Mettre à jour
             </Link>
@@ -48,23 +53,43 @@ export function MaintenanceStatsCards({
 }: {
   stats: MaintenanceStatsDto;
 }) {
-  const items = [
-    { label: "Interventions", value: String(stats.interventionCount) },
-    { label: "Coût total", value: `${stats.totalCost} $` },
-    { label: "Coût année", value: `${stats.yearCost} $` },
-    { label: "À venir", value: String(stats.upcomingCount) },
-    { label: "En retard", value: String(stats.overdueCount) },
-  ];
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-      {items.map((item) => (
-        <Card key={item.label}>
-          <CardHeader className="pb-2">
-            <CardDescription>{item.label}</CardDescription>
-            <CardTitle className="text-2xl">{item.value}</CardTitle>
-          </CardHeader>
-        </Card>
-      ))}
+      <MetricCard
+        title="Interventions"
+        value={String(stats.interventionCount)}
+        description="Historique enregistré"
+        icon={<ClipboardList />}
+        variant="neutral"
+      />
+      <MetricCard
+        title="Coût total"
+        value={`${stats.totalCost} $`}
+        description="Toutes périodes"
+        icon={<CircleDollarSign />}
+        variant="info"
+      />
+      <MetricCard
+        title="Coût de l’année"
+        value={`${stats.yearCost} $`}
+        description="Année civile en cours"
+        icon={<CircleDollarSign />}
+        variant="success"
+      />
+      <MetricCard
+        title="À venir"
+        value={String(stats.upcomingCount)}
+        description="Prochaines échéances"
+        icon={<CalendarDays />}
+        variant="warning"
+      />
+      <MetricCard
+        title="En retard"
+        value={String(stats.overdueCount)}
+        description="À traiter en priorité"
+        icon={<AlertCircle />}
+        variant={stats.overdueCount > 0 ? "danger" : "neutral"}
+      />
     </div>
   );
 }
@@ -77,7 +102,9 @@ export function ScheduleList({
   empty: string;
 }) {
   if (items.length === 0) {
-    return <p className="text-muted-foreground text-sm">{empty}</p>;
+    return empty ? (
+      <p className="text-muted-foreground text-sm">{empty}</p>
+    ) : null;
   }
   return (
     <ul className="divide-border divide-y">
@@ -115,9 +142,25 @@ export function ScheduleList({
 export function HistoryList({ items }: { items: MaintenanceHistoryDto[] }) {
   if (items.length === 0) {
     return (
-      <p className="text-muted-foreground text-sm">
-        Aucun entretien enregistré.
-      </p>
+      <EmptyState
+        className="border-0 bg-transparent py-8 shadow-none"
+        title="Aucun entretien enregistré"
+        description="Notez les interventions pour préparer sereinement vos prochains voyages."
+        icon={
+          <Image
+            src={BRAND_ASSETS.icons.entretien.teal}
+            alt=""
+            width={28}
+            height={28}
+          />
+        }
+        action={
+          <Button size="sm" render={<Link href="/dashboard/maintenance/new" />}>
+            <Wrench data-icon="inline-start" />
+            Ajouter un entretien
+          </Button>
+        }
+      />
     );
   }
   return (

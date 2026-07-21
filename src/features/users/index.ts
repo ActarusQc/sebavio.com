@@ -5,8 +5,10 @@
 export {
   updateProfileSchema,
   updatePreferencesSchema,
+  changePasswordSchema,
   type UpdateProfileInput,
   type UpdatePreferencesInput,
+  type ChangePasswordInput,
 } from "./schemas";
 
 export type {
@@ -25,12 +27,14 @@ export {
   getPreferences,
   updateProfile,
   updatePreferences,
+  changePassword,
 } from "./services";
 
 export {
   updateProfileAction,
   updatePreferencesAction,
+  changePasswordAction,
   type UsersActionResult,
 } from "./actions";
 
-export { ProfileForm, PreferencesForm } from "./components";
+export { ProfileForm, PreferencesForm, ChangePasswordForm } from "./components";

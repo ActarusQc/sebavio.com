@@ -7,7 +7,10 @@ import {
   updateOdometerAction,
   type VehiclesActionResult,
 } from "@/features/vehicles/actions";
-import { USER_DOCUMENT_TYPES } from "@/features/vehicles/constants";
+import {
+  USER_DOCUMENT_TYPES,
+  USER_DOCUMENT_TYPE_LABELS,
+} from "@/features/vehicles/constants";
 import type { UserVehicleDetailDto } from "@/features/vehicles/types";
 import { FormField } from "@/components/common";
 import { Badge, Button, Input } from "@/components/ui";
@@ -61,10 +64,36 @@ export function VehicleDetailPanels({ vehicle }: VehicleDetailProps) {
             <dd>{vehicle.licensePlate ?? "—"}</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Conso réelle</dt>
+            <dt className="text-muted-foreground">Consommation utilisée</dt>
+            <dd>
+              {vehicle.effectiveSpecs.consumptionLPer100Km != null
+                ? `${vehicle.effectiveSpecs.consumptionLPer100Km} L/100 km`
+                : "—"}
+              {vehicle.effectiveSpecs.consumptionSource === "user_override" ? (
+                <span className="text-muted-foreground ml-1 text-xs">
+                  (personnalisée)
+                </span>
+              ) : vehicle.effectiveSpecs.manufacturerConsumptionL100 != null ? (
+                <span className="text-muted-foreground ml-1 text-xs">
+                  (suggérée :{" "}
+                  {vehicle.effectiveSpecs.manufacturerConsumptionL100})
+                </span>
+              ) : null}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Moyenne des pleins</dt>
             <dd>
               {vehicle.realAvgConsumption
                 ? `${vehicle.realAvgConsumption} L/100 km`
+                : "—"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Réservoir</dt>
+            <dd>
+              {vehicle.effectiveSpecs.tankCapacityLiters != null
+                ? `${vehicle.effectiveSpecs.tankCapacityLiters} L`
                 : "—"}
             </dd>
           </div>
@@ -81,9 +110,13 @@ export function VehicleDetailPanels({ vehicle }: VehicleDetailProps) {
             <dd>
               {vehicle.model
                 ? `${vehicle.model.manufacturerName} ${vehicle.model.modelName} (${vehicle.model.year})`
-                : vehicle.manualManufacturerName
-                  ? `${vehicle.manualManufacturerName} ${vehicle.manualModelName} (${vehicle.manualYear})`
-                  : "—"}
+                : vehicle.catalogLabel
+                  ? vehicle.catalogLabel
+                  : vehicle.manualManufacturerName && vehicle.manualModelName
+                    ? `${vehicle.manualManufacturerName} ${vehicle.manualModelName}${
+                        vehicle.manualYear ? ` (${vehicle.manualYear})` : ""
+                      }`
+                    : "—"}
             </dd>
           </div>
         </dl>
@@ -137,8 +170,8 @@ export function VehicleDetailPanels({ vehicle }: VehicleDetailProps) {
         )}
         <form action={photoAction} className="grid gap-3 sm:grid-cols-2">
           <input type="hidden" name="id" value={vehicle.id} />
-          <FormField htmlFor="photo-url" label="URL photo" required>
-            <Input id="photo-url" name="photoUrl" type="url" required />
+          <FormField htmlFor="photo-url" label="URL photo">
+            <Input id="photo-url" name="photoUrl" type="url" />
           </FormField>
           <FormField htmlFor="photo-caption" label="Légende">
             <Input id="photo-caption" name="caption" maxLength={200} />
@@ -162,29 +195,36 @@ export function VehicleDetailPanels({ vehicle }: VehicleDetailProps) {
           <p className="text-muted-foreground text-sm">Aucun document.</p>
         ) : (
           <ul className="space-y-2 text-sm">
-            {vehicle.documents.map((d) => (
-              <li key={d.id}>
-                <a
-                  href={d.fileUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-primary underline-offset-4 hover:underline"
-                >
-                  [{d.type}] {d.title}
-                </a>
-              </li>
-            ))}
+            {vehicle.documents.map((d) => {
+              const typeLabel = USER_DOCUMENT_TYPE_LABELS[d.type] ?? d.type;
+              const label = `[${typeLabel}] ${d.title}`;
+              return (
+                <li key={d.id}>
+                  {d.fileUrl ? (
+                    <a
+                      href={d.fileUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary underline-offset-4 hover:underline"
+                    >
+                      {label}
+                    </a>
+                  ) : (
+                    <span>{label}</span>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
         <form action={docAction} className="grid gap-3 sm:grid-cols-2">
           <input type="hidden" name="id" value={vehicle.id} />
-          <FormField htmlFor="doc-type" label="Type" required>
+          <FormField htmlFor="doc-type" label="Type">
             <select
               id="doc-type"
               name="type"
               className={selectClassName}
-              defaultValue="Insurance"
-              required
+              defaultValue="Assurance"
             >
               {USER_DOCUMENT_TYPES.map((t) => (
                 <option key={t} value={t}>
@@ -193,11 +233,8 @@ export function VehicleDetailPanels({ vehicle }: VehicleDetailProps) {
               ))}
             </select>
           </FormField>
-          <FormField htmlFor="doc-title" label="Titre" required>
-            <Input id="doc-title" name="title" required maxLength={150} />
-          </FormField>
-          <FormField htmlFor="doc-url" label="URL" required>
-            <Input id="doc-url" name="fileUrl" type="url" required />
+          <FormField htmlFor="doc-title" label="Titre">
+            <Input id="doc-title" name="title" maxLength={150} />
           </FormField>
           <FormField htmlFor="doc-expiry" label="Expiration">
             <Input id="doc-expiry" name="expiryDate" type="date" />

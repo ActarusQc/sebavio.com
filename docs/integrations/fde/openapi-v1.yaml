@@ -1,0 +1,500 @@
+openapi: 3.1.0
+info:
+  title: FDE FuelSync — Sebavio Integration API v1
+  version: 1.0.0
+  description: |
+    Contrat machine minimal pour l'intégration backend Sebavio avec Travel Data Engine.
+    Routes plugin FuelSync sous `/api/v1/plugins/fuel-sync/*`.
+    Authentification Bearer API key. Pas de route resolve dédiée — utiliser `regional-prices/latest` avec filtres.
+
+    Identifiants stations (ÉTAPE 23) :
+    - `id` est un UUID opaque canonique — ne jamais le reconstruire côté client.
+    - `publicId` optionnel (`fst_…`) est également opaque et stable.
+    - Les anciens codes `req-*` restent résolvables sur `GET /stations/{id}` et renvoient l’identité canonique
+      (`canonicalId`, éventuellement `resolvedFromLegacyId`).
+    - Un changement de nom / bannière / adresse mineure / coords dans la tolérance ne change pas `id`.
+    - `stableStationCode` (fingerprint) est déprécié pour l’identité permanente.
+servers:
+  - url: https://fde.monteregia.com
+    description: Production
+  - url: http://127.0.0.1:3020
+    description: Local loopback
+security:
+  - bearerAuth: []
+tags:
+  - name: status
+  - name: catalog
+  - name: prices
+  - name: compliance
+paths:
+  /plugins/fuel-sync/stations/nearby:
+    get:
+      summary: Stations proches (Haversine)
+      security: [{ ApiKeyAuth: [] }]
+      parameters:
+        - in: query
+          name: latitude
+          required: true
+          schema: { type: number }
+        - in: query
+          name: longitude
+          required: true
+          schema: { type: number }
+        - in: query
+          name: radiusKm
+          schema: { type: number, default: 10 }
+        - in: query
+          name: fuelType
+          schema: { type: string, enum: [regular, premium, diesel] }
+      responses:
+        '200': { description: Liste nearby }
+        '401': { description: Non authentifié }
+        '403': { description: Permission manquante }
+
+  /api/v1/plugins/fuel-sync/status:
+    get:
+      tags: [status]
+      summary: Statut FuelSync
+      operationId: getFuelSyncStatus
+      responses:
+        '200':
+          description: Statut runtime et disponibilité des données régionales
+          headers:
+            Cache-Control:
+              schema: { type: string }
+              example: private, max-age=60
+            X-Request-Id:
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FuelStatusResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+  /api/v1/plugins/fuel-sync/regions:
+    get:
+      tags: [catalog]
+      summary: Régions disponibles
+      operationId: listFuelRegions
+      parameters:
+        - $ref: '#/components/parameters/country'
+        - $ref: '#/components/parameters/subdivision'
+        - $ref: '#/components/parameters/provider'
+        - $ref: '#/components/parameters/source'
+        - $ref: '#/components/parameters/fuelType'
+      responses:
+        '200':
+          description: Liste des régions distinctes
+          headers:
+            Cache-Control:
+              schema: { type: string }
+              example: private, max-age=300
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/FuelRegionResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/v1/plugins/fuel-sync/fuel-types:
+    get:
+      tags: [catalog]
+      summary: Types de carburant disponibles
+      operationId: listFuelTypes
+      responses:
+        '200':
+          description: Types réellement observés
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/FuelFuelTypeResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/v1/plugins/fuel-sync/regional-prices/latest:
+    get:
+      tags: [prices]
+      summary: Dernières observations régionales (filtres optionnels)
+      description: |
+        Point d'intégration principal pour obtenir le prix le plus récent par région + type + provider.
+        Remplace un endpoint resolve dédié (voir ADR 0019).
+      operationId: getLatestRegionalPrices
+      parameters:
+        - $ref: '#/components/parameters/country'
+        - $ref: '#/components/parameters/subdivision'
+        - $ref: '#/components/parameters/region'
+        - $ref: '#/components/parameters/fuelType'
+        - $ref: '#/components/parameters/provider'
+        - $ref: '#/components/parameters/source'
+      responses:
+        '200':
+          description: Dernières observations
+          headers:
+            Cache-Control:
+              schema: { type: string }
+            ETag:
+              schema: { type: string }
+            Last-Modified:
+              schema: { type: string, format: date-time }
+            X-Request-Id:
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/FuelRegionalPriceResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/v1/plugins/fuel-sync/regional-prices/history:
+    get:
+      tags: [prices]
+      summary: Historique régional paginé
+      operationId: getRegionalPriceHistory
+      parameters:
+        - $ref: '#/components/parameters/country'
+        - $ref: '#/components/parameters/subdivision'
+        - $ref: '#/components/parameters/region'
+        - name: fuelType
+          in: query
+          required: true
+          schema: { type: string, enum: [regular, midGrade, premium, diesel] }
+        - $ref: '#/components/parameters/provider'
+        - $ref: '#/components/parameters/source'
+        - $ref: '#/components/parameters/observedFrom'
+        - $ref: '#/components/parameters/observedTo'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/order'
+      responses:
+        '200':
+          description: Historique paginé
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FuelRegionalPriceListResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/v1/plugins/fuel-sync/sources:
+    get:
+      tags: [compliance]
+      summary: Sources et conformité
+      operationId: listFuelSources
+      responses:
+        '200':
+          description: Sources publiques
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/FuelSourcePublicResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API key
+      description: Clé API machine-à-machine (backend Sebavio uniquement)
+  parameters:
+    country:
+      name: country
+      in: query
+      schema: { type: string, example: CA }
+    subdivision:
+      name: subdivision
+      in: query
+      schema: { type: string, example: QC }
+    region:
+      name: region
+      in: query
+      schema: { type: string, example: Montréal }
+    fuelType:
+      name: fuelType
+      in: query
+      schema: { type: string, enum: [regular, midGrade, premium, diesel] }
+    provider:
+      name: provider
+      in: query
+      schema: { type: string, example: statcan-regional-fuel }
+    source:
+      name: source
+      in: query
+      schema: { type: string, example: statcan-wds-18100001 }
+    observedFrom:
+      name: observedFrom
+      in: query
+      schema: { type: string, format: date-time }
+    observedTo:
+      name: observedTo
+      in: query
+      schema: { type: string, format: date-time }
+    page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    pageSize:
+      name: pageSize
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+    sort:
+      name: sort
+      in: query
+      schema: { type: string, enum: [observedAt, collectedAt, id], default: observedAt }
+    order:
+      name: order
+      in: query
+      schema: { type: string, enum: [asc, desc], default: desc }
+  responses:
+    Unauthorized:
+      description: Clé absente ou invalide
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    Forbidden:
+      description: Permission insuffisante
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    ValidationError:
+      description: Paramètres invalides
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    RateLimited:
+      description: Limite de débit atteinte
+      headers:
+        Retry-After:
+          schema: { type: integer }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    ServiceUnavailable:
+      description: Plugin ou persistance indisponible
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+  schemas:
+    ApiError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            requestId: { type: string }
+            details: { type: object, additionalProperties: true }
+    FuelFreshnessInfo:
+      type: object
+      required: [observedAt, collectedAt, ageSeconds, ageDays, freshnessStatus]
+      properties:
+        observedAt: { type: string, format: date-time }
+        collectedAt: { type: string, format: date-time }
+        ageSeconds: { type: number }
+        ageDays: { type: number }
+        freshnessStatus:
+          type: string
+          enum: [current, aging, stale, unknown]
+    FuelPublicAttribution:
+      type: object
+      required: [source, dataset, productId, license, attributionRequired, notice, commercialReviewRequired]
+      properties:
+        source: { type: string }
+        dataset: { type: string }
+        productId: { type: string }
+        license: { type: string }
+        attributionRequired: { type: boolean, const: true }
+        retrievedAt: { type: string, format: date-time }
+        notice: { type: string }
+        commercialReviewRequired: { type: boolean, const: true }
+    FuelRegionalPriceResponse:
+      type: object
+      required:
+        - id
+        - providerId
+        - sourceId
+        - countryCode
+        - subdivisionCode
+        - regionName
+        - fuelType
+        - price
+        - currency
+        - unit
+        - observedAt
+        - collectedAt
+        - freshness
+      properties:
+        id: { type: string, format: uuid }
+        providerId: { type: string }
+        sourceId: { type: string }
+        countryCode: { type: string }
+        subdivisionCode: { type: string }
+        regionName: { type: string }
+        regionCode: { type: string }
+        fuelType: { type: string }
+        price: { type: number, description: CAD per liter (decimal) }
+        currency: { type: string, example: CAD }
+        unit: { type: string, example: liter }
+        observedAt: { type: string, format: date-time }
+        collectedAt: { type: string, format: date-time }
+        snapshotId: { type: string, format: uuid }
+        attribution: { $ref: '#/components/schemas/FuelPublicAttribution' }
+        freshness: { $ref: '#/components/schemas/FuelFreshnessInfo' }
+    PaginationMeta:
+      type: object
+      required: [page, pageSize, totalItems, totalPages, hasNextPage, hasPreviousPage]
+      properties:
+        page: { type: integer }
+        pageSize: { type: integer }
+        totalItems: { type: integer }
+        totalPages: { type: integer }
+        hasNextPage: { type: boolean }
+        hasPreviousPage: { type: boolean }
+    FuelRegionalPriceListResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/FuelRegionalPriceResponse' }
+        pagination: { $ref: '#/components/schemas/PaginationMeta' }
+    FuelRegionResponse:
+      type: object
+      required:
+        - countryCode
+        - subdivisionCode
+        - regionName
+        - providerIds
+        - sourceIds
+        - firstObservedAt
+        - lastObservedAt
+        - fuelTypes
+        - observationCount
+      properties:
+        countryCode: { type: string }
+        subdivisionCode: { type: string }
+        regionCode: { type: string }
+        regionName: { type: string }
+        providerIds: { type: array, items: { type: string } }
+        sourceIds: { type: array, items: { type: string } }
+        firstObservedAt: { type: string, format: date-time }
+        lastObservedAt: { type: string, format: date-time }
+        fuelTypes: { type: array, items: { type: string } }
+        observationCount: { type: integer }
+    FuelFuelTypeResponse:
+      type: object
+      required:
+        - id
+        - displayName
+        - availableForRegionalPrices
+        - availableForStationPrices
+        - currencies
+        - units
+        - firstObservedAt
+        - lastObservedAt
+      properties:
+        id: { type: string }
+        displayName: { type: string }
+        availableForRegionalPrices: { type: boolean }
+        availableForStationPrices: { type: boolean }
+        currencies: { type: array, items: { type: string } }
+        units: { type: array, items: { type: string } }
+        firstObservedAt: { type: string, format: date-time }
+        lastObservedAt: { type: string, format: date-time }
+    FuelSourcePublicResponse:
+      type: object
+      required:
+        - id
+        - name
+        - owner
+        - sourceType
+        - attributionRequired
+        - commercialUseAllowed
+        - retentionAllowed
+        - status
+        - limitations
+        - commercialReviewNotice
+      properties:
+        id: { type: string }
+        name: { type: string }
+        owner: { type: string }
+        sourceType: { type: string }
+        officialReference: { type: string }
+        license: { type: string }
+        attributionRequired: { type: boolean }
+        attributionText: { type: string }
+        commercialUseAllowed: { type: string }
+        retentionAllowed: { type: string }
+        status: { type: string }
+        limitations: { type: array, items: { type: string } }
+        attribution: { $ref: '#/components/schemas/FuelPublicAttribution' }
+        commercialReviewNotice: { type: string }
+    FuelStatusResponse:
+      type: object
+      required:
+        - pluginId
+        - version
+        - runtimeState
+        - enabled
+        - synchronizationEnabled
+        - readiness
+        - health
+        - registeredProviderCount
+        - operationalProviderCount
+        - lastRun
+        - lastActiveRegionalSnapshot
+        - lastRegionalDataAt
+        - freshness
+        - availableDataTypes
+        - attributionRequired
+        - knownLimitations
+      properties:
+        pluginId: { type: string }
+        version: { type: string }
+        runtimeState: { type: string }
+        enabled: { type: boolean }
+        synchronizationEnabled: { type: boolean }
+        readiness: { type: string }
+        health: { type: string }
+        registeredProviderCount: { type: integer }
+        operationalProviderCount: { type: integer }
+        lastRun: { type: object, nullable: true }
+        lastActiveRegionalSnapshot: { type: object, nullable: true }
+        lastRegionalDataAt: { type: string, format: date-time, nullable: true }
+        freshness: { $ref: '#/components/schemas/FuelFreshnessInfo', nullable: true }
+        availableDataTypes:
+          type: object
+          properties:
+            regionalPrices:
+              type: object
+              properties:
+                available: { type: boolean }
+                count: { type: integer }
+            stationPrices:
+              type: object
+              properties:
+                available: { type: boolean, const: false }
+                count: { type: integer, const: 0 }
+        attributionRequired: { type: boolean }
+        knownLimitations: { type: array, items: { type: string } }

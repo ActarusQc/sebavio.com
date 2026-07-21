@@ -32,3 +32,9 @@ export type {
   UserVehicleDetailDto,
   PaginatedVehicles,
 } from "@/features/vehicles/types";
+
+export {
+  getEffectiveVehicleSpecifications,
+  parseDecimalInput,
+  hashVehicleFuelSpecs,
+} from "@/features/vehicles/lib/effective-specs";

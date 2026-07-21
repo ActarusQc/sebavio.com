@@ -23,10 +23,12 @@ import type {
 } from "@/features/maps/components/trip-map";
 import { TripActivitiesSection } from "@/features/trips/activities/components/trip-activities-section";
 import type { TripActivityDto } from "@/features/trips/activities/activity-types";
-import { TripHero } from "@/features/trips/components/detail/trip-hero";
-import { TripQuickSummary } from "@/features/trips/components/detail/trip-quick-summary";
+import { TripHeader } from "@/features/trips/components/detail/trip-header";
 import { TripOverviewCard } from "@/features/trips/components/detail/trip-overview-card";
 import { TripMapCard } from "@/features/trips/components/detail/trip-map-card";
+import { TripStatsCard } from "@/features/trips/components/detail/trip-stats-card";
+import { TripItineraryPreview } from "@/features/trips/components/detail/trip-itinerary-preview";
+import { TripFuelSummaryCard } from "@/features/trips/components/detail/trip-fuel-summary-card";
 import { TripStopsOverview } from "@/features/trips/components/detail/trip-stops-overview";
 import { TripFutureModules } from "@/features/trips/components/detail/trip-future-modules";
 import { TripItinerarySection } from "@/features/trips/components/detail/trip-itinerary-section";
@@ -42,7 +44,12 @@ import {
   TripWeatherSection,
 } from "@/features/weather/components";
 import { countRouteStopsByKind } from "@/features/trips/lib/stop-counts";
-import { TripAssistantPanel } from "@/features/ai/components/trip-assistant-panel";
+import { TripAssistantProvider } from "@/features/ai/components/trip-assistant-context";
+import { TripAiSummaryCard } from "@/features/ai/components/trip-ai-summary-card";
+import {
+  TripAssistantFab,
+  TripAssistantSheet,
+} from "@/features/ai/components/trip-assistant-panel";
 
 const initial: TripsActionResult | undefined = undefined;
 
@@ -80,31 +87,40 @@ export function TripDetailPanels({ trip }: TripDetailPanelsProps) {
       latestServer={tracking.latestServer}
       tripOrigin={tripOrigin}
     >
-      <TripDetailPanelsInner
-        trip={trip}
-        userLocation={userLocation}
-        centerOnUserToken={centerOnUserToken}
-        geoPanel={
-          <TripGeolocationPanel
-            uiState={tracking.uiState}
-            messageFr={
-              tracking.error?.messageFr ?? tracking.flushError?.messageFr
-            }
-            canCenter={Boolean(userLocation)}
-            onActivate={tracking.activate}
-            onPause={tracking.pauseTracking}
-            onResume={tracking.resumeTracking}
-            onRetry={() => {
-              void tracking.refreshPermission().then((perm) => {
-                if (perm === "granted" || perm === "prompt") {
-                  tracking.activate();
-                }
-              });
-            }}
-            onCenter={() => setCenterOnUserToken((n) => n + 1)}
-          />
-        }
-      />
+      <TripAssistantProvider
+        tripId={trip.id}
+        tripActive={trip.status === "in_progress"}
+        liveLatitude={userLocation?.lat ?? null}
+        liveLongitude={userLocation?.lng ?? null}
+      >
+        <TripDetailPanelsInner
+          trip={trip}
+          userLocation={userLocation}
+          centerOnUserToken={centerOnUserToken}
+          geoPanel={
+            <TripGeolocationPanel
+              uiState={tracking.uiState}
+              messageFr={
+                tracking.error?.messageFr ?? tracking.flushError?.messageFr
+              }
+              canCenter={Boolean(userLocation)}
+              onActivate={tracking.activate}
+              onPause={tracking.pauseTracking}
+              onResume={tracking.resumeTracking}
+              onRetry={() => {
+                void tracking.refreshPermission().then((perm) => {
+                  if (perm === "granted" || perm === "prompt") {
+                    tracking.activate();
+                  }
+                });
+              }}
+              onCenter={() => setCenterOnUserToken((n) => n + 1)}
+            />
+          }
+        />
+        <TripAssistantSheet />
+        <TripAssistantFab />
+      </TripAssistantProvider>
     </TripLiveLocationProvider>
   );
 }
@@ -242,6 +258,14 @@ function TripDetailPanelsInner({
   const routeStale = Boolean(trip.route?.isStale);
   const stopCounts = countRouteStopsByKind(trip.stops);
 
+  const pauseCount = trip.stops.filter((s) => s.stopType === "rest").length;
+  const estimatedArrival =
+    trip.stops
+      .filter((s) => s.direction === "outbound")
+      .find((s) => s.stopType === "destination")?.arrivalTime ??
+    trip.stops.filter((s) => s.direction === "outbound").at(-1)?.arrivalTime ??
+    null;
+
   function submitHidden(
     action: (payload: FormData) => void,
     fields: Record<string, string>,
@@ -327,22 +351,25 @@ function TripDetailPanelsInner({
     live.isLiveUseful && trip.status === "in_progress" ? live.longitude : null;
 
   return (
-    <div className="flex flex-col gap-5 sm:gap-6" data-trip-detail>
-      <TripHero
+    <div
+      className="flex flex-col gap-5 pb-28 sm:gap-6 sm:pb-28"
+      data-trip-detail
+    >
+      <TripHeader
         tripId={trip.id}
         title={trip.title}
         status={trip.status}
+        origin={trip.origin}
+        originCity={trip.originCity}
+        originProvince={trip.originProvince}
+        destination={trip.destination}
+        destinationCity={trip.destinationCity}
+        destinationProvince={trip.destinationProvince}
+        departureDate={trip.departureDate}
+        returnDate={trip.returnDate}
         canEdit={!readonly}
       />
 
-      <div className="flex flex-wrap items-center gap-2">
-        <TripAssistantPanel
-          tripId={trip.id}
-          tripActive={trip.status === "in_progress"}
-          liveLatitude={userLocation?.lat ?? liveLat}
-          liveLongitude={userLocation?.lng ?? liveLng}
-        />
-      </div>
       {(feedback || success) && (
         <p
           className={
@@ -382,137 +409,136 @@ function TripDetailPanelsInner({
         onFuelMarkersChange={onFuelMarkersChange}
         onFocusFuelStop={onFocusFuelStop}
       >
-        {/* 1. Météo compacte */}
+        {/* 1. Météo */}
         <TripWeatherCompact
           tripId={trip.id}
           liveLatitude={liveLat}
           liveLongitude={liveLng}
         />
 
-        {/* 2. KPIs */}
-        <TripQuickSummary
-          routeFresh={Boolean(routeFresh)}
-          distanceKm={routeFresh ? (trip.route?.distanceKm ?? null) : null}
-          durationMin={
-            routeFresh
-              ? (trip.totalDurationMin ??
-                trip.route?.estimatedDurationMin ??
-                null)
-              : null
-          }
-          estimatedFuelCost={
-            routeFresh ? (trip.route?.estimatedFuelCost ?? null) : null
-          }
-          routeStopCount={stopCounts.routeStopCount}
-          activityStopCount={stopCounts.activityStopCount}
-          detourStopCount={stopCounts.detourStopCount}
-        />
+        {/* 2. Assistant Sebavio */}
+        <TripAiSummaryCard />
 
-        {/* Géoloc discrète */}
-        {geoPanel}
+        {/* 3. Carte + détails — mobile : détails avant carte */}
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,2.8fr)_minmax(285px,1fr)] lg:items-stretch lg:gap-[18px]">
+          <div className="order-2 space-y-3 lg:order-1">
+            {geoPanel}
+            <TripMapCard
+              trip={trip}
+              readonly={readonly}
+              routeStale={routeStale}
+              optimizePending={recalculating}
+              fuelMarkers={fuelMarkers}
+              activityMarkers={activityMarkers}
+              focusFuelMarkerId={focusFuelMarkerId}
+              userLocation={userLocation}
+              centerOnUserToken={centerOnUserToken}
+              onOptimize={() => submitHidden(optimizeAction, { id: trip.id })}
+              mapEditMode={mapEditMode && !readonly}
+              onToggleMapEdit={() => setMapEditMode((v) => !v)}
+              onMapClickAddWaypoint={handleMapClickAdd}
+              onWaypointDragEnd={handleWaypointDrag}
+            />
+          </div>
+          <div className="order-1 lg:order-2">
+            <TripStatsCard
+              routeFresh={Boolean(routeFresh)}
+              distanceKm={routeFresh ? (trip.route?.distanceKm ?? null) : null}
+              durationMin={
+                routeFresh
+                  ? (trip.totalDurationMin ??
+                    trip.route?.estimatedDurationMin ??
+                    null)
+                  : null
+              }
+              estimatedArrival={estimatedArrival}
+              activityCount={stopCounts.activityStopCount}
+              pauseCount={pauseCount}
+            />
+          </div>
+        </div>
 
-        {live.isLiveUseful && trip.status === "in_progress" ? (
-          <p
-            className="text-muted-foreground px-1 text-xs"
-            role="status"
-            data-testid="trip-geo-remaining-hint"
-          >
-            Position actuelle utilisée pour la météo locale, les activités à
-            proximité et les estimations de trajet restant.
-          </p>
-        ) : null}
+        {/* 4. Itinéraire + carburant */}
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:items-stretch lg:gap-[18px]">
+          <TripItineraryPreview trip={trip} />
+          <TripFuelSummaryCard
+            hasVehicle={Boolean(trip.vehicleId)}
+            fuelEstimateStale={Boolean(trip.route?.fuelEstimateStale)}
+          />
+        </div>
 
-        {/* 3. Carburant + Carte */}
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)] lg:items-start lg:gap-6">
-          <TripFuelSettingsCard />
-          <TripMapCard
+        {/* Sections détaillées existantes */}
+        <div className="mt-1 flex flex-col gap-5 sm:mt-2 sm:gap-6">
+          <TripItinerarySection
             trip={trip}
             readonly={readonly}
-            routeStale={routeStale}
-            optimizePending={recalculating}
-            fuelMarkers={fuelMarkers}
-            activityMarkers={activityMarkers}
-            focusFuelMarkerId={focusFuelMarkerId}
-            userLocation={userLocation}
-            centerOnUserToken={centerOnUserToken}
-            onOptimize={() => submitHidden(optimizeAction, { id: trip.id })}
-            mapEditMode={mapEditMode && !readonly}
+            recalculating={recalculating}
+            mapEditMode={mapEditMode}
             onToggleMapEdit={() => setMapEditMode((v) => !v)}
-            onMapClickAddWaypoint={handleMapClickAdd}
-            onWaypointDragEnd={handleWaypointDrag}
+            onRecalculate={() => submitHidden(optimizeAction, { id: trip.id })}
+            onAdd={handleAdd}
+            onUpdate={handleUpdate}
+            onDelete={handleDelete}
+            onReorder={handleReorder}
           />
-        </div>
 
-        {/* 4. Itinéraire détaillé */}
-        <TripItinerarySection
-          trip={trip}
-          readonly={readonly}
-          recalculating={recalculating}
-          mapEditMode={mapEditMode}
-          onToggleMapEdit={() => setMapEditMode((v) => !v)}
-          onRecalculate={() => submitHidden(optimizeAction, { id: trip.id })}
-          onAdd={handleAdd}
-          onUpdate={handleUpdate}
-          onDelete={handleDelete}
-          onReorder={handleReorder}
-        />
-
-        {/* 5. Activités + Détails */}
-        <div className="grid gap-5 lg:grid-cols-2 lg:items-stretch lg:gap-6">
-          <TripActivitiesSection
-            tripId={trip.id}
-            readonly={readonly}
-            variant="selected"
-            onActivitiesChange={onActivitiesChange}
-            tripOrigin={
-              live.isLiveUseful &&
-              live.latitude != null &&
-              live.longitude != null
-                ? {
-                    address: "Ma position actuelle",
-                    lat: live.latitude,
-                    lng: live.longitude,
-                  }
-                : trip.originLatitude != null && trip.originLongitude != null
+          <div className="grid gap-5 lg:grid-cols-2 lg:items-stretch lg:gap-6">
+            <TripActivitiesSection
+              tripId={trip.id}
+              readonly={readonly}
+              variant="selected"
+              onActivitiesChange={onActivitiesChange}
+              tripOrigin={
+                live.isLiveUseful &&
+                live.latitude != null &&
+                live.longitude != null
                   ? {
-                      address: trip.origin,
-                      lat: Number(trip.originLatitude),
-                      lng: Number(trip.originLongitude),
+                      address: "Ma position actuelle",
+                      lat: live.latitude,
+                      lng: live.longitude,
                     }
-                  : { address: trip.origin, lat: NaN, lng: NaN }
-            }
-            tripDestination={
-              trip.destinationLatitude != null &&
-              trip.destinationLongitude != null
-                ? {
-                    address: trip.destination,
-                    lat: Number(trip.destinationLatitude),
-                    lng: Number(trip.destinationLongitude),
-                  }
-                : { address: trip.destination, lat: NaN, lng: NaN }
-            }
+                  : trip.originLatitude != null && trip.originLongitude != null
+                    ? {
+                        address: trip.origin,
+                        lat: Number(trip.originLatitude),
+                        lng: Number(trip.originLongitude),
+                      }
+                    : { address: trip.origin, lat: NaN, lng: NaN }
+              }
+              tripDestination={
+                trip.destinationLatitude != null &&
+                trip.destinationLongitude != null
+                  ? {
+                      address: trip.destination,
+                      lat: Number(trip.destinationLatitude),
+                      lng: Number(trip.destinationLongitude),
+                    }
+                  : { address: trip.destination, lat: NaN, lng: NaN }
+              }
+            />
+            <TripOverviewCard
+              trip={trip}
+              readonly={readonly}
+              startPending={startPending}
+              completePending={completePending}
+              cancelPending={cancelPending}
+              onStart={() => submitHidden(startAction, { id: trip.id })}
+              onComplete={() => setConfirm("complete")}
+              onCancel={() => setConfirm("cancel")}
+            />
+          </div>
+
+          <TripFuelSettingsCard />
+
+          <TripWeatherSection
+            tripId={trip.id}
+            liveLatitude={liveLat}
+            liveLongitude={liveLng}
           />
-          <TripOverviewCard
-            trip={trip}
-            readonly={readonly}
-            startPending={startPending}
-            completePending={completePending}
-            cancelPending={cancelPending}
-            onStart={() => submitHidden(startAction, { id: trip.id })}
-            onComplete={() => setConfirm("complete")}
-            onCancel={() => setConfirm("cancel")}
-          />
+
+          <TripStopsOverview />
+          <TripFutureModules />
         </div>
-
-        {/* Secondaires */}
-        <TripWeatherSection
-          tripId={trip.id}
-          liveLatitude={liveLat}
-          liveLongitude={liveLng}
-        />
-
-        <TripStopsOverview />
-        <TripFutureModules />
       </TripFuelEstimateProvider>
 
       <TripConfirmDialog

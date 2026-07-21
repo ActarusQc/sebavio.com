@@ -6,6 +6,12 @@ const optionalPositiveNumber = z.preprocess((v) => {
   return v;
 }, z.number().finite().positive().nullable().optional());
 
+const optionalNonNegNumber = z.preprocess((v) => {
+  if (v === "" || v === null || v === undefined) return null;
+  if (typeof v === "string") return Number(v);
+  return v;
+}, z.number().finite().min(0).nullable().optional());
+
 const optionalString = (max: number) =>
   z
     .string()
@@ -92,12 +98,105 @@ export const fuelLogUpdateSchema = z
     message: "Aucune modification",
   });
 
+/** Types carburant sélectionnables pour un calcul de voyage. */
+export const tripFuelTypeSchema = z.enum([
+  "regular",
+  "midGrade",
+  "premium",
+  "diesel",
+  "ethanol",
+  "other",
+]);
+
+export const initialFuelSchema = z
+  .object({
+    mode: z.enum([
+      "full",
+      "empty",
+      "quarter",
+      "half",
+      "three_quarters",
+      "percentage",
+      "litres",
+    ]),
+    value: z.number().finite().min(0).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.mode === "percentage") {
+      if (data.value == null || data.value < 0 || data.value > 100) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Pourcentage initial entre 0 et 100 requis",
+          path: ["value"],
+        });
+      }
+    }
+    if (data.mode === "litres" && (data.value == null || data.value < 0)) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Litres initiaux requis",
+        path: ["value"],
+      });
+    }
+  });
+
+export const departureRefillSchema = z
+  .object({
+    mode: z.enum(["automatic", "manual_total", "none"]),
+    manualTotal: optionalNonNegNumber,
+  })
+  .superRefine((data, ctx) => {
+    if (
+      data.mode === "manual_total" &&
+      (data.manualTotal == null || data.manualTotal < 0)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Montant du plein de départ requis",
+        path: ["manualTotal"],
+      });
+    }
+  });
+
+export const reserveSchema = z
+  .object({
+    mode: z.enum(["percentage", "litres"]).default("percentage"),
+    value: z.number().finite().positive().default(15),
+  })
+  .superRefine((data, ctx) => {
+    if (data.mode === "percentage" && (data.value <= 0 || data.value >= 100)) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Réserve en % entre 0 et 100 (exclus)",
+        path: ["value"],
+      });
+    }
+  });
+
+/**
+ * Options du calcul de plan carburant (voyage).
+ * Compat : defaultPricePerLiter / consumptionL100 conservés.
+ */
 export const fuelEstimateSchema = z.object({
   defaultPricePerLiter: optionalPositiveNumber,
-  /** Override consommation L/100 (sinon real_avg ou catalogue). */
   consumptionL100: optionalPositiveNumber,
+  tankCapacityL: optionalPositiveNumber,
+  fuelType: tripFuelTypeSchema.optional(),
+  includeReturnTrip: z.boolean().optional().default(true),
+  returnDistanceKm: optionalPositiveNumber,
+  initialFuel: initialFuelSchema.optional().default({ mode: "full" }),
+  departureRefill: departureRefillSchema.optional().default({ mode: "none" }),
+  includeExistingFuelValue: z.boolean().optional().default(false),
+  refillStrategy: z
+    .enum(["full_tank", "required_only", "optimized"])
+    .optional()
+    .default("full_tank"),
+  reserve: reserveSchema.optional(),
+  refillAtDestination: z.boolean().optional().default(false),
+  finishWithFullTank: z.boolean().optional().default(false),
 });
 
 export type FuelLogCreateInput = z.infer<typeof fuelLogCreateSchema>;
 export type FuelLogUpdateInput = z.infer<typeof fuelLogUpdateSchema>;
 export type FuelEstimateInput = z.infer<typeof fuelEstimateSchema>;
+export type TripFuelType = z.infer<typeof tripFuelTypeSchema>;

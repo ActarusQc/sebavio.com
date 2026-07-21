@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { passwordSchema } from "@/features/auth/schemas";
 import { currencyForCountry } from "@/features/users/services/defaults";
 
 const isoLanguage = z
@@ -73,7 +74,22 @@ export const updatePreferencesSchema = z.object({
   }),
   notificationsEnabled: z.boolean(),
   aiProactive: z.boolean(),
+  costcoMember: z.boolean(),
 });
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, { error: "Mot de passe actuel requis" }),
+    newPassword: passwordSchema,
+    confirmPassword: z
+      .string()
+      .min(1, { error: "Confirmation du mot de passe requise" }),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    error: "Les mots de passe ne correspondent pas",
+    path: ["confirmPassword"],
+  });
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>;
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;

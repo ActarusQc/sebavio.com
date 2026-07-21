@@ -26,8 +26,15 @@ describe("plan entitlements — registry", () => {
       "weather.forecast_days",
       "fuel.optimization.enabled",
       "fuel.live_prices.enabled",
+      "fuel.stations.detailed.enabled",
       "trip.sharing.enabled",
       "trip.export_pdf.enabled",
+      "trip.preview.enabled",
+      "trip.full_access.enabled",
+      "trip.gps_tracking.enabled",
+      "trip.travel_mode.enabled",
+      "trip.detours.enabled",
+      "trip.optimize.enabled",
       "notifications.enabled",
       "support.priority",
     ];
@@ -101,7 +108,15 @@ describe("plan entitlements — registry", () => {
       grouped
         .find((g) => g.category === "trips")
         ?.definitions.map((d) => d.key),
-    ).toEqual(["trips.max"]);
+    ).toEqual([
+      "trips.max",
+      "trip.preview.enabled",
+      "trip.full_access.enabled",
+      "trip.gps_tracking.enabled",
+      "trip.travel_mode.enabled",
+      "trip.detours.enabled",
+      "trip.optimize.enabled",
+    ]);
     expect(
       grouped
         .find((g) => g.category === "activities")
@@ -115,6 +130,13 @@ describe("plan entitlements — registry", () => {
       "trip.sharing.enabled",
       "trip.export_pdf.enabled",
       "notifications.enabled",
+    ]);
+    expect(
+      grouped.find((g) => g.category === "fuel")?.definitions.map((d) => d.key),
+    ).toEqual([
+      "fuel.optimization.enabled",
+      "fuel.live_prices.enabled",
+      "fuel.stations.detailed.enabled",
     ]);
   });
 

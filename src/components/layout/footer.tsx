@@ -7,9 +7,11 @@ export type FooterProps = {
 };
 
 /**
- * Footer minimal (version, liens support) — Document 7.
+ * Footer applicatif minimal — Document 7.
  */
 export function Footer({ children, className }: FooterProps) {
+  const year = new Date().getFullYear();
+
   return (
     <footer
       className={cn(
@@ -17,7 +19,7 @@ export function Footer({ children, className }: FooterProps) {
         className,
       )}
     >
-      {children ?? <p>Sebavio — Compagnon de voyage intelligent</p>}
+      {children ?? <p>© {year} Sebavio — L’étoile qui guide votre route</p>}
     </footer>
   );
 }

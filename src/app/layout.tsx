@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Poppins } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -10,9 +10,17 @@ const inter = Inter({
   display: "swap",
 });
 
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-heading",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "Sebavio",
-  description: "Compagnon de voyage intelligent",
+  title: "Sebavio — L’étoile qui guide votre route",
+  description:
+    "Compagnon intelligent pour planifier des voyages plus simples, économiques et inoubliables.",
 };
 
 export default function RootLayout({
@@ -23,7 +31,7 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${inter.variable} h-full`}
+      className={`${inter.variable} ${poppins.variable} h-full`}
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col font-sans">

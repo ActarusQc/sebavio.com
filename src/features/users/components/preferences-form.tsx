@@ -82,6 +82,21 @@ export function PreferencesForm({ preferences }: PreferencesFormProps) {
         />
         Suggestions IA proactives
       </label>
+      <label className="flex items-start gap-3 text-sm">
+        <input
+          type="checkbox"
+          name="costcoMember"
+          defaultChecked={preferences.costcoMember}
+          className="border-input mt-0.5 size-4 rounded border"
+        />
+        <span>
+          Je suis membre Costco
+          <span className="text-muted-foreground mt-0.5 block text-xs">
+            Si coché, les stations Costco peuvent être proposées dans le plan de
+            carburant. Sinon, elles sont exclues.
+          </span>
+        </span>
+      </label>
       {state && !state.ok ? (
         <p className="text-destructive text-sm" role="alert">
           {state.message}

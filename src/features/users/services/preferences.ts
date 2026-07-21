@@ -16,6 +16,7 @@ function toPreferencesDto(row: {
   fuelUnit: string;
   notificationsEnabled: boolean;
   aiProactive: boolean;
+  costcoMember: boolean;
   updatedAt: Date;
 }): UserPreferencesDto {
   return {
@@ -25,6 +26,7 @@ function toPreferencesDto(row: {
     fuelUnit: row.fuelUnit,
     notificationsEnabled: row.notificationsEnabled,
     aiProactive: row.aiProactive,
+    costcoMember: row.costcoMember,
     updatedAt: row.updatedAt.toISOString(),
   };
 }
@@ -93,6 +95,7 @@ export async function updatePreferences(
       fuelUnit: input.fuelUnit,
       notificationsEnabled: input.notificationsEnabled,
       aiProactive: input.aiProactive,
+      costcoMember: input.costcoMember,
     },
   });
 
@@ -107,6 +110,7 @@ export async function updatePreferences(
       fuelUnit: before.fuelUnit,
       notificationsEnabled: before.notificationsEnabled,
       aiProactive: before.aiProactive,
+      costcoMember: before.costcoMember,
     },
     newValue: {
       distanceUnit: updated.distanceUnit,
@@ -114,6 +118,7 @@ export async function updatePreferences(
       fuelUnit: updated.fuelUnit,
       notificationsEnabled: updated.notificationsEnabled,
       aiProactive: updated.aiProactive,
+      costcoMember: updated.costcoMember,
     },
     ipAddress,
   });

@@ -1,14 +1,8 @@
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { requireActiveUser } from "@/features/auth";
-import { PageHeader } from "@/components/common";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Button,
-} from "@/components/ui";
+import { AppPageHero } from "@/components/common";
+import { Button } from "@/components/ui";
 import { VehiclesList } from "@/features/vehicles/components";
 import { listVehicles } from "@/features/vehicles/services";
 
@@ -30,28 +24,21 @@ export default async function VehiclesPage({
   const result = await listVehicles(user.id, query);
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
-      <PageHeader
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+      <AppPageHero
+        variant="vehicles"
         title="Mes véhicules"
         description="Gérez vos véhicules personnels, liés au catalogue ou saisis manuellement."
+        breadcrumb={<span>Espace client · Véhicules</span>}
         actions={
-          <Button render={<Link href="/dashboard/vehicles/new" />}>
+          <Button size="lg" render={<Link href="/dashboard/vehicles/new" />}>
+            <Plus data-icon="inline-start" />
             Ajouter un véhicule
           </Button>
         }
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Liste</CardTitle>
-          <CardDescription>
-            Isolation stricte : seuls vos véhicules sont visibles.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <VehiclesList result={result} />
-        </CardContent>
-      </Card>
+      <VehiclesList result={result} />
     </div>
   );
 }

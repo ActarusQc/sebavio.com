@@ -11,49 +11,20 @@ import {
 import {
   CatalogFilters,
   CatalogImportForm,
-  CatalogList,
   ManufacturerCreateForm,
   ModelCreateForm,
 } from "@/features/vehicle-catalog/components";
-import {
-  listManufacturers,
-  listModels,
-} from "@/features/vehicle-catalog/services";
+import { listManufacturers } from "@/features/vehicle-catalog/services";
 import { MAX_PAGE_SIZE } from "@/features/vehicle-catalog/constants";
 
-type SearchParams = Promise<Record<string, string | string[] | undefined>>;
-
-export default async function CatalogPage({
-  searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
+export default async function CatalogPage() {
   const user = await requireActiveUser();
   const isAdmin = isAdminRole(user.role);
-  const params = await searchParams;
 
-  const query: Record<string, string | undefined> = {};
-  for (const [key, value] of Object.entries(params)) {
-    query[key] = Array.isArray(value) ? value[0] : value;
-  }
-
-  // Cap serveur pageSize (jamais de dump).
-  if (query.pageSize) {
-    const n = Number(query.pageSize);
-    if (Number.isFinite(n) && n > MAX_PAGE_SIZE) {
-      query.pageSize = String(MAX_PAGE_SIZE);
-    }
-  }
-
-  const [manufacturers, models] = await Promise.all([
-    listManufacturers({ pageSize: String(MAX_PAGE_SIZE), active: "true" }),
-    listModels(query),
-  ]);
-
-  const baseQuery = new URLSearchParams();
-  for (const [key, value] of Object.entries(query)) {
-    if (value && key !== "page") baseQuery.set(key, value);
-  }
+  const manufacturers = await listManufacturers({
+    pageSize: String(MAX_PAGE_SIZE),
+    active: "true",
+  });
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
@@ -73,18 +44,6 @@ export default async function CatalogPage({
           <Suspense fallback={null}>
             <CatalogFilters manufacturers={manufacturers.items} />
           </Suspense>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Modèles</CardTitle>
-          <CardDescription>
-            Résultats paginés (max {MAX_PAGE_SIZE} par page).
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <CatalogList result={models} baseQuery={baseQuery.toString()} />
         </CardContent>
       </Card>
 

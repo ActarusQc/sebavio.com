@@ -1,18 +1,12 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireActiveUser } from "@/features/auth";
-import { PageHeader } from "@/components/common";
+import { UnlockTripPanel } from "@/features/subscriptions/components";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Button,
-} from "@/components/ui";
+  buildLimitedTripPreview,
+  resolveUserAccess,
+} from "@/features/subscriptions/services/access-resolve";
 import { TripDetailPanels } from "@/features/trips/components";
 import { getTripById } from "@/features/trips/services";
-import { getTripWeatherSafe } from "@/features/weather";
 import { isAppError } from "@/lib/errors";
 
 type PageProps = { params: Promise<{ id: string }> };
@@ -31,46 +25,29 @@ export default async function TripDetailPage({ params }: PageProps) {
     throw error;
   }
 
-  const weather = await getTripWeatherSafe(user.id, id);
+  const access = await resolveUserAccess(user.id);
+  const showUnlock = access.level === "decouverte";
+  const preview = showUnlock
+    ? buildLimitedTripPreview({
+        approximateDistanceKm: trip.route?.distanceKm
+          ? Number(trip.route.distanceKm)
+          : null,
+        approximateDurationMinutes:
+          trip.totalDurationMin ?? trip.route?.estimatedDurationMin ?? null,
+        stopCount: trip.stopCount,
+        fuelLitersEstimate: null,
+      })
+    : null;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
-      <PageHeader
-        title={trip.title}
-        description="Fiche voyage et étapes."
-        actions={
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" render={<Link href="/dashboard/trips" />}>
-              Liste
-            </Button>
-            {trip.status !== "completed" && trip.status !== "cancelled" ? (
-              <Button
-                render={<Link href={`/dashboard/trips/${trip.id}/edit`} />}
-              >
-                Modifier
-              </Button>
-            ) : null}
-            <Button
-              variant="outline"
-              render={<Link href={`/dashboard/finance/trips/${trip.id}`} />}
-            >
-              Finances
-            </Button>
-          </div>
-        }
-      />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Détails</CardTitle>
-          <CardDescription>
-            {trip.stopCount} étape{trip.stopCount > 1 ? "s" : ""}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <TripDetailPanels trip={trip} weather={weather} />
-        </CardContent>
-      </Card>
+    <div
+      className="mx-auto flex w-full max-w-[1320px] flex-col gap-5 sm:gap-6 lg:gap-[22px]"
+      data-trip-detail
+    >
+      {showUnlock && preview ? (
+        <UnlockTripPanel tripId={trip.id} preview={preview} />
+      ) : null}
+      <TripDetailPanels trip={trip} />
     </div>
   );
 }

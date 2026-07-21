@@ -10,7 +10,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-heading);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -47,6 +47,20 @@
   --color-info-foreground: var(--info-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-sebavio-navy: var(--sebavio-navy);
+  --color-sebavio-slate: var(--sebavio-slate);
+  --color-sebavio-sage: var(--sebavio-sage);
+  --color-sebavio-gold: var(--sebavio-gold);
+  --color-sebavio-coral: var(--sebavio-coral);
+  --color-sebavio-sand: var(--sebavio-sand);
+  --color-sebavio-muted: var(--sebavio-muted);
+  --color-sebavio-background: var(--sebavio-background);
+  --color-sebavio-teal: var(--sebavio-teal);
+  --color-sebavio-teal-soft: var(--sebavio-teal-soft);
+  --color-sebavio-teal-border: var(--sebavio-teal-border);
+  --color-sebavio-orange: var(--sebavio-orange);
+  --color-sebavio-orange-soft: var(--sebavio-orange-soft);
+  --color-sebavio-surface: var(--sebavio-surface);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -59,88 +73,135 @@
   --shadow-lg: var(--shadow-lg);
 }
 
-/* Thème clair — vert Sebavio (Document 7) */
+/* Thème clair — identité Sebavio (bleu ardoise, or, sable) */
 :root {
-  --background: var(--sebavio-gray-50);
-  --foreground: var(--sebavio-gray-900);
-  --card: oklch(1 0 0);
-  --card-foreground: var(--sebavio-gray-900);
-  --popover: oklch(1 0 0);
-  --popover-foreground: var(--sebavio-gray-900);
-  --primary: var(--sebavio-green-600);
-  --primary-foreground: oklch(0.99 0.005 155);
-  --secondary: var(--sebavio-gray-100);
-  --secondary-foreground: var(--sebavio-gray-900);
-  --muted: var(--sebavio-gray-100);
-  --muted-foreground: var(--sebavio-gray-500);
-  --accent: var(--sebavio-green-50);
-  --accent-foreground: var(--sebavio-green-900);
-  --destructive: var(--sebavio-red-500);
-  --destructive-foreground: oklch(0.99 0 0);
-  --success: var(--sebavio-green-600);
-  --success-foreground: oklch(0.99 0.005 155);
-  --info: var(--sebavio-blue-500);
-  --info-foreground: oklch(0.99 0 0);
-  --warning: var(--sebavio-orange-500);
-  --warning-foreground: var(--sebavio-gray-900);
-  --border: var(--sebavio-gray-200);
-  --input: var(--sebavio-gray-200);
-  --ring: var(--sebavio-green-500);
-  --chart-1: var(--sebavio-green-600);
-  --chart-2: var(--sebavio-blue-500);
-  --chart-3: var(--sebavio-orange-500);
-  --chart-4: var(--sebavio-green-700);
-  --chart-5: var(--sebavio-gray-500);
-  --sidebar: oklch(1 0 0);
-  --sidebar-foreground: var(--sebavio-gray-900);
-  --sidebar-primary: var(--sebavio-green-600);
-  --sidebar-primary-foreground: oklch(0.99 0.005 155);
-  --sidebar-accent: var(--sebavio-green-50);
-  --sidebar-accent-foreground: var(--sebavio-green-900);
-  --sidebar-border: var(--sebavio-gray-200);
-  --sidebar-ring: var(--sebavio-green-500);
+  --background: var(--sebavio-background);
+  --foreground: var(--sebavio-navy);
+  --card: #ffffff;
+  --card-foreground: var(--sebavio-navy);
+  --popover: #ffffff;
+  --popover-foreground: var(--sebavio-navy);
+  --primary: var(--sebavio-gold);
+  --primary-foreground: var(--sebavio-navy);
+  --secondary: #eef3f3;
+  --secondary-foreground: var(--sebavio-navy);
+  --muted: #f3f1ec;
+  --muted-foreground: var(--sebavio-muted);
+  --accent: #e8f2f3;
+  --accent-foreground: var(--sebavio-navy);
+  --destructive: var(--sebavio-coral);
+  --destructive-foreground: #ffffff;
+  --success: var(--sebavio-sage);
+  --success-foreground: #ffffff;
+  --info: var(--sebavio-slate);
+  --info-foreground: #ffffff;
+  --warning: var(--sebavio-gold);
+  --warning-foreground: var(--sebavio-navy);
+  --border: #e5e0d6;
+  --input: #e5e0d6;
+  --ring: var(--sebavio-slate);
+  --chart-1: var(--sebavio-slate);
+  --chart-2: var(--sebavio-sage);
+  --chart-3: var(--sebavio-gold);
+  --chart-4: var(--sebavio-navy);
+  --chart-5: var(--sebavio-muted);
+  --sidebar: #ffffff;
+  --sidebar-foreground: var(--sebavio-navy);
+  --sidebar-primary: var(--sebavio-slate);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8f2f3;
+  --sidebar-accent-foreground: var(--sebavio-navy);
+  --sidebar-border: #e5e0d6;
+  --sidebar-ring: var(--sebavio-slate);
 }
 
-/* Thème sombre — mêmes tokens sémantiques */
+/* Thème sombre — tons marine / ardoise */
 .dark {
-  --background: oklch(0.18 0.015 155);
-  --foreground: oklch(0.97 0.01 155);
-  --card: oklch(0.22 0.018 155);
-  --card-foreground: oklch(0.97 0.01 155);
-  --popover: oklch(0.22 0.018 155);
-  --popover-foreground: oklch(0.97 0.01 155);
-  --primary: oklch(0.72 0.14 155);
-  --primary-foreground: oklch(0.2 0.04 155);
-  --secondary: oklch(0.28 0.02 155);
-  --secondary-foreground: oklch(0.97 0.01 155);
-  --muted: oklch(0.28 0.02 155);
-  --muted-foreground: oklch(0.72 0.02 155);
-  --accent: oklch(0.3 0.04 155);
-  --accent-foreground: oklch(0.95 0.03 155);
-  --destructive: oklch(0.65 0.18 25);
-  --destructive-foreground: oklch(0.99 0 0);
-  --success: oklch(0.72 0.14 155);
-  --success-foreground: oklch(0.2 0.04 155);
-  --info: oklch(0.7 0.12 245);
-  --info-foreground: oklch(0.18 0.04 245);
-  --warning: oklch(0.78 0.14 70);
-  --warning-foreground: oklch(0.22 0.04 55);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.72 0.14 155);
-  --chart-1: oklch(0.72 0.14 155);
-  --chart-2: oklch(0.7 0.12 245);
-  --chart-3: oklch(0.78 0.14 70);
-  --chart-4: oklch(0.6 0.1 155);
-  --chart-5: oklch(0.65 0.02 155);
-  --sidebar: oklch(0.2 0.016 155);
-  --sidebar-foreground: oklch(0.97 0.01 155);
-  --sidebar-primary: oklch(0.72 0.14 155);
-  --sidebar-primary-foreground: oklch(0.2 0.04 155);
-  --sidebar-accent: oklch(0.28 0.03 155);
-  --sidebar-accent-foreground: oklch(0.97 0.01 155);
-  --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.72 0.14 155);
+  --background: #0b2235;
+  --foreground: #faf9f6;
+  --card: #123048;
+  --card-foreground: #faf9f6;
+  --popover: #123048;
+  --popover-foreground: #faf9f6;
+  --primary: var(--sebavio-gold);
+  --primary-foreground: var(--sebavio-navy);
+  --secondary: #1a3a52;
+  --secondary-foreground: #faf9f6;
+  --muted: #1a3a52;
+  --muted-foreground: #a8b8b8;
+  --accent: #1e4558;
+  --accent-foreground: #faf9f6;
+  --destructive: var(--sebavio-coral);
+  --destructive-foreground: #ffffff;
+  --success: var(--sebavio-sage);
+  --success-foreground: #0b2235;
+  --info: var(--sebavio-slate);
+  --info-foreground: #ffffff;
+  --warning: var(--sebavio-gold);
+  --warning-foreground: var(--sebavio-navy);
+  --border: rgb(255 255 255 / 12%);
+  --input: rgb(255 255 255 / 15%);
+  --ring: var(--sebavio-sage);
+  --chart-1: var(--sebavio-gold);
+  --chart-2: var(--sebavio-sage);
+  --chart-3: var(--sebavio-slate);
+  --chart-4: #c9bda6;
+  --chart-5: #a8b8b8;
+  --sidebar: #0e2d46;
+  --sidebar-foreground: #faf9f6;
+  --sidebar-primary: var(--sebavio-gold);
+  --sidebar-primary-foreground: var(--sebavio-navy);
+  --sidebar-accent: #1a3a52;
+  --sidebar-accent-foreground: #faf9f6;
+  --sidebar-border: rgb(255 255 255 / 12%);
+  --sidebar-ring: var(--sebavio-gold);
+}
+
+/* Pages auth : forcer le thème clair même si le document est en .dark */
+[data-auth-page] {
+  color-scheme: light;
+  --background: var(--sebavio-background);
+  --foreground: var(--sebavio-navy);
+  --card: #ffffff;
+  --card-foreground: var(--sebavio-navy);
+  --muted: #f3f1ec;
+  --muted-foreground: var(--sebavio-muted);
+  --border: #e5e0d6;
+  --input: #e5e0d6;
+  --ring: var(--sebavio-slate);
+  --primary: var(--sebavio-gold);
+  --primary-foreground: var(--sebavio-navy);
+}
+
+/* Détail voyage : thème clair forcé (maquette tableau de bord) */
+[data-trip-detail] {
+  color-scheme: light;
+  --background: var(--sebavio-surface);
+  --foreground: var(--sebavio-navy);
+  --card: #ffffff;
+  --card-foreground: var(--sebavio-navy);
+  --muted: #eef3f6;
+  --muted-foreground: var(--sebavio-muted);
+  --border: #d9e2ea;
+  --input: #d9e2ea;
+  --ring: var(--sebavio-teal);
+  --popover: #ffffff;
+  --popover-foreground: var(--sebavio-navy);
+  --secondary: #eef3f6;
+  --secondary-foreground: var(--sebavio-navy);
+  --accent: var(--sebavio-teal-soft);
+  --accent-foreground: var(--sebavio-navy);
+  background-color: var(--sebavio-surface);
+  color: var(--sebavio-navy);
+}
+
+.trip-card {
+  background: #ffffff;
+  border: 1px solid rgb(14 45 70 / 0.07);
+  border-radius: 1rem;
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 0.04),
+    0 8px 24px rgb(15 23 42 / 0.06);
 }
 
 @layer base {
@@ -155,6 +216,16 @@
   html {
     @apply font-sans;
   }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family:
+      var(--font-heading), var(--font-sans), ui-sans-serif, system-ui,
+      sans-serif;
+  }
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -165,4 +236,80 @@
       scroll-behavior: auto !important;
     }
   }
+}
+
+/* Espace client — fond crème + halos subtils (identité landing) */
+.workspace-shell {
+  background-color: var(--sebavio-background);
+  background-image:
+    radial-gradient(
+      ellipse 80% 50% at 0% 0%,
+      rgb(78 127 133 / 0.08),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 60% 40% at 100% 0%,
+      rgb(240 182 77 / 0.07),
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse 50% 30% at 50% 100%,
+      rgb(111 168 161 / 0.06),
+      transparent 55%
+    );
+}
+
+.dark .workspace-shell {
+  background-color: #0b2235;
+  background-image:
+    radial-gradient(
+      ellipse 70% 45% at 0% 0%,
+      rgb(78 127 133 / 0.18),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 50% 35% at 100% 10%,
+      rgb(240 182 77 / 0.08),
+      transparent 50%
+    );
+}
+
+/* Motif route / topographie très discret pour AppPageHero */
+.workspace-hero-motif {
+  background-image:
+    linear-gradient(
+      115deg,
+      transparent 40%,
+      rgb(14 45 70 / 0.03) 40.5%,
+      transparent 41%
+    ),
+    linear-gradient(
+      115deg,
+      transparent 62%,
+      rgb(78 127 133 / 0.04) 62.5%,
+      transparent 63%
+    ),
+    radial-gradient(circle at 92% 18%, rgb(240 182 77 / 0.12), transparent 28%);
+}
+
+.dark .workspace-hero-motif {
+  background-image:
+    linear-gradient(
+      115deg,
+      transparent 40%,
+      rgb(255 255 255 / 0.03) 40.5%,
+      transparent 41%
+    ),
+    radial-gradient(circle at 92% 18%, rgb(240 182 77 / 0.1), transparent 28%);
+}
+
+/* Sidebar espace client — ton sable / marine distinct du contenu */
+:root {
+  --sidebar: #f6f4ef;
+  --sidebar-accent: #e8f2f3;
+}
+
+.dark {
+  --sidebar: #0e2d46;
+  --sidebar-accent: #1a3a52;
 }

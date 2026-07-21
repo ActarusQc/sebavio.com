@@ -31,6 +31,12 @@ export type TripStopDto = {
   arrivalTime: string | null;
   departureTime: string | null;
   stopType: string;
+  /** outbound | return */
+  direction: string;
+  placeId: string | null;
+  /** Durée sur place en minutes (0 = simple passage). */
+  durationMinutes: number;
+  notes: string | null;
   campgroundId: string | null;
   campground: TripStopCampgroundDto | null;
   /** Distance étape ↔ camping (km), si les deux ont des coordonnées. */
@@ -52,9 +58,14 @@ export type TripRouteDto = {
   estimatedDurationMin: number | null;
   estimatedFuelCost: string | null;
   polyline: string | null;
+  returnDistanceKm: string | null;
+  returnEstimatedDurationMin: number | null;
+  returnPolyline: string | null;
   waypointsHash: string | null;
   /** true si les étapes ont changé depuis le dernier calcul d'itinéraire. */
   isStale: boolean;
+  /** true si les caractéristiques véhicule ont changé depuis le dernier calcul carburant. */
+  fuelEstimateStale: boolean;
   updatedAt: string;
 };
 
@@ -62,6 +73,8 @@ export type TripVehicleSummaryDto = {
   id: string;
   displayName: string;
   nickname: string | null;
+  fuelType: string | null;
+  preferredFuelType: string | null;
 };
 
 export type TripGroupSummaryDto = {
@@ -80,7 +93,21 @@ export type TripDto = {
   departureDate: string;
   returnDate: string | null;
   origin: string;
+  originPlaceId: string | null;
+  originLatitude: string | null;
+  originLongitude: string | null;
+  originCity: string | null;
+  originProvince: string | null;
+  originPostalCode: string | null;
+  originCountry: string | null;
   destination: string;
+  destinationPlaceId: string | null;
+  destinationLatitude: string | null;
+  destinationLongitude: string | null;
+  destinationCity: string | null;
+  destinationProvince: string | null;
+  destinationPostalCode: string | null;
+  destinationCountry: string | null;
   plannedBudget: string | null;
   vehicle: TripVehicleSummaryDto | null;
   travelGroup: TripGroupSummaryDto | null;
@@ -92,6 +119,13 @@ export type TripDto = {
 export type TripDetailDto = TripDto & {
   stops: TripStopDto[];
   route: TripRouteDto | null;
+  /** Somme des durées sur place des activités ajoutées à l'itinéraire. */
+  activityVisitMinutes: number;
+  /**
+   * Durée totale = conduite (route) + temps sur place des activités.
+   * Null si l'itinéraire n'a pas encore de durée de conduite.
+   */
+  totalDurationMin: number | null;
 };
 
 export type TripSummaryDto = {

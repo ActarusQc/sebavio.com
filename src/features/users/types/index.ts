@@ -18,6 +18,7 @@ export type UserPreferencesDto = {
   fuelUnit: string;
   notificationsEnabled: boolean;
   aiProactive: boolean;
+  costcoMember: boolean;
   updatedAt: string;
 };
 

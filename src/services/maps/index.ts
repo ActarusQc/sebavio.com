@@ -84,7 +84,13 @@ export function createMapsService(provider?: MapsProvider): MapsService {
 
     async directions(userId, origin, destination, waypoints = []) {
       const cached = await getCachedDirections(origin, destination, waypoints);
-      if (cached) {
+      // Ignorer le cache legacy sans legs / destination finale (pré-intégrité).
+      if (
+        cached &&
+        cached.finalDestination &&
+        typeof cached.legCount === "number" &&
+        Array.isArray(cached.legs)
+      ) {
         return cached;
       }
 

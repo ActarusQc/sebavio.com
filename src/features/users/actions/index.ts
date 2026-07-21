@@ -4,8 +4,13 @@ import { requireActiveUser } from "@/features/auth/services/session";
 import {
   updateProfileSchema,
   updatePreferencesSchema,
+  changePasswordSchema,
 } from "@/features/users/schemas";
-import { updateProfile, updatePreferences } from "@/features/users/services";
+import {
+  updateProfile,
+  updatePreferences,
+  changePassword,
+} from "@/features/users/services";
 import { isAppError } from "@/lib/errors";
 
 export type UsersActionResult =
@@ -75,6 +80,7 @@ export async function updatePreferencesAction(
     fuelUnit: formString(formData, "fuelUnit"),
     notificationsEnabled: formBoolean(formData, "notificationsEnabled"),
     aiProactive: formBoolean(formData, "aiProactive"),
+    costcoMember: formBoolean(formData, "costcoMember"),
   });
 
   if (!parsed.success) {
@@ -93,5 +99,34 @@ export async function updatePreferencesAction(
       return { ok: false, message: error.message };
     }
     return { ok: false, message: "Enregistrement impossible" };
+  }
+}
+
+export async function changePasswordAction(
+  _prev: UsersActionResult | undefined,
+  formData: FormData,
+): Promise<UsersActionResult> {
+  const parsed = changePasswordSchema.safeParse({
+    currentPassword: formString(formData, "currentPassword"),
+    newPassword: formString(formData, "newPassword"),
+    confirmPassword: formString(formData, "confirmPassword"),
+  });
+
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: parsed.error.issues[0]?.message ?? "Mot de passe invalide",
+    };
+  }
+
+  try {
+    const user = await requireActiveUser();
+    await changePassword(user.id, parsed.data);
+    return { ok: true, message: "Mot de passe modifié." };
+  } catch (error) {
+    if (isAppError(error)) {
+      return { ok: false, message: error.message };
+    }
+    return { ok: false, message: "Modification impossible" };
   }
 }

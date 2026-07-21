@@ -18,7 +18,13 @@
 
 # next.js
 /.next/
+/.next-preview/
+/.next-visual/
 /out/
+
+# e2e screenshots / local diagnostics
+/tests/e2e/artifacts/
+.env.backup*
 
 # production
 /build

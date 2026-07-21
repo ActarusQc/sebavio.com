@@ -1,5 +1,9 @@
 /**
  * Hooks partagés transversaux.
- * Socle architectural — aucune logique métier.
  */
-export {};
+export { useGeolocation } from "./use-geolocation";
+export type {
+  GeolocationPermissionState,
+  GeolocationTrackingState,
+  GeoPosition,
+} from "./use-geolocation";

@@ -16,6 +16,15 @@ export {
   tryRegieQuote,
 } from "./regie-quebec";
 export type { IngestReport, IngestOptions } from "./regie-quebec";
+export {
+  FdeFuelPriceProvider,
+  tryFdeQuote,
+  lookupFuelPriceReference,
+  mapSebavioFuelToFde,
+  selectReferencePrice,
+  median,
+  assertFdeRateLimit,
+} from "./fde";
 
 import { CompositeFuelPriceProvider } from "./composite";
 import type { FuelPriceProvider } from "./types";

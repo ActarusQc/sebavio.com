@@ -1,4 +1,4 @@
-import { PageHeader } from "@/components/common";
+import { AppPageHero } from "@/components/common";
 import { requireActiveUser } from "@/features/auth/services/session";
 import {
   getNotificationPreferences,
@@ -17,14 +17,16 @@ export default async function NotificationsPage() {
   ]);
 
   return (
-    <div className="flex flex-col gap-8">
-      <PageHeader
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+      <AppPageHero
+        variant="notifications"
         title="Notifications"
-        description="Centre de notifications in-app — alertes entretien, voyages et budget."
+        description="Centre de notifications — alertes entretien, voyages et budget."
+        breadcrumb={<span>Espace client · Notifications</span>}
       />
       <NotificationsList items={list.items} unreadCount={list.unreadCount} />
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Préférences</h2>
+      <section className="border-sebavio-sand/50 bg-card/90 dark:bg-card/70 flex flex-col gap-3 rounded-[var(--radius-card)] border p-4 shadow-[var(--shadow-sm)] sm:p-5 dark:border-white/10">
+        <h2 className="font-heading text-lg font-semibold">Préférences</h2>
         <p className="text-muted-foreground text-sm">
           L’interrupteur global reste dans Paramètres. Ici : canaux et types.
         </p>

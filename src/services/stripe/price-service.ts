@@ -15,6 +15,7 @@ import {
 import { retrieveSebavioProduct } from "./product-service";
 import {
   buildSebavioMetadata,
+  buildSebavioOneTimeMetadata,
   getSebavioPlanId,
   getSebavioStripeMode,
   isSebavioAppMetadata,
@@ -28,6 +29,16 @@ export type CreateSebavioPriceInput = {
   currency: string;
   interval: "day" | "week" | "month" | "year";
   intervalCount: number;
+  idempotencyKey: string;
+};
+
+export type CreateSebavioOneTimePriceInput = {
+  productId: string;
+  planId: string;
+  planSlug: string;
+  unitAmount: number;
+  currency: string;
+  accessDurationDays: number;
   idempotencyKey: string;
 };
 
@@ -79,6 +90,63 @@ function assertValidCreatePriceInput(input: CreateSebavioPriceInput): void {
     throw new AppError(
       "VALIDATION_ERROR",
       "interval_count invalide (entier > 0 requis).",
+      400,
+    );
+  }
+}
+
+function assertValidCreateOneTimePriceInput(
+  input: CreateSebavioOneTimePriceInput,
+): void {
+  if (!input.productId || input.productId.trim() === "") {
+    throw new AppError(
+      "VALIDATION_ERROR",
+      "Identifiant produit invalide.",
+      400,
+    );
+  }
+
+  const planParsed = planIdSchema.safeParse(input.planId);
+  if (!planParsed.success) {
+    throw new AppError(
+      "VALIDATION_ERROR",
+      "Identifiant de forfait invalide.",
+      400,
+    );
+  }
+
+  if (!input.planSlug || input.planSlug.trim() === "") {
+    throw new AppError("VALIDATION_ERROR", "Slug de forfait invalide.", 400);
+  }
+
+  if (
+    typeof input.unitAmount !== "number" ||
+    !Number.isInteger(input.unitAmount) ||
+    input.unitAmount < 0
+  ) {
+    throw new AppError("VALIDATION_ERROR", "Montant invalide.", 400);
+  }
+
+  if (
+    typeof input.currency !== "string" ||
+    input.currency.length === 0 ||
+    input.currency !== input.currency.toLowerCase()
+  ) {
+    throw new AppError(
+      "VALIDATION_ERROR",
+      "Devise invalide (minuscules non vides requis).",
+      400,
+    );
+  }
+
+  if (
+    typeof input.accessDurationDays !== "number" ||
+    !Number.isInteger(input.accessDurationDays) ||
+    input.accessDurationDays <= 0
+  ) {
+    throw new AppError(
+      "VALIDATION_ERROR",
+      "Durée d'accès invalide (entier > 0 requis).",
       400,
     );
   }
@@ -155,6 +223,38 @@ export async function createSebavioPrice(
         interval_count: input.intervalCount,
       },
       metadata: buildSebavioMetadata(input.planId, mode),
+    },
+    { idempotencyKey: input.idempotencyKey },
+  );
+
+  assertModeConsistency(price.livemode, mode);
+  return price;
+}
+
+/**
+ * Crée un Price Stripe one-time (sans `recurring`) pour le Pass temporaire.
+ */
+export async function createSebavioOneTimePrice(
+  input: CreateSebavioOneTimePriceInput,
+): Promise<Stripe.Price> {
+  assertValidCreateOneTimePriceInput(input);
+
+  const mode = getStripeMode();
+  await retrieveSebavioProduct(input.productId, {
+    expectedPlanId: input.planId,
+  });
+
+  const stripe = getStripeClient();
+  const price = await stripe.prices.create(
+    {
+      product: input.productId,
+      unit_amount: input.unitAmount,
+      currency: input.currency,
+      metadata: buildSebavioOneTimeMetadata(input.planId, mode, {
+        planSlug: input.planSlug,
+        accessDurationDays: input.accessDurationDays,
+        durationDays: input.accessDurationDays,
+      }),
     },
     { idempotencyKey: input.idempotencyKey },
   );

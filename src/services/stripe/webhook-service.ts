@@ -4,6 +4,12 @@ import { createHash, randomUUID } from "crypto";
 
 import type Stripe from "stripe";
 
+import {
+  activateOrExtendPassFromPurchase,
+  markPurchaseFailed,
+  markPurchaseRefundedAndRevoke,
+} from "@/features/subscriptions/services/pass-access";
+import { OFFICIAL_PLAN_SLUGS } from "@/features/subscriptions/lib/official-plan-slugs";
 import { prisma } from "@/lib/prisma";
 
 import { getStripeClient } from "./client";
@@ -161,6 +167,97 @@ async function markWebhookResult(
   });
 }
 
+async function resolvePassPurchaseFromSession(
+  session: Stripe.Checkout.Session,
+) {
+  const mode = getStripeMode();
+  const purchaseId = session.metadata?.purchaseId;
+  if (purchaseId) {
+    return prisma.planPurchase.findFirst({
+      where: { id: purchaseId, stripeMode: mode },
+      include: {
+        planPrice: true,
+        plan: true,
+      },
+    });
+  }
+
+  const planSlug = session.metadata?.planSlug;
+  if (planSlug !== OFFICIAL_PLAN_SLUGS.PASS_30_JOURS) {
+    return null;
+  }
+
+  if (session.id) {
+    return prisma.planPurchase.findFirst({
+      where: {
+        stripeCheckoutSessionId: session.id,
+        stripeMode: mode,
+      },
+      include: {
+        planPrice: true,
+        plan: true,
+      },
+    });
+  }
+
+  return null;
+}
+
+async function handlePassCheckoutPaid(
+  session: Stripe.Checkout.Session,
+  stripeEventId: string,
+): Promise<void> {
+  if (session.mode !== "payment") return;
+
+  const purchaseIdMeta = session.metadata?.purchaseId;
+  const planSlug = session.metadata?.planSlug;
+  if (!purchaseIdMeta && planSlug !== OFFICIAL_PLAN_SLUGS.PASS_30_JOURS) {
+    return;
+  }
+
+  const purchase = await resolvePassPurchaseFromSession(session);
+  if (!purchase) return;
+
+  const durationDays =
+    purchase.planPrice.accessDurationDays ??
+    Number(session.metadata?.accessDurationDays) ??
+    30;
+
+  const paidAt = session.created
+    ? new Date(session.created * 1000)
+    : new Date();
+
+  await activateOrExtendPassFromPurchase({
+    purchaseId: purchase.id,
+    stripeEventId,
+    paidAt,
+    userId: purchase.userId,
+    planId: purchase.planId,
+    durationDays,
+    stripeMode: getStripeMode(),
+    stripePaymentIntentId: expandId(session.payment_intent),
+  });
+}
+
+async function handlePassRefundByPaymentIntent(
+  paymentIntentId: string,
+  stripeEventId: string,
+): Promise<void> {
+  const mode = getStripeMode();
+  const purchase = await prisma.planPurchase.findFirst({
+    where: {
+      stripePaymentIntentId: paymentIntentId,
+      stripeMode: mode,
+    },
+  });
+  if (!purchase) return;
+
+  await markPurchaseRefundedAndRevoke(purchase.id, {
+    stripeEventId,
+    reason: "Remboursement Stripe.",
+  });
+}
+
 async function handleEvent(
   event: Stripe.Event,
 ): Promise<"processed" | "ignored"> {
@@ -211,18 +308,26 @@ async function handleEvent(
       for (const r of refunds) {
         await syncStripeRefund(r.id, opts);
       }
+      if (piId) {
+        await handlePassRefundByPaymentIntent(piId, event.id);
+      }
       return "processed";
     }
 
     case "refund.created":
     case "refund.updated":
-    case "refund.failed":
+    case "refund.failed": {
       if (id) await syncStripeRefund(id, opts);
+      const refund = event.data.object as Stripe.Refund;
+      const piId = expandId(refund.payment_intent);
+      if (piId && event.type !== "refund.failed") {
+        await handlePassRefundByPaymentIntent(piId, event.id);
+      }
       return "processed";
+    }
 
     case "checkout.session.completed":
-    case "checkout.session.async_payment_succeeded":
-    case "checkout.session.async_payment_failed": {
+    case "checkout.session.async_payment_succeeded": {
       const session = event.data.object as Stripe.Checkout.Session;
       const customerId = expandId(session.customer);
       if (customerId) await syncStripeCustomer(customerId, opts);
@@ -232,6 +337,20 @@ async function handleEvent(
       if (piId) await syncStripePaymentIntent(piId, opts);
       const invId = expandId(session.invoice);
       if (invId) await syncStripeInvoice(invId, opts);
+      await handlePassCheckoutPaid(session, event.id);
+      return "processed";
+    }
+
+    case "checkout.session.async_payment_failed": {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const customerId = expandId(session.customer);
+      if (customerId) await syncStripeCustomer(customerId, opts);
+      const piId = expandId(session.payment_intent);
+      if (piId) await syncStripePaymentIntent(piId, opts);
+      const purchase = await resolvePassPurchaseFromSession(session);
+      if (purchase) {
+        await markPurchaseFailed(purchase.id, event.id);
+      }
       return "processed";
     }
 

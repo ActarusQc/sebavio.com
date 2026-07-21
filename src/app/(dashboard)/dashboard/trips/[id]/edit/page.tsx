@@ -1,15 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireActiveUser } from "@/features/auth";
-import { PageHeader } from "@/components/common";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Button,
-} from "@/components/ui";
+import { AppPageHero } from "@/components/common";
+import { Button } from "@/components/ui";
+import { getTravelerProfile } from "@/features/trips/activities/trip-activity-service";
 import { TripForm } from "@/features/trips/components";
 import { getTripById } from "@/features/trips/services";
 import { listVehicles } from "@/features/vehicles/services";
@@ -37,16 +31,19 @@ export default async function EditTripPage({ params }: PageProps) {
     notFound();
   }
 
-  const [vehicles, groups] = await Promise.all([
+  const [vehicles, groups, travelerProfile] = await Promise.all([
     listVehicles(user.id, { pageSize: String(MAX_PAGE_SIZE) }),
     listTravelGroups(user.id, { pageSize: String(MAX_PAGE_SIZE) }),
+    getTravelerProfile(user.id, id),
   ]);
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
-      <PageHeader
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+      <AppPageHero
+        variant="trips"
         title="Modifier le voyage"
         description={trip.title}
+        breadcrumb={<span>Espace client · Voyages · Modification</span>}
         actions={
           <Button
             variant="outline"
@@ -57,27 +54,18 @@ export default async function EditTripPage({ params }: PageProps) {
         }
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Informations</CardTitle>
-          <CardDescription>
-            Le véhicule et le groupe (optionnel) doivent vous appartenir.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <TripForm
-            trip={trip}
-            vehicles={vehicles.items.map((v) => ({
-              id: v.id,
-              displayName: v.displayName,
-            }))}
-            groups={groups.items.map((g) => ({
-              id: g.id,
-              name: g.name,
-            }))}
-          />
-        </CardContent>
-      </Card>
+      <TripForm
+        trip={trip}
+        travelerProfile={travelerProfile}
+        vehicles={vehicles.items.map((v) => ({
+          id: v.id,
+          displayName: v.displayName,
+        }))}
+        groups={groups.items.map((g) => ({
+          id: g.id,
+          name: g.name,
+        }))}
+      />
     </div>
   );
 }

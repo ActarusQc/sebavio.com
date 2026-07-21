@@ -58,6 +58,7 @@ describe("updatePreferencesSchema", () => {
       fuelUnit: "L/100",
       notificationsEnabled: true,
       aiProactive: false,
+      costcoMember: false,
     });
     expect(result.success).toBe(true);
   });
@@ -70,6 +71,7 @@ describe("updatePreferencesSchema", () => {
         fuelUnit: "L/100",
         notificationsEnabled: true,
         aiProactive: false,
+        costcoMember: true,
       }).success,
     ).toBe(false);
   });
