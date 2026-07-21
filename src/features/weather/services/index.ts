@@ -154,15 +154,27 @@ export async function getTripWeather(
   }
 
   if (trip.destinationLatitude != null && trip.destinationLongitude != null) {
+    const destinationStop =
+      stops.find((s) => s.stopType === "destination") ??
+      [...stops].reverse().find((s) => s.stopType !== "origin") ??
+      null;
+    const arrivalAnchor = destinationStop
+      ? resolveStopForecastDate({
+          arrivalTime: destinationStop.arrivalTime,
+          departureDate: trip.departureDate,
+          sequence: destinationStop.sequence,
+        })
+      : trip.returnDate
+        ? trip.returnDate.toISOString().slice(0, 10)
+        : trip.departureDate.toISOString().slice(0, 10);
+
     candidates.push({
       id: `destination:${trip.id}`,
       name: trip.destination,
       type: "destination",
       latitude: Number(trip.destinationLatitude.toString()),
       longitude: Number(trip.destinationLongitude.toString()),
-      date: trip.returnDate
-        ? trip.returnDate.toISOString().slice(0, 10)
-        : trip.departureDate.toISOString().slice(0, 10),
+      date: arrivalAnchor,
     });
   }
 
@@ -183,23 +195,14 @@ export async function getTripWeather(
     });
   }
 
-  // Départ : uniquement s'il apporte une info distincte (voyage multi-jours / en cours).
-  const includeOrigin =
-    trip.originLatitude != null &&
-    trip.originLongitude != null &&
-    (timing.tripStatus === "in_progress" ||
-      timing.hoursUntilDeparture <= 48 ||
-      (trip.returnDate != null &&
-        trip.returnDate.getTime() - trip.departureDate.getTime() >
-          2 * 86_400_000));
-
-  if (includeOrigin) {
+  // Départ : toujours inclus quand des coordonnées existent (bandeau dual départ/arrivée).
+  if (trip.originLatitude != null && trip.originLongitude != null) {
     candidates.unshift({
       id: `origin:${trip.id}`,
       name: trip.origin,
       type: "origin",
-      latitude: Number(trip.originLatitude!.toString()),
-      longitude: Number(trip.originLongitude!.toString()),
+      latitude: Number(trip.originLatitude.toString()),
+      longitude: Number(trip.originLongitude.toString()),
       date: trip.departureDate.toISOString().slice(0, 10),
     });
   }

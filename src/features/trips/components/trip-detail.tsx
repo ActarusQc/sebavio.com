@@ -414,6 +414,20 @@ function TripDetailPanelsInner({
           tripId={trip.id}
           liveLatitude={liveLat}
           liveLongitude={liveLng}
+          originLabel={
+            trip.originCity
+              ? [trip.originCity, trip.originProvince]
+                  .filter(Boolean)
+                  .join(", ")
+              : trip.origin
+          }
+          destinationLabel={
+            trip.destinationCity
+              ? [trip.destinationCity, trip.destinationProvince]
+                  .filter(Boolean)
+                  .join(", ")
+              : trip.destination
+          }
         />
 
         {/* 2. Assistant Sebavio */}
