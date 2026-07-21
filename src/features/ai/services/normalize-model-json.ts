@@ -46,10 +46,125 @@ export function normalizeModelJson(raw: unknown): unknown {
     obj.clarification = null;
   }
   if (!Array.isArray(obj.warnings)) obj.warnings = [];
+  else obj.warnings = normalizeWarnings(obj.warnings);
   if (!Array.isArray(obj.suggestions)) obj.suggestions = [];
+  else obj.suggestions = normalizeSuggestions(obj.suggestions);
   if (!Array.isArray(obj.missingInformation)) obj.missingInformation = [];
+  else {
+    obj.missingInformation = obj.missingInformation
+      .filter((x): x is string => typeof x === "string")
+      .map((x) => x.slice(0, 500))
+      .slice(0, 30);
+  }
 
   return obj;
+}
+
+function normalizeWarnings(items: unknown[]): unknown[] {
+  const out: unknown[] = [];
+  let i = 0;
+  for (const item of items.slice(0, 20)) {
+    i += 1;
+    if (typeof item === "string") {
+      const t = item.trim().slice(0, 200);
+      if (!t) continue;
+      out.push({
+        code: `warn-${i}`,
+        title: t.slice(0, 80),
+        description: t,
+        severity: "info",
+      });
+      continue;
+    }
+    if (!item || typeof item !== "object") continue;
+    const w = item as Record<string, unknown>;
+    const title = asString(w.title, "Avertissement", 200);
+    const description = asString(w.description, title, 2000);
+    const severityRaw = String(w.severity ?? "info");
+    const severity = (["info", "warning", "important"] as const).includes(
+      severityRaw as "info",
+    )
+      ? severityRaw
+      : "info";
+    out.push({
+      code: asString(w.code, `warn-${i}`, 80),
+      title,
+      description,
+      severity,
+    });
+  }
+  return out;
+}
+
+function normalizeSuggestions(items: unknown[]): unknown[] {
+  const out: unknown[] = [];
+  let i = 0;
+  for (const item of items.slice(0, 20)) {
+    i += 1;
+    if (typeof item === "string") {
+      const t = item.trim();
+      if (!t) continue;
+      out.push({
+        id: `sug-${i}`,
+        type: "activity",
+        title: t.slice(0, 200),
+        description: t.slice(0, 2000),
+        reason: "Suggestion de l’assistant",
+        estimatedDurationMinutes: null,
+        estimatedAdditionalDistanceKm: null,
+        estimatedDelayMinutes: null,
+        weatherCompatibility: "unknown",
+        requiresVerification: true,
+        proposedAction: null,
+      });
+      continue;
+    }
+    if (!item || typeof item !== "object") continue;
+    const s = item as Record<string, unknown>;
+    const typeRaw = String(s.type ?? "activity");
+    const type = (
+      [
+        "activity",
+        "schedule",
+        "pause",
+        "weather",
+        "fuel_explanation",
+        "route_suggestion",
+      ] as const
+    ).includes(typeRaw as "activity")
+      ? typeRaw
+      : "activity";
+    const weatherRaw = String(s.weatherCompatibility ?? "unknown");
+    const weatherCompatibility = (
+      ["good", "mixed", "poor", "unknown"] as const
+    ).includes(weatherRaw as "unknown")
+      ? weatherRaw
+      : "unknown";
+    out.push({
+      id: asString(s.id, `sug-${i}`, 80),
+      type,
+      title: asString(s.title, "Suggestion", 200),
+      description: asString(
+        s.description,
+        asString(s.title, "Suggestion", 200),
+        2000,
+      ),
+      reason: asString(s.reason, "Suggestion de l’assistant", 2000),
+      estimatedDurationMinutes: asNullableInt(s.estimatedDurationMinutes),
+      estimatedAdditionalDistanceKm: asNullableNumber(
+        s.estimatedAdditionalDistanceKm,
+      ),
+      estimatedDelayMinutes: asNullableInt(s.estimatedDelayMinutes),
+      weatherCompatibility,
+      requiresVerification: Boolean(s.requiresVerification),
+      proposedAction:
+        s.proposedAction && typeof s.proposedAction === "object"
+          ? s.proposedAction
+          : null,
+      section: s.section ?? null,
+    });
+  }
+  return out;
 }
 
 function asNullableString(v: unknown, max: number): string | null {

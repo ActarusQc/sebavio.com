@@ -74,6 +74,7 @@ vi.mock("@/features/ai/services/rate-limit", () => ({
   assertAiRateLimit: mockRateLimit,
   acquireAiRequestLock: mockAcquireLock,
   assertAiWebSearchLimits: vi.fn(),
+  recordAiWebSearchConversationUse: vi.fn(),
 }));
 
 vi.mock("@/features/ai/services/context-builder", () => ({

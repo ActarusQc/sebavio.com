@@ -437,11 +437,11 @@ export async function runTripAssistant(params: {
         ? await provider.analyzeTrip(providerInput)
         : await provider.generateTripAssistantResponse(providerInput);
 
-    // Une nouvelle tentative linguistique contrôlée si anglicismes
+    // Retry linguistique uniquement hors recherche Web (évite de perdre citations / outils)
     const firstScan = findForbiddenAnglicisms(
       collectTextsForLinguisticScan(result.response),
     );
-    if (firstScan.length > 0 && provider.name !== "mock") {
+    if (firstScan.length > 0 && provider.name !== "mock" && !enableWebSearch) {
       console.warn("[ai] linguistic_retry", {
         codes: [...new Set(firstScan.map((i) => i.code))],
       });
@@ -455,6 +455,11 @@ export async function runTripAssistant(params: {
       } catch {
         /* conserve la première réponse */
       }
+    } else if (firstScan.length > 0) {
+      console.warn("[ai] linguistic_normalize_only", {
+        codes: [...new Set(firstScan.map((i) => i.code))],
+        webSearch: enableWebSearch,
+      });
     }
 
     const mergedSources = mergeAndSanitizeSources(
