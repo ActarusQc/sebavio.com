@@ -37,6 +37,38 @@ import {
 } from "@/features/ai/services/verify-claims";
 import { enrichRestaurantRouteImpacts } from "@/features/ai/services/enrich-route-impact";
 import { getOwnedTripOrThrow } from "@/features/trips/services/trips";
+import {
+  detectRestaurantStyle,
+  detectRestaurantStyleFromHistory,
+  defaultMealDurationMinutes,
+  restaurantStyleLabel,
+  type RestaurantStyleId,
+} from "@/features/ai/lib/restaurant-preferences";
+import {
+  combineTripDateAndClock,
+  parseDepartureClockTime,
+  parseMealClockTime,
+  resolveTripPositionAtTime,
+} from "@/features/ai/services/resolve-position-at-time";
+import {
+  RESTAURANT_SEARCH_DEFAULT_RADIUS_KM,
+  RESTAURANT_SEARCH_MAX_DETOUR_MINUTES,
+  RESTAURANT_SEARCH_TIME_TOLERANCE_MINUTES,
+  searchRestaurantsNearPosition,
+} from "@/features/ai/services/search-restaurants-near";
+import {
+  buildNoRestaurantResultSuggestions,
+  buildRestaurantClarificationResponse,
+  filterOpenRestaurantRecommendations,
+} from "@/features/ai/services/restaurant-flow";
+import {
+  LINGUISTIC_CORRECTION_INSTRUCTION,
+  validateAndNormalizeFrenchResponse,
+} from "@/features/ai/services/linguistic-validation";
+import {
+  collectTextsForLinguisticScan,
+  findForbiddenAnglicisms,
+} from "@/features/ai/lib/linguistic";
 
 export type TripAssistantRunResult =
   | {
@@ -165,6 +197,17 @@ export async function runTripAssistant(params: {
       liveLongitude: input.liveLongitude,
     });
 
+    const conversationEarly = await getOrCreateConversation(
+      params.userId,
+      input.tripId,
+    );
+    const history = await listConversationMessages(params.userId, input.tripId);
+    const historyMessages =
+      history?.messages.map((m) => ({
+        role: m.role,
+        content: m.content,
+      })) ?? [];
+
     const routing = routeTripAssistantRequest({
       message: input.message,
       requestType: input.requestType,
@@ -182,10 +225,61 @@ export async function runTripAssistant(params: {
       );
     }
 
+    // Clarification style restaurant (sans appel xAI)
+    if (routing.intent === "restaurant_recommendation") {
+      const styleFromMessage = detectRestaurantStyle(input.message);
+      const styleFromHistory =
+        styleFromMessage ?? detectRestaurantStyleFromHistory(historyMessages);
+      if (!styleFromHistory) {
+        const clarificationResponse = buildRestaurantClarificationResponse();
+        await appendConversationMessages({
+          conversationId: conversationEarly.id,
+          userContent: input.message,
+          assistantContent: clarificationResponse.answer,
+          structured: clarificationResponse,
+          model: null,
+          promptVersion: TRIP_ASSISTANT_PROMPT_VERSION,
+        });
+        await recordAiUsage({
+          userId: params.userId,
+          tripId: input.tripId,
+          requestType: input.requestType,
+          provider: "local",
+          model: "clarification",
+          promptVersion: TRIP_ASSISTANT_PROMPT_VERSION,
+          durationMs: Date.now() - started,
+          success: true,
+          planSlug: access.access.planSlug,
+          knowledgeMode: "trip_context",
+          webSearchUsed: false,
+          intent: "restaurant_clarification",
+          sourceCount: 0,
+        });
+        return {
+          ok: true,
+          mode: "personalized",
+          response: clarificationResponse,
+          conversationId: conversationEarly.id,
+          promptVersion: TRIP_ASSISTANT_PROMPT_VERSION,
+          model: null,
+        };
+      }
+    }
+
+    const restaurantStyle: RestaurantStyleId | null =
+      routing.intent === "restaurant_recommendation"
+        ? (detectRestaurantStyle(input.message) ??
+          detectRestaurantStyleFromHistory(historyMessages))
+        : null;
+
     const knowledgeMode = routing.knowledgeMode;
     let enableWebSearch = false;
     let routeSearchJson: string | null = null;
     let routeSearch = null;
+    let mealPositionJson: string | null = null;
+    let restaurantCandidatesJson: string | null = null;
+    let placesFailed = false;
+    let placesCandidateCount = 0;
 
     if (routing.knowledgeMode === "web_grounded") {
       if (!config.webSearchEnabled) {
@@ -212,13 +306,9 @@ export async function runTripAssistant(params: {
         };
       }
 
-      const conversation = await getOrCreateConversation(
-        params.userId,
-        input.tripId,
-      );
       await assertAiWebSearchLimits({
         userId: params.userId,
-        conversationId: conversation.id,
+        conversationId: conversationEarly.id,
         tripId: input.tripId,
       });
       enableWebSearch = true;
@@ -234,6 +324,84 @@ export async function runTripAssistant(params: {
           routeSearchJson = JSON.stringify(routeSearch);
         }
       }
+
+      if (routing.intent === "restaurant_recommendation" && restaurantStyle) {
+        const depClock = parseDepartureClockTime(input.message) ?? {
+          hour: 8,
+          minute: 0,
+        };
+        const mealClock = parseMealClockTime(input.message) ?? {
+          hour: 12,
+          minute: 0,
+        };
+        const departureDateTime = combineTripDateAndClock(
+          context.trip.departureDate,
+          depClock,
+        );
+        let targetDateTime = combineTripDateAndClock(
+          context.trip.departureDate,
+          mealClock,
+        );
+        if (targetDateTime <= departureDateTime) {
+          targetDateTime = new Date(
+            targetDateTime.getTime() + 24 * 60 * 60 * 1000,
+          );
+        }
+
+        const mealPosition = await resolveTripPositionAtTime({
+          tripId: input.tripId,
+          userId: params.userId,
+          departureDateTime,
+          targetDateTime,
+        });
+
+        if (mealPosition) {
+          mealPositionJson = JSON.stringify({
+            ...mealPosition,
+            departureClock: depClock,
+            mealClock,
+            searchWindowMinutes: RESTAURANT_SEARCH_TIME_TOLERANCE_MINUTES,
+            maxDetourMinutes: RESTAURANT_SEARCH_MAX_DETOUR_MINUTES,
+            radiusKm: RESTAURANT_SEARCH_DEFAULT_RADIUS_KM,
+            style: restaurantStyle,
+            styleLabel: restaurantStyleLabel(restaurantStyle),
+            proposedMealDurationMinutes:
+              defaultMealDurationMinutes(restaurantStyle),
+            note: "Estimation basée sur l’itinéraire et les étapes planifiées.",
+          });
+
+          try {
+            const candidates = await searchRestaurantsNearPosition({
+              tripId: input.tripId,
+              userId: params.userId,
+              latitude: mealPosition.latitude,
+              longitude: mealPosition.longitude,
+              style: restaurantStyle,
+            });
+            placesCandidateCount = candidates.length;
+            if (candidates.length > 0) {
+              restaurantCandidatesJson = JSON.stringify({
+                count: candidates.length,
+                candidates: candidates.slice(0, 8).map((c) => ({
+                  name: c.name,
+                  city: c.city,
+                  address: c.address,
+                  latitude: c.latitude,
+                  longitude: c.longitude,
+                  rating: c.rating,
+                  ratingCount: c.ratingCount,
+                  priceLevel: c.priceLevel,
+                  websiteUrl: c.websiteUrl,
+                  googleMapsUrl: c.googleMapsUrl,
+                  primaryType: c.primaryType,
+                })),
+              });
+            }
+          } catch {
+            placesFailed = true;
+          }
+        }
+      }
     }
 
     const systemPrompt = buildTripAssistantSystemPrompt({
@@ -245,8 +413,11 @@ export async function runTripAssistant(params: {
       message: input.message,
       contextJson: JSON.stringify(context),
       routeSearchJson,
+      mealPositionJson,
+      restaurantCandidatesJson,
       intent: routing.intent,
       knowledgeMode,
+      restaurantStyle,
     });
 
     const provider = createAiProvider();
@@ -260,10 +431,30 @@ export async function runTripAssistant(params: {
       enableWebSearch,
     };
 
-    const result =
+    let result =
       input.requestType === "analyze"
         ? await provider.analyzeTrip(providerInput)
         : await provider.generateTripAssistantResponse(providerInput);
+
+    // Une nouvelle tentative linguistique contrôlée si anglicismes
+    const firstScan = findForbiddenAnglicisms(
+      collectTextsForLinguisticScan(result.response),
+    );
+    if (firstScan.length > 0 && provider.name !== "mock") {
+      console.warn("[ai] linguistic_retry", {
+        codes: [...new Set(firstScan.map((i) => i.code))],
+      });
+      try {
+        result = await provider.generateTripAssistantResponse({
+          ...providerInput,
+          systemPrompt: `${systemPrompt}\n${LINGUISTIC_CORRECTION_INSTRUCTION}`,
+          enableWebSearch: false,
+          timeoutMs: config.timeoutMs,
+        });
+      } catch {
+        /* conserve la première réponse */
+      }
+    }
 
     const mergedSources = mergeAndSanitizeSources(
       result.response.sources,
@@ -277,6 +468,7 @@ export async function runTripAssistant(params: {
       sources: mergedSources,
       restaurantRecommendations:
         result.response.restaurantRecommendations ?? [],
+      clarification: result.response.clarification ?? null,
     };
 
     response = enforceMichelinVerification(response, mergedSources);
@@ -286,19 +478,43 @@ export async function runTripAssistant(params: {
       response,
       routeSearch,
     });
+    response = filterOpenRestaurantRecommendations(response);
 
-    const conversation = await getOrCreateConversation(
-      params.userId,
-      input.tripId,
-    );
+    if (
+      routing.intent === "restaurant_recommendation" &&
+      (response.restaurantRecommendations?.length ?? 0) === 0 &&
+      !response.clarification?.required
+    ) {
+      const answerBase =
+        placesFailed && !response.webSearchUsed
+          ? "Je ne peux pas vérifier les restaurants pour le moment. Votre voyage reste accessible; veuillez réessayer dans quelques instants."
+          : "Je n’ai pas trouvé d’établissement dont les heures à midi peuvent être confirmées dans un détour raisonnable.";
+      response = {
+        ...response,
+        status: "incomplete",
+        answer: response.answer?.includes("établissement")
+          ? response.answer
+          : answerBase,
+        suggestions:
+          response.suggestions.length > 0
+            ? response.suggestions
+            : buildNoRestaurantResultSuggestions(),
+      };
+    }
+
+    const linguistic = validateAndNormalizeFrenchResponse(response);
+    response = linguistic.response;
+
     await appendConversationMessages({
-      conversationId: conversation.id,
+      conversationId: conversationEarly.id,
       userContent: input.message,
       assistantContent: response.answer,
       structured: response,
       model: result.model,
       promptVersion: TRIP_ASSISTANT_PROMPT_VERSION,
     });
+
+    const restaurantCount = response.restaurantRecommendations?.length ?? 0;
 
     await recordAiUsage({
       userId: params.userId,
@@ -319,12 +535,22 @@ export async function runTripAssistant(params: {
       intent: routing.intent,
       sourceCount: response.sources.length,
     });
+    if (routing.intent === "restaurant_recommendation") {
+      console.info("[ai] restaurant_search_metrics", {
+        style: restaurantStyle,
+        placesCandidateCount,
+        restaurantCount,
+        sourceCount: response.sources.length,
+        webSearchUsed: response.webSearchUsed,
+        placesFailed,
+      });
+    }
 
     return {
       ok: true,
       mode: "personalized",
       response,
-      conversationId: conversation.id,
+      conversationId: conversationEarly.id,
       promptVersion: TRIP_ASSISTANT_PROMPT_VERSION,
       model: result.model,
     };

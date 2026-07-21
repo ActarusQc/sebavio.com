@@ -42,7 +42,7 @@ describe("routeTripAssistantRequest", () => {
         "Quel restaurant haut de gamme me suggères-tu à mi-parcours entre Saint-Mathias et Gaspé ?",
       requestType: "chat",
     });
-    expect(r.intent).toBe("restaurant_search");
+    expect(r.intent).toBe("restaurant_recommendation");
     expect(r.knowledgeMode).toBe("web_grounded");
     expect(r.requiresRecommendationsEntitlement).toBe(true);
   });
@@ -158,6 +158,7 @@ describe("enforceMichelinVerification", () => {
     knowledgeMode: "web_grounded",
     webSearchUsed: true,
     sources: [],
+    clarification: null,
     restaurantRecommendations: [
       {
         name: "Test",

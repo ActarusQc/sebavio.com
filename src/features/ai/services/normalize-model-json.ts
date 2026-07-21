@@ -29,6 +29,9 @@ export function normalizeModelJson(raw: unknown): unknown {
   if (!Array.isArray(obj.restaurantRecommendations)) {
     obj.restaurantRecommendations = [];
   }
+  if (obj.clarification === undefined) {
+    obj.clarification = null;
+  }
   if (!Array.isArray(obj.warnings)) obj.warnings = [];
   if (!Array.isArray(obj.suggestions)) obj.suggestions = [];
   if (!Array.isArray(obj.missingInformation)) obj.missingInformation = [];
@@ -58,6 +61,9 @@ function normalizeSourcesArray(items: unknown[]): AiSource[] {
         "reservation",
         "tourism",
         "review",
+        "maps",
+        "michelin",
+        "directory",
         "other",
       ] as const
     ).includes(sourceTypeRaw as "other")

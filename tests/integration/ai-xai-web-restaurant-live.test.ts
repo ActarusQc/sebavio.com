@@ -68,7 +68,7 @@ describe("Validation live — restaurant mi-parcours (1 appel)", () => {
       requestType: "chat",
     });
     expect(routing.knowledgeMode).toBe("web_grounded");
-    expect(routing.intent).toBe("restaurant_search");
+    expect(routing.intent).toBe("restaurant_recommendation");
 
     const config = getAiRuntimeConfig();
     const routeSearch = await buildRouteSearchContext({
@@ -145,7 +145,7 @@ describe("Validation live — restaurant mi-parcours (1 appel)", () => {
       orderBy: { createdAt: "desc" },
     });
     expect(usage?.provider).toBe("xai");
-    expect(usage?.intent).toBe("restaurant_search");
+    expect(usage?.intent).toBe("restaurant_recommendation");
 
     report.ok = true;
     report.noWriteMutation = true;

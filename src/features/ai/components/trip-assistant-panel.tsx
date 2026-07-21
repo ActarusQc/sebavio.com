@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Loader2, Paperclip, SendHorizonal } from "lucide-react";
+import { Loader2, Paperclip, RotateCcw, SendHorizonal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -19,6 +19,8 @@ import {
   AssistantSourcesList,
   WebSearchBadge,
 } from "@/features/ai/components/assistant-sources";
+import { ClarificationOptions } from "@/features/ai/components/clarification-options";
+import { RestaurantRecommendationCards } from "@/features/ai/components/restaurant-recommendation-cards";
 import { ApplyActionDialog } from "@/features/ai/components/apply-action-dialog";
 import { describeProposedAction } from "@/features/ai/services/apply-action-client";
 import { QUICK_ACTIONS } from "@/features/ai/constants";
@@ -73,6 +75,7 @@ export function TripAssistantSheet() {
     largeDetourKm,
     clearActionErrors,
     confirmApply,
+    clearConversation,
     abortVisual,
   } = useTripAssistant();
 
@@ -109,31 +112,53 @@ export function TripAssistantSheet() {
           showCloseButton
         >
           <SheetHeader className="border-b border-[rgb(14_45_70/0.08)] bg-white px-4 py-3">
-            <SheetTitle
-              id={titleId}
-              className="flex items-center gap-2.5 text-base"
-            >
-              <SebavioAssistantIcon size={28} />
-              <span className="text-sebavio-navy">Assistant Sebavio</span>
-              {statusLabel ? (
-                <span
-                  className={cn(
-                    "ml-1 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium",
-                    statusLabel === "En ligne"
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "bg-amber-50 text-amber-800",
-                  )}
+            <div className="flex items-start justify-between gap-2">
+              <SheetTitle
+                id={titleId}
+                className="flex items-center gap-2.5 text-base"
+              >
+                <SebavioAssistantIcon size={28} />
+                <span className="text-sebavio-navy">Assistant Sebavio</span>
+                {statusLabel ? (
+                  <span
+                    className={cn(
+                      "ml-1 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium",
+                      statusLabel === "En ligne"
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-amber-50 text-amber-800",
+                    )}
+                  >
+                    {statusLabel === "En ligne" ? (
+                      <span
+                        className="size-1.5 rounded-full bg-emerald-500"
+                        aria-hidden
+                      />
+                    ) : null}
+                    {statusLabel}
+                  </span>
+                ) : null}
+              </SheetTitle>
+              {canUsePersonalizedAi && messages.length > 0 ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={pending}
+                  className="text-muted-foreground hover:text-sebavio-navy h-8 shrink-0 gap-1.5 px-2 text-xs"
+                  onClick={() => {
+                    const ok = window.confirm(
+                      "Effacer cette conversation et en commencer une nouvelle ?",
+                    );
+                    if (ok) clearConversation();
+                  }}
+                  aria-label="Nouvelle conversation"
+                  title="Nouvelle conversation"
                 >
-                  {statusLabel === "En ligne" ? (
-                    <span
-                      className="size-1.5 rounded-full bg-emerald-500"
-                      aria-hidden
-                    />
-                  ) : null}
-                  {statusLabel}
-                </span>
+                  <RotateCcw className="size-3.5" aria-hidden />
+                  Nouvelle
+                </Button>
               ) : null}
-            </SheetTitle>
+            </div>
           </SheetHeader>
 
           <SheetBody
@@ -230,6 +255,17 @@ export function TripAssistantSheet() {
                     <div className="mt-3 space-y-3">
                       <WebSearchBadge
                         used={Boolean(m.structured.webSearchUsed)}
+                      />
+                      {m.structured.clarification?.required ? (
+                        <ClarificationOptions
+                          clarification={m.structured.clarification}
+                          disabled={pending || inputDisabled}
+                          onSelect={(label) => sendMessage(label, "chat")}
+                        />
+                      ) : null}
+                      <RestaurantRecommendationCards
+                        response={m.structured}
+                        onProposeAction={setPendingAction}
                       />
                       <TripAssistantAnalysis response={m.structured} />
                       <AssistantSourcesList

@@ -16,6 +16,7 @@ import {
 import { useRouter } from "next/navigation";
 import {
   applyTripAssistantActionAction,
+  clearTripAssistantConversationAction,
   getTripAssistantBootstrapAction,
   sendTripAssistantMessageAction,
 } from "@/features/ai/actions";
@@ -70,6 +71,7 @@ type TripAssistantContextValue = {
   ) => void;
   runQuickAction: (id: QuickActionId) => void;
   confirmApply: (action: ProposedTripAction) => void;
+  clearConversation: () => void;
   abortVisual: () => void;
 };
 
@@ -376,6 +378,26 @@ export function TripAssistantProvider({
     });
   }
 
+  const clearConversation = useCallback(() => {
+    if (pending || sendingRef.current) return;
+    startTransition(async () => {
+      setError(null);
+      const result = await clearTripAssistantConversationAction(tripId);
+      if (!result.ok) {
+        setError(result.message);
+        return;
+      }
+      setMessages([]);
+      setPendingAction(null);
+      setLocationError(null);
+      setLargeDetourKm(null);
+      setDraft("");
+      window.setTimeout(() => {
+        document.getElementById("trip-assistant-input")?.focus();
+      }, 80);
+    });
+  }, [pending, tripId]);
+
   const lastAnalysis = useMemo(() => {
     for (let i = messages.length - 1; i >= 0; i--) {
       const m = messages[i];
@@ -417,6 +439,7 @@ export function TripAssistantProvider({
     sendMessage,
     runQuickAction,
     confirmApply,
+    clearConversation,
     abortVisual: () => {
       abortVisualRef.current = true;
     },

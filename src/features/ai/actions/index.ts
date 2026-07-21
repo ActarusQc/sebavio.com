@@ -9,9 +9,11 @@ import {
 } from "@/features/ai/services/trip-assistant";
 import { applyProposedTripAction } from "@/features/ai/services/apply-action";
 import { resolveTripAssistantAccess } from "@/features/ai/services/access";
+import { clearTripAssistantConversation } from "@/features/ai/services/conversations";
 import { DEMO_STATIC_RESPONSE, QUICK_ACTIONS } from "@/features/ai/constants";
 import type { TripAssistantResponse } from "@/features/ai/schemas/response";
 import type { AiConversationDto } from "@/features/ai/services/conversations";
+import { getRedis } from "@/lib/redis";
 
 export type AiActionResult<T = unknown> =
   | { ok: true; data: T }
@@ -160,6 +162,45 @@ export async function applyTripAssistantActionAction(raw: {
         ? error.message
         : "Impossible d’appliquer la suggestion.",
       code: isAppError(error) ? error.code : "AI_003",
+    };
+  }
+}
+
+export async function clearTripAssistantConversationAction(
+  tripId: string,
+): Promise<AiActionResult<{ cleared: boolean }>> {
+  try {
+    const user = await requireActiveUser();
+    const access = await resolveTripAssistantAccess(user.id);
+    if (!access.canUsePersonalizedAi) {
+      return {
+        ok: false,
+        message: "Conversation personnalisée non disponible.",
+        code: "ACCESS_DENIED",
+      };
+    }
+
+    const result = await clearTripAssistantConversation(user.id, tripId);
+
+    if (result.conversationId) {
+      try {
+        const redis = getRedis();
+        if (redis.status !== "ready") await redis.connect();
+        await redis.del(`ai:web:conv:${result.conversationId}`);
+        await redis.del(`ai:web:conv:${tripId}`);
+      } catch {
+        /* best-effort */
+      }
+    }
+
+    return { ok: true, data: { cleared: result.cleared } };
+  } catch (error) {
+    return {
+      ok: false,
+      message: isAppError(error)
+        ? error.message
+        : "Impossible d’effacer la conversation.",
+      code: isAppError(error) ? error.code : "INTERNAL_ERROR",
     };
   }
 }

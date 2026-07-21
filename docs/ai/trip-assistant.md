@@ -112,9 +112,33 @@ AI_ROUTE_MAX_DETOUR_KM=30
 - `trip_context` : données Sebavio uniquement (analyse, carburant, horaire, météo)
 - `web_grounded` : recherche Web xAI (`tools: [{ type: "web_search" }]`) pour restaurants, hôtels, tourisme
 
-Point médian = 50 % de la distance **routière** (polyline), pas le barycentre géographique.
+## Français (prompt `trip-assistant-v3-fr-restaurants`)
+
+Réponses exclusivement en français du Québec. Terminologie Sebavio :
+outbound → trajet aller, inbound → trajet retour, food → restauration/repas,
+fuel stop → arrêt de ravitaillement, ETA → heure d’arrivée estimée, etc.
+Validation linguistique post-réponse + normalisation sûre (noms propres conservés).
+
+## Recommandations restaurants
+
+1. Intention `restaurant_recommendation`
+2. Clarification du style (5 options) si absent — **sans appel xAI**
+3. Position temporelle `resolveTripPositionAtTime` (itinéraire réel + pauses, pas barycentre)
+4. Places (rayon 15 km) + `web_search` xAI
+5. Filtrage des établissements fermés à l’heure du repas
+6. Max 3 cartes + sources + ajout comme activité « Repas » après confirmation
+
+Constantes centralisées : `RESTAURANT_SEARCH_*` dans `search-restaurants-near.ts`.
 
 Désactivation rapide recherche Web : `AI_WEB_SEARCH_ENABLED=false`.
+
+## Diagnostic (réponse générique antérieure)
+
+Causes corrigées :
+- position = mi-parcours distance, pas secteur à l’heure du repas ;
+- pas de pré-recherche Places injectée ;
+- pas de clarification de style → requête trop vague ;
+- prompt trop prudent → fallback « aucun établissement ».
 
 
 ## Changer de modèle Grok

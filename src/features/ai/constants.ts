@@ -1,4 +1,4 @@
-export const TRIP_ASSISTANT_PROMPT_VERSION = "trip-assistant-v2-web-grounded";
+export const TRIP_ASSISTANT_PROMPT_VERSION = "trip-assistant-v3-fr-restaurants";
 
 export const QUICK_ACTIONS = [
   {
@@ -80,4 +80,5 @@ export const DEMO_STATIC_RESPONSE = {
   webSearchUsed: false,
   sources: [],
   restaurantRecommendations: [],
+  clarification: null,
 };

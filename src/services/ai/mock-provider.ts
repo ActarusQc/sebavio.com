@@ -44,6 +44,7 @@ const DEFAULT_MOCK: TripAssistantResponse = {
   webSearchUsed: false,
   sources: [],
   restaurantRecommendations: [],
+  clarification: null,
 };
 
 /**

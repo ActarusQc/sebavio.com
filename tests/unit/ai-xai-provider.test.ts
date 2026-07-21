@@ -25,6 +25,7 @@ const VALID_RESPONSE = {
   webSearchUsed: false,
   sources: [],
   restaurantRecommendations: [],
+  clarification: null,
 };
 
 function makeTransport(

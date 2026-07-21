@@ -6,11 +6,12 @@ export const TRIP_ASSISTANT_INTENTS = [
   "schedule_analysis",
   "fuel_explanation",
   "weather_analysis",
-  "restaurant_search",
-  "activity_search",
+  "restaurant_recommendation",
+  "activity_recommendation",
   "lodging_search",
   "tourism_search",
   "general_question",
+  "restaurant_clarification",
 ] as const;
 
 export type TripAssistantIntent = (typeof TRIP_ASSISTANT_INTENTS)[number];
@@ -28,7 +29,7 @@ function normalize(text: string): string {
 }
 
 const RESTAURANT_RE =
-  /\b(restaurant|resto|gastronom|manger|repas|diner|dejeuner|brunch|michelin|bib gourmand|fine dining|haut de gamme|table|cuisine)\b/;
+  /\b(restaurant|resto|gastronom|manger|repas|diner|diner|dejeuner|dejeuner|souper|brunch|michelin|bib gourmand|fine dining|haut de gamme|table|cuisine|casse[- ]?croute|casse[- ]?croûte|restauration rapide|cafe|café)\b/;
 const LODGING_RE =
   /\b(hotel|hôtel|hebergement|hébergement|auberge|motel|gite|gîte|bnb|bed and breakfast|logement)\b/;
 const ACTIVITY_TOURISM_RE =
@@ -83,7 +84,6 @@ export function routeTripAssistantRequest(input: {
     };
   }
 
-  // Activité déjà au voyage → contexte interne si le message le cible
   if (
     input.hasExistingActivitiesInContext &&
     EXISTING_ACTIVITY_RE.test(msg) &&
@@ -101,7 +101,7 @@ export function routeTripAssistantRequest(input: {
 
   if (RESTAURANT_RE.test(msg)) {
     return {
-      intent: "restaurant_search",
+      intent: "restaurant_recommendation",
       knowledgeMode: "web_grounded",
       requiresRecommendationsEntitlement: true,
       needsRouteSearchContext: true,
@@ -123,7 +123,7 @@ export function routeTripAssistantRequest(input: {
     return {
       intent: ACTIVITY_TOURISM_RE.test(msg)
         ? "tourism_search"
-        : "activity_search",
+        : "activity_recommendation",
       knowledgeMode: "web_grounded",
       requiresRecommendationsEntitlement: true,
       needsRouteSearchContext: true,
@@ -148,4 +148,15 @@ export function routeTripAssistantRequest(input: {
     needsRouteSearchContext: false,
     reason: "question générale — contexte voyage",
   };
+}
+
+export function requiresCurrentWebInformation(
+  intent: TripAssistantIntent,
+): boolean {
+  return (
+    intent === "restaurant_recommendation" ||
+    intent === "activity_recommendation" ||
+    intent === "lodging_search" ||
+    intent === "tourism_search"
+  );
 }

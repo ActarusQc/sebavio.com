@@ -82,7 +82,7 @@ export async function appendConversationMessages(params: {
   userContent: string;
   assistantContent: string;
   structured: TripAssistantResponse;
-  model: string;
+  model: string | null;
   promptVersion: string;
 }): Promise<void> {
   await prisma.$transaction([
@@ -108,4 +108,27 @@ export async function appendConversationMessages(params: {
       data: { updatedAt: new Date() },
     }),
   ]);
+}
+
+/**
+ * Efface la conversation du voyage (messages cascade) pour en démarrer une nouvelle.
+ * Retourne l’id effacé le cas échéant (limites Redis conversation).
+ */
+export async function clearTripAssistantConversation(
+  userId: string,
+  tripId: string,
+): Promise<{ cleared: boolean; conversationId: string | null }> {
+  const existing = await prisma.aiConversation.findUnique({
+    where: { userId_tripId: { userId, tripId } },
+    select: { id: true },
+  });
+  if (!existing) {
+    return { cleared: false, conversationId: null };
+  }
+
+  await prisma.aiConversation.delete({
+    where: { id: existing.id },
+  });
+
+  return { cleared: true, conversationId: existing.id };
 }

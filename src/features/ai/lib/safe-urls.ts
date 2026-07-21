@@ -43,21 +43,37 @@ export function extractDomain(url: string): string | null {
 
 export function classifySourceType(
   url: string,
-): "official" | "guide" | "reservation" | "tourism" | "review" | "other" {
+):
+  | "official"
+  | "guide"
+  | "reservation"
+  | "tourism"
+  | "review"
+  | "maps"
+  | "michelin"
+  | "directory"
+  | "other" {
   const domain = (extractDomain(url) ?? "").toLowerCase();
   if (
     domain.includes("guide.michelin") ||
     domain.includes("michelin.com") ||
     domain.endsWith("michelin.ca")
   ) {
-    return "guide";
+    return "michelin";
+  }
+  if (
+    domain.includes("google.com/maps") ||
+    domain.includes("maps.google") ||
+    domain.includes("goo.gl/maps")
+  ) {
+    return "maps";
   }
   if (
     domain.includes("tripadvisor") ||
     domain.includes("yelp.") ||
-    domain.includes("google.com/maps")
+    domain.includes("pagesjaunes")
   ) {
-    return "review";
+    return domain.includes("pagesjaunes") ? "directory" : "review";
   }
   if (
     domain.includes("opentable") ||

@@ -3,6 +3,7 @@ import { proposedTripActionSchema } from "@/features/ai/schemas/actions";
 import {
   aiKnowledgeModeSchema,
   aiSourceSchema,
+  assistantClarificationSchema,
   restaurantRecommendationSchema,
 } from "@/features/ai/schemas/sources";
 
@@ -63,6 +64,10 @@ export const tripAssistantResponseSchema = z.object({
     .max(10)
     .optional()
     .default([]),
+  clarification: assistantClarificationSchema
+    .nullable()
+    .optional()
+    .default(null),
 });
 
 export type TripAssistantResponse = z.infer<typeof tripAssistantResponseSchema>;
@@ -75,4 +80,5 @@ export type {
   AiKnowledgeMode,
   AiSource,
   RestaurantRecommendation,
+  AssistantClarification,
 } from "@/features/ai/schemas/sources";

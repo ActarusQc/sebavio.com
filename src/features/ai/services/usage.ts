@@ -74,6 +74,11 @@ export type AiAdminMetrics = {
     webSearches: number;
     webSearchSuccesses: number;
     avgSourceCount: number | null;
+    restaurantRequests: number;
+    restaurantClarifications: number;
+    restaurantWithResults: number;
+    restaurantWithoutResults: number;
+    restaurantAvgDurationMs: number | null;
   };
   byDay: Array<{ day: string; count: number; successes: number }>;
   byRequestType: Array<{ requestType: string; count: number }>;
@@ -117,6 +122,21 @@ export async function getAiAdminMetrics(
     .map((r) => r.sourceCount)
     .filter((n): n is number => typeof n === "number");
 
+  const restaurantRows = rows.filter(
+    (r) =>
+      r.intent === "restaurant_recommendation" ||
+      r.intent === "restaurant_search",
+  );
+  const clarificationRows = rows.filter(
+    (r) => r.intent === "restaurant_clarification",
+  );
+  const restaurantWithResults = restaurantRows.filter(
+    (r) => r.success && (r.sourceCount ?? 0) > 0,
+  );
+  const restaurantWithoutResults = restaurantRows.filter(
+    (r) => r.success && (r.sourceCount ?? 0) === 0,
+  );
+
   const totals = {
     requests: rows.length,
     successes: rows.filter((r) => r.success).length,
@@ -139,6 +159,17 @@ export async function getAiAdminMetrics(
             (sourceCounts.reduce((a, b) => a + b, 0) / sourceCounts.length) *
               10,
           ) / 10,
+    restaurantRequests: restaurantRows.length,
+    restaurantClarifications: clarificationRows.length,
+    restaurantWithResults: restaurantWithResults.length,
+    restaurantWithoutResults: restaurantWithoutResults.length,
+    restaurantAvgDurationMs:
+      restaurantRows.length === 0
+        ? null
+        : Math.round(
+            restaurantRows.reduce((sum, r) => sum + r.durationMs, 0) /
+              restaurantRows.length,
+          ),
   };
 
   const dayMap = new Map<string, { count: number; successes: number }>();
