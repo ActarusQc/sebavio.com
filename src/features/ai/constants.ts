@@ -1,5 +1,5 @@
 export const TRIP_ASSISTANT_PROMPT_VERSION =
-  "trip-assistant-v4-position-temporelle";
+  "trip-assistant-v5-meal-scoped-style";
 
 export const QUICK_ACTIONS = [
   {

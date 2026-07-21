@@ -40,8 +40,10 @@ import { enrichRestaurantRouteImpacts } from "@/features/ai/services/enrich-rout
 import { getOwnedTripOrThrow } from "@/features/trips/services/trips";
 import {
   detectRestaurantStyle,
-  detectRestaurantStyleFromHistory,
   defaultMealDurationMinutes,
+  isRestaurantSearchFollowUp,
+  isSameStyleRequest,
+  isStyleChangeWithinRequest,
   restaurantStyleLabel,
   type RestaurantStyleId,
 } from "@/features/ai/lib/restaurant-preferences";
@@ -57,8 +59,13 @@ import {
 } from "@/features/ai/lib/meal-timing";
 import {
   buildPendingRestaurantRequest,
+  detectLegFromMessage,
+  detectRegionHintFromMessage,
+  extractActiveCompletedRestaurantRequest,
   extractPendingRestaurantRequest,
+  isNewMealOccasion,
   isStyleOnlyClarificationReply,
+  resolveMealDateIso,
 } from "@/features/ai/lib/pending-assistant-request";
 import {
   RESTAURANT_SEARCH_DEFAULT_RADIUS_KM,
@@ -222,18 +229,98 @@ export async function runTripAssistant(params: {
       })) ?? [];
 
     const pendingFromHistory = extractPendingRestaurantRequest(historyMessages);
+    const completedRestaurant =
+      extractActiveCompletedRestaurantRequest(historyMessages);
 
     let effectiveMessage = input.message;
-    let resumedPending: PendingAssistantRequest | null = null;
+    let activeMealRequest: PendingAssistantRequest | null = null;
     let forcedRestaurantStyle: RestaurantStyleId | null = null;
+    let skipClarification = false;
 
-    // Reprise automatique après clic sur un style (sans répéter la question)
+    // Reprise après clarification style / confirmation « même style »
     if (pendingFromHistory && isStyleOnlyClarificationReply(input.message)) {
-      const style = detectRestaurantStyle(input.message);
-      if (style) {
-        resumedPending = pendingFromHistory;
-        forcedRestaurantStyle = style;
+      const normalized = input.message
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/\p{M}/gu, "");
+
+      if (
+        pendingFromHistory.status === "awaiting_same_style_confirm" &&
+        (normalized.includes("choisir un autre style") ||
+          normalized === "choose_other_style")
+      ) {
+        const pending = {
+          ...pendingFromHistory,
+          status: "awaiting_style" as const,
+          clarificationStep: "restaurant_style" as const,
+          restaurantStyle: null,
+          previousStyleLabel: pendingFromHistory.previousStyleLabel ?? null,
+        };
+        const clarificationResponse = buildRestaurantClarificationResponse(
+          pending,
+          pending.mealType,
+        );
+        await appendConversationMessages({
+          conversationId: conversationEarly.id,
+          userContent: input.message,
+          assistantContent: clarificationResponse.answer,
+          structured: clarificationResponse,
+          model: null,
+          promptVersion: TRIP_ASSISTANT_PROMPT_VERSION,
+        });
+        await recordAiUsage({
+          userId: params.userId,
+          tripId: input.tripId,
+          requestType: input.requestType,
+          provider: "local",
+          model: "clarification",
+          promptVersion: TRIP_ASSISTANT_PROMPT_VERSION,
+          durationMs: Date.now() - started,
+          success: true,
+          planSlug: access.access.planSlug,
+          knowledgeMode: "trip_context",
+          webSearchUsed: false,
+          intent: "restaurant_clarification",
+          sourceCount: 0,
+        });
+        return {
+          ok: true,
+          mode: "personalized",
+          response: clarificationResponse,
+          conversationId: conversationEarly.id,
+          promptVersion: TRIP_ASSISTANT_PROMPT_VERSION,
+          model: null,
+        };
+      }
+
+      if (
+        pendingFromHistory.status === "awaiting_same_style_confirm" &&
+        (normalized.includes("oui, conserver") ||
+          normalized === "keep_previous_style") &&
+        pendingFromHistory.restaurantStyle
+      ) {
+        activeMealRequest = {
+          ...pendingFromHistory,
+          status: "searching",
+          clarificationStep: null,
+        };
+        forcedRestaurantStyle = pendingFromHistory.restaurantStyle;
         effectiveMessage = pendingFromHistory.originalMessage;
+        skipClarification = true;
+      } else {
+        const style = detectRestaurantStyle(input.message);
+        if (style) {
+          activeMealRequest = {
+            ...pendingFromHistory,
+            restaurantStyle: style,
+            status: "searching",
+            clarificationStep: null,
+          };
+          forcedRestaurantStyle = style;
+          effectiveMessage = pendingFromHistory.originalMessage;
+          skipClarification = true;
+        }
       }
     }
 
@@ -243,7 +330,7 @@ export async function runTripAssistant(params: {
       hasExistingActivitiesInContext: (context.activities?.length ?? 0) > 0,
     });
 
-    if (resumedPending) {
+    if (activeMealRequest && skipClarification) {
       routing = {
         intent: "restaurant_recommendation",
         knowledgeMode: "web_grounded",
@@ -251,16 +338,6 @@ export async function runTripAssistant(params: {
         needsRouteSearchContext: true,
         reason: "reprise après clarification style",
       };
-    }
-
-    // Changement de sujet pendant clarification → abandonne la demande en attente
-    if (
-      pendingFromHistory &&
-      !resumedPending &&
-      routing.intent !== "restaurant_recommendation" &&
-      !isStyleOnlyClarificationReply(input.message)
-    ) {
-      // pas de pending dans la réponse suivante
     }
 
     if (
@@ -276,55 +353,230 @@ export async function runTripAssistant(params: {
 
     const departureFromMessage =
       resolveDepartureTiming(effectiveMessage) ??
-      (resumedPending
+      (activeMealRequest
         ? {
-            hour: resumedPending.departureHour,
-            minute: resumedPending.departureMinute,
+            hour: activeMealRequest.departureHour,
+            minute: activeMealRequest.departureMinute,
             source: "conversation" as const,
           }
-        : null);
+        : completedRestaurant && isRestaurantSearchFollowUp(input.message)
+          ? {
+              hour: completedRestaurant.departureHour,
+              minute: completedRestaurant.departureMinute,
+              source: "conversation" as const,
+            }
+          : null);
     const mealFromMessage =
       resolveMealTiming(effectiveMessage) ??
-      (resumedPending
+      (activeMealRequest
         ? {
-            mealType: resumedPending.mealType,
-            targetHour: resumedPending.targetHour,
-            targetMinute: resumedPending.targetMinute,
+            mealType: activeMealRequest.mealType,
+            targetHour: activeMealRequest.targetHour,
+            targetMinute: activeMealRequest.targetMinute,
             targetTimeSource: "conversation" as const,
           }
-        : null);
+        : completedRestaurant && isRestaurantSearchFollowUp(input.message)
+          ? {
+              mealType: completedRestaurant.mealType,
+              targetHour: completedRestaurant.targetHour,
+              targetMinute: completedRestaurant.targetMinute,
+              targetTimeSource: "conversation" as const,
+            }
+          : null);
 
-    // Clarification style restaurant (sans appel xAI)
-    if (routing.intent === "restaurant_recommendation" && !resumedPending) {
-      const styleFromMessage = detectRestaurantStyle(input.message);
-      const styleKnown =
-        styleFromMessage ??
-        detectRestaurantStyleFromHistory(
-          historyMessages.map((m) => ({ role: m.role, content: m.content })),
-        );
-      if (!styleKnown) {
-        const dep = departureFromMessage ?? {
-          hour: 8,
-          minute: 0,
-          source: "trip_default" as const,
-        };
-        const meal = mealFromMessage ?? {
-          mealType: "lunch" as const,
-          targetHour: 12,
-          targetMinute: 0,
-          targetTimeSource: "trip_default" as const,
-        };
+    const depForOccasion = departureFromMessage ?? {
+      hour:
+        activeMealRequest?.departureHour ??
+        completedRestaurant?.departureHour ??
+        8,
+      minute:
+        activeMealRequest?.departureMinute ??
+        completedRestaurant?.departureMinute ??
+        0,
+      source: "trip_default" as const,
+    };
+    const mealForOccasion = mealFromMessage ?? {
+      mealType: (activeMealRequest?.mealType ??
+        completedRestaurant?.mealType ??
+        "lunch") as "breakfast" | "lunch" | "dinner",
+      targetHour:
+        activeMealRequest?.targetHour ?? completedRestaurant?.targetHour ?? 12,
+      targetMinute:
+        activeMealRequest?.targetMinute ??
+        completedRestaurant?.targetMinute ??
+        0,
+      targetTimeSource: "trip_default" as const,
+    };
+    const legForOccasion = detectLegFromMessage(effectiveMessage);
+    const mealDateForOccasion = resolveMealDateIso(
+      context.trip.departureDate,
+      depForOccasion.hour,
+      depForOccasion.minute,
+      mealForOccasion.targetHour,
+      mealForOccasion.targetMinute,
+    );
+    const regionHintForOccasion = detectRegionHintFromMessage(effectiveMessage);
+
+    // Clarification style : une fois par nouvelle occasion de repas (pas depuis l’historique)
+    if (routing.intent === "restaurant_recommendation" && !skipClarification) {
+      const styleFromCurrentMessage = detectRestaurantStyle(input.message);
+      const styleChange = isStyleChangeWithinRequest(input.message);
+      const followUp = isRestaurantSearchFollowUp(input.message);
+      const sameStyleAsk = isSameStyleRequest(input.message);
+
+      const referenceRequest =
+        completedRestaurant &&
+        !isNewMealOccasion(completedRestaurant, {
+          mealType: mealForOccasion.mealType,
+          targetHour: mealForOccasion.targetHour,
+          targetMinute: mealForOccasion.targetMinute,
+          mealDate: mealDateForOccasion,
+          leg: legForOccasion,
+          message: input.message,
+          regionHint: regionHintForOccasion,
+        })
+          ? completedRestaurant
+          : null;
+
+      // « Même style que précédemment » → confirmation, jamais de réutilisation silencieuse
+      if (
+        sameStyleAsk &&
+        completedRestaurant?.restaurantStyle &&
+        (!referenceRequest ||
+          isNewMealOccasion(completedRestaurant, {
+            mealType: mealForOccasion.mealType,
+            targetHour: mealForOccasion.targetHour,
+            targetMinute: mealForOccasion.targetMinute,
+            mealDate: mealDateForOccasion,
+            leg: legForOccasion,
+            message: input.message,
+            regionHint: regionHintForOccasion,
+          }))
+      ) {
         const pending = buildPendingRestaurantRequest({
           tripId: input.tripId,
           originalMessage: effectiveMessage,
-          departureHour: dep.hour,
-          departureMinute: dep.minute,
-          mealType: meal.mealType,
-          targetHour: meal.targetHour,
-          targetMinute: meal.targetMinute,
+          departureHour: depForOccasion.hour,
+          departureMinute: depForOccasion.minute,
+          mealType: mealForOccasion.mealType,
+          targetHour: mealForOccasion.targetHour,
+          targetMinute: mealForOccasion.targetMinute,
+          mealDate: mealDateForOccasion,
+          targetLocalTime: `${mealForOccasion.targetHour} h ${String(mealForOccasion.targetMinute).padStart(2, "0")}`,
+          leg: legForOccasion,
+          restaurantStyle: completedRestaurant.restaurantStyle,
+          previousStyleLabel: restaurantStyleLabel(
+            completedRestaurant.restaurantStyle,
+          ),
+          regionHint: regionHintForOccasion,
+          status: "awaiting_same_style_confirm",
+          clarificationStep: "same_style_confirm",
         });
-        const clarificationResponse =
-          buildRestaurantClarificationResponse(pending);
+        const clarificationResponse = buildRestaurantClarificationResponse(
+          pending,
+          mealForOccasion.mealType,
+        );
+        await appendConversationMessages({
+          conversationId: conversationEarly.id,
+          userContent: input.message,
+          assistantContent: clarificationResponse.answer,
+          structured: clarificationResponse,
+          model: null,
+          promptVersion: TRIP_ASSISTANT_PROMPT_VERSION,
+        });
+        await recordAiUsage({
+          userId: params.userId,
+          tripId: input.tripId,
+          requestType: input.requestType,
+          provider: "local",
+          model: "clarification",
+          promptVersion: TRIP_ASSISTANT_PROMPT_VERSION,
+          durationMs: Date.now() - started,
+          success: true,
+          planSlug: access.access.planSlug,
+          knowledgeMode: "trip_context",
+          webSearchUsed: false,
+          intent: "restaurant_clarification",
+          sourceCount: 0,
+        });
+        return {
+          ok: true,
+          mode: "personalized",
+          response: clarificationResponse,
+          conversationId: conversationEarly.id,
+          promptVersion: TRIP_ASSISTANT_PROMPT_VERSION,
+          model: null,
+        };
+      }
+
+      // Suivi même demande (« voir plus ») ou changement de style dans la demande
+      if (referenceRequest?.restaurantStyle && (followUp || styleChange)) {
+        forcedRestaurantStyle = styleChange
+          ? (styleFromCurrentMessage ?? referenceRequest.restaurantStyle)
+          : referenceRequest.restaurantStyle;
+        activeMealRequest = {
+          ...referenceRequest,
+          restaurantStyle: forcedRestaurantStyle,
+          status: "searching",
+          clarificationStep: null,
+          originalMessage: styleChange
+            ? effectiveMessage
+            : referenceRequest.originalMessage,
+        };
+        skipClarification = true;
+      } else if (styleFromCurrentMessage) {
+        // Style explicite dans le message courant → nouvelle recherche sans clarification
+        forcedRestaurantStyle = styleFromCurrentMessage;
+        activeMealRequest = buildPendingRestaurantRequest({
+          tripId: input.tripId,
+          originalMessage: effectiveMessage,
+          departureHour: depForOccasion.hour,
+          departureMinute: depForOccasion.minute,
+          mealType: mealForOccasion.mealType,
+          targetHour: mealForOccasion.targetHour,
+          targetMinute: mealForOccasion.targetMinute,
+          mealDate: mealDateForOccasion,
+          leg: legForOccasion,
+          restaurantStyle: styleFromCurrentMessage,
+          regionHint: regionHintForOccasion,
+          status: "searching",
+          clarificationStep: null,
+          requestId:
+            referenceRequest &&
+            !isNewMealOccasion(referenceRequest, {
+              mealType: mealForOccasion.mealType,
+              targetHour: mealForOccasion.targetHour,
+              targetMinute: mealForOccasion.targetMinute,
+              mealDate: mealDateForOccasion,
+              leg: legForOccasion,
+              message: input.message,
+              regionHint: regionHintForOccasion,
+            })
+              ? referenceRequest.requestId
+              : undefined,
+        });
+        skipClarification = true;
+      } else if (!followUp) {
+        // Nouvelle occasion sans style → clarification (ignore l’historique)
+        const pending = buildPendingRestaurantRequest({
+          tripId: input.tripId,
+          originalMessage: effectiveMessage,
+          departureHour: depForOccasion.hour,
+          departureMinute: depForOccasion.minute,
+          mealType: mealForOccasion.mealType,
+          targetHour: mealForOccasion.targetHour,
+          targetMinute: mealForOccasion.targetMinute,
+          mealDate: mealDateForOccasion,
+          leg: legForOccasion,
+          restaurantStyle: null,
+          regionHint: regionHintForOccasion,
+          status: "awaiting_style",
+          clarificationStep: "restaurant_style",
+        });
+        const clarificationResponse = buildRestaurantClarificationResponse(
+          pending,
+          mealForOccasion.mealType,
+        );
         await appendConversationMessages({
           conversationId: conversationEarly.id,
           userContent: input.message,
@@ -363,12 +615,8 @@ export async function runTripAssistant(params: {
       routing.intent === "restaurant_recommendation"
         ? (forcedRestaurantStyle ??
           detectRestaurantStyle(input.message) ??
-          detectRestaurantStyleFromHistory(
-            historyMessages.map((m) => ({
-              role: m.role,
-              content: m.content,
-            })),
-          ))
+          activeMealRequest?.restaurantStyle ??
+          null)
         : null;
 
     const knowledgeMode = routing.knowledgeMode;
@@ -434,14 +682,15 @@ export async function runTripAssistant(params: {
 
       if (routing.intent === "restaurant_recommendation" && restaurantStyle) {
         const depClock = departureFromMessage ?? {
-          hour: resumedPending?.departureHour ?? 8,
-          minute: resumedPending?.departureMinute ?? 0,
+          hour: activeMealRequest?.departureHour ?? 8,
+          minute: activeMealRequest?.departureMinute ?? 0,
           source: "trip_default" as const,
         };
         const mealTiming = mealFromMessage ?? {
-          mealType: "lunch" as const,
-          targetHour: resumedPending?.targetHour ?? 12,
-          targetMinute: resumedPending?.targetMinute ?? 0,
+          mealType: (activeMealRequest?.mealType ?? "lunch") as
+            "breakfast" | "lunch" | "dinner",
+          targetHour: activeMealRequest?.targetHour ?? 12,
+          targetMinute: activeMealRequest?.targetMinute ?? 0,
           targetTimeSource: "trip_default" as const,
         };
         const departureDateTime = combineTripDateAndClock(
@@ -468,18 +717,29 @@ export async function runTripAssistant(params: {
           userId: params.userId,
           departureDateTime,
           targetDateTime,
-          leg: "outbound",
+          leg: activeMealRequest?.leg ?? legForOccasion,
         });
 
         if (mealPosition) {
           targetProgressKm = mealPosition.routeProgressKm;
           mealPositionNearestCity = mealPosition.nearestCity;
+          if (activeMealRequest) {
+            activeMealRequest = {
+              ...activeMealRequest,
+              regionHint: mealPosition.nearestCity,
+              targetLocalTime:
+                mealLocalClockLabel ?? activeMealRequest.targetLocalTime,
+              mealDate: targetDateTime.toISOString().slice(0, 10),
+            };
+          }
           mealPositionJson = JSON.stringify({
             targetLocalTime: mealLocalClockLabel,
             mealTypeFr: mealTypeLabelFr(mealTiming.mealType),
             departureLocalTime: formatLocalClock(departureDateTime),
             departureSource: depClock.source,
             mealSource: mealTiming.targetTimeSource,
+            restaurantPreferenceForCurrentRequest: restaurantStyle,
+            requestId: activeMealRequest?.requestId ?? null,
             estimatedPosition: {
               latitude: mealPosition.latitude,
               longitude: mealPosition.longitude,
@@ -498,7 +758,7 @@ export async function runTripAssistant(params: {
             proposedMealDurationMinutes:
               defaultMealDurationMinutes(restaurantStyle),
             instruction:
-              "Rechercher uniquement près de estimatedPosition. Ne pas choisir une autre ville du corridor.",
+              "Rechercher uniquement près de estimatedPosition. Ne pas choisir une autre ville du corridor. restaurantPreferenceForCurrentRequest ne s’applique qu’à ce requestId.",
           });
 
           console.info("[ai] restaurant_meal_position", {
@@ -508,6 +768,8 @@ export async function runTripAssistant(params: {
             elapsedDrivingMinutes: mealPosition.elapsedDrivingMinutes,
             departureSource: depClock.source,
             mealType: mealTiming.mealType,
+            requestId: activeMealRequest?.requestId,
+            style: restaurantStyle,
           });
 
           try {
@@ -615,7 +877,17 @@ export async function runTripAssistant(params: {
       restaurantRecommendations:
         result.response.restaurantRecommendations ?? [],
       clarification: null,
-      pendingRequest: null,
+      pendingRequest:
+        routing.intent === "restaurant_recommendation" &&
+        restaurantStyle &&
+        activeMealRequest
+          ? {
+              ...activeMealRequest,
+              restaurantStyle,
+              status: "completed",
+              clarificationStep: null,
+            }
+          : null,
     };
 
     response = enforceMichelinVerification(response, mergedSources);
@@ -670,9 +942,20 @@ export async function runTripAssistant(params: {
     }
 
     const linguistic = validateAndNormalizeFrenchResponse(response);
+    const completedPending =
+      routing.intent === "restaurant_recommendation" &&
+      restaurantStyle &&
+      activeMealRequest
+        ? {
+            ...activeMealRequest,
+            restaurantStyle,
+            status: "completed" as const,
+            clarificationStep: null,
+          }
+        : null;
     response = {
       ...linguistic.response,
-      pendingRequest: null,
+      pendingRequest: completedPending,
       restaurantRecommendations: (
         linguistic.response.restaurantRecommendations ?? []
       ).map((r) => ({

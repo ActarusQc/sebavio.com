@@ -1,6 +1,14 @@
 "use client";
 
-import { Compass, Leaf, Sparkles, Timer, UtensilsCrossed } from "lucide-react";
+import {
+  Compass,
+  Coffee,
+  Heart,
+  Leaf,
+  Sparkles,
+  Timer,
+  UtensilsCrossed,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { AssistantClarification } from "@/features/ai/schemas/response";
 import { cn } from "@/lib/utils";
@@ -8,9 +16,13 @@ import { cn } from "@/lib/utils";
 const OPTION_ICONS: Record<string, typeof Timer> = {
   fast: Timer,
   family: UtensilsCrossed,
+  romantic: Heart,
   fine: Sparkles,
   local: Leaf,
+  cafe: Coffee,
   any: Compass,
+  keep_previous_style: Compass,
+  choose_other_style: Compass,
 };
 
 export function ClarificationOptions({

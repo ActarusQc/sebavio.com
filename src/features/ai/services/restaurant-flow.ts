@@ -1,14 +1,27 @@
 import type { TripAssistantResponse } from "@/features/ai/schemas/response";
-import { buildRestaurantStyleClarification } from "@/features/ai/lib/restaurant-preferences";
+import {
+  buildRestaurantStyleClarification,
+  buildSameStyleConfirmClarification,
+} from "@/features/ai/lib/restaurant-preferences";
+import type { MealType } from "@/features/ai/lib/meal-timing";
 import type { PendingAssistantRequest } from "@/features/ai/lib/pending-assistant-request";
 
 export function buildRestaurantClarificationResponse(
   pending: PendingAssistantRequest,
+  mealType: MealType = pending.mealType,
 ): TripAssistantResponse {
+  const clarification =
+    pending.status === "awaiting_same_style_confirm" &&
+    pending.previousStyleLabel
+      ? buildSameStyleConfirmClarification(pending.previousStyleLabel)
+      : buildRestaurantStyleClarification(mealType);
+
   return {
     summary: "Précision du style de restaurant",
-    // Question affichée une seule fois via clarification.question (pas dans answer)
-    answer: "Pour vous proposer des options adaptées :",
+    answer:
+      pending.status === "awaiting_same_style_confirm"
+        ? "Pour ce nouveau repas :"
+        : "Pour vous proposer des options adaptées :",
     status: "incomplete",
     warnings: [],
     suggestions: [],
@@ -18,7 +31,7 @@ export function buildRestaurantClarificationResponse(
     webSearchUsed: false,
     sources: [],
     restaurantRecommendations: [],
-    clarification: buildRestaurantStyleClarification(),
+    clarification,
     pendingRequest: pending,
   };
 }
@@ -112,6 +125,19 @@ export function buildNoRestaurantResultSuggestions(): TripAssistantResponse["sug
       description: "Chercher des options pour un arrêt court.",
       reason: "Catégorie souvent plus flexible en horaire",
       estimatedDurationMinutes: 30,
+      estimatedAdditionalDistanceKm: null,
+      estimatedDelayMinutes: null,
+      weatherCompatibility: "unknown",
+      requiresVerification: false,
+      proposedAction: null,
+    },
+    {
+      id: "change-style",
+      type: "activity",
+      title: "Changer le type de restaurant",
+      description: "Relancer la recherche avec un autre style.",
+      reason: "Nouvelle préférence pour ce même repas",
+      estimatedDurationMinutes: null,
       estimatedAdditionalDistanceKm: null,
       estimatedDelayMinutes: null,
       weatherCompatibility: "unknown",

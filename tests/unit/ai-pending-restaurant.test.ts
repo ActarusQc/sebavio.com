@@ -35,7 +35,7 @@ describe("pending restaurant + clarification unique", () => {
     const questionOccurrences =
       [response.answer, response.clarification?.question ?? ""]
         .join("\n")
-        .split("Quel type de restaurant préférez-vous").length - 1;
+        .split(/Quel type de restaurant recherchez-vous/).length - 1;
     expect(questionOccurrences).toBe(1);
 
     const extracted = extractPendingRestaurantRequest([

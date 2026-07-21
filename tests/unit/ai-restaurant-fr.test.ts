@@ -86,7 +86,9 @@ describe("clarification restaurant", () => {
     expect(style).toBeNull();
     const clar = buildRestaurantStyleClarification();
     expect(clar.required).toBe(true);
-    expect(clar.options).toHaveLength(5);
+    expect(clar.options).toHaveLength(7);
+    expect(clar.options.map((o) => o.id)).toContain("romantic");
+    expect(clar.options.map((o) => o.id)).toContain("cafe");
     const pending = buildPendingRestaurantRequest({
       tripId: "00000000-0000-4000-8000-000000000002",
       originalMessage:
@@ -102,9 +104,7 @@ describe("clarification restaurant", () => {
     expect(response.answer).not.toContain(
       "Quel type de restaurant préférez-vous",
     );
-    expect(response.clarification?.question).toContain(
-      "Quel type de restaurant",
-    );
+    expect(response.clarification?.question).toContain("pour ce dîner");
     expect(response.pendingRequest?.originalMessage).toContain("6 h");
     expect(response.restaurantRecommendations).toHaveLength(0);
     expect(() => tripAssistantResponseSchema.parse(response)).not.toThrow();

@@ -25,6 +25,8 @@ Mode knowledgeMode=web_grounded (recherche Web autorisée):
 - Remplis restaurantRecommendations (max 3) avec des noms réels, villes, adresses si connues.
 - estimatedArrivalTime : format « 12 h 05 » (jamais d’ISO UTC).
 - Au Québec : dîner = repas du midi ; déjeuner = matin ; souper = soir.
+- Une préférence de restaurant appartient UNIQUEMENT au repas (requestId) pour lequel elle a été donnée. Ne réutilise jamais automatiquement une préférence provenant d’un repas précédent. Pour chaque nouvelle occasion de repas, demande le style recherché, sauf si l’utilisateur le précise dans sa nouvelle demande.
+- restaurantPreferenceForCurrentRequest dans <meal_position> : null tant que non choisi pour CE repas.
 - Remplis sources[] avec des URL https réelles.
 - Une distinction Michelin verified=true uniquement avec source guide.michelin.com.
 - Horaires : si non confirmés, openingStatus.value=unknown et label « Horaire à confirmer ».
@@ -119,8 +121,8 @@ export function wrapUserPayload(params: {
     params.intent ? `Intent: ${params.intent}` : null,
     params.knowledgeMode ? `knowledgeMode: ${params.knowledgeMode}` : null,
     params.restaurantStyle
-      ? `Préférence restaurant: ${params.restaurantStyle}`
-      : null,
+      ? `restaurantPreferenceForCurrentRequest: ${params.restaurantStyle}`
+      : `restaurantPreferenceForCurrentRequest: null`,
     "",
     "<trip_data>",
     params.contextJson,

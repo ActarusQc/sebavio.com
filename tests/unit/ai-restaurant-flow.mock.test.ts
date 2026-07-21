@@ -263,7 +263,10 @@ describe("flux restaurant mock", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.response.clarification?.required).toBe(true);
-    expect(result.response.clarification?.options).toHaveLength(5);
+    expect(result.response.clarification?.options).toHaveLength(7);
+    expect(result.response.clarification?.options.map((o) => o.id)).toContain(
+      "romantic",
+    );
     expect(result.response.restaurantRecommendations).toHaveLength(0);
     expect(createAiProvider).not.toHaveBeenCalled();
     expect(appendConversationMessages).toHaveBeenCalled();
@@ -285,5 +288,77 @@ describe("flux restaurant mock", () => {
       result.response.restaurantRecommendations?.map((r) => r.name),
     ).toEqual(["Chez Ouvert"]);
     expect(result.response.answer.toLowerCase()).not.toMatch(/\boutbound\b/);
+    expect(result.response.pendingRequest?.status).toBe("completed");
+    expect(result.response.pendingRequest?.restaurantStyle).toBe("family");
+  });
+
+  it("après dîner familial — souper redemande le style (pas de réutilisation)", async () => {
+    const { listConversationMessages } =
+      await import("@/features/ai/services/conversations");
+    const { buildPendingRestaurantRequest } =
+      await import("@/features/ai/lib/pending-assistant-request");
+    const completed = buildPendingRestaurantRequest({
+      tripId: "00000000-0000-4000-8000-000000000002",
+      originalMessage: "Dîner à midi restaurant?",
+      departureHour: 6,
+      departureMinute: 0,
+      mealType: "lunch",
+      targetHour: 12,
+      targetMinute: 0,
+      mealDate: "2026-07-15",
+      restaurantStyle: "family",
+      status: "completed",
+      clarificationStep: null,
+      regionHint: "Trois-Pistoles",
+    });
+    vi.mocked(listConversationMessages).mockResolvedValueOnce({
+      id: "conv-1",
+      tripId: "00000000-0000-4000-8000-000000000002",
+      messages: [
+        {
+          id: "m1",
+          role: "user",
+          content: "Dîner à midi",
+          structuredPayload: null,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: "m2",
+          role: "assistant",
+          content: "Voici des restos familiaux à Trois-Pistoles.",
+          structuredPayload: {
+            pendingRequest: completed,
+            restaurantRecommendations: [{ name: "Cantine" }],
+          },
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: "m3",
+          role: "user",
+          content: "Familial et décontracté",
+          structuredPayload: null,
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    } as never);
+
+    const result = await runTripAssistant({
+      userId: "00000000-0000-4000-8000-000000000001",
+      raw: {
+        tripId: "00000000-0000-4000-8000-000000000002",
+        message: "Pour souper à mon arrivée, que me suggères-tu?",
+        requestType: "chat",
+      },
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.response.clarification?.required).toBe(true);
+    expect(result.response.clarification?.options.map((o) => o.id)).toContain(
+      "romantic",
+    );
+    expect(result.response.pendingRequest?.restaurantStyle).toBeNull();
+    expect(result.response.pendingRequest?.status).toBe("awaiting_style");
+    expect(result.response.pendingRequest?.mealType).toBe("dinner");
+    expect(createAiProvider).not.toHaveBeenCalled();
   });
 });

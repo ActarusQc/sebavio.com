@@ -36,8 +36,10 @@ export type RestaurantPlaceCandidate = {
 const STYLE_QUERIES: Record<RestaurantStyleId, string> = {
   fast: "restauration rapide restaurant",
   family: "restaurant familial",
+  romantic: "restaurant romantique",
   fine: "restaurant gastronomique",
   local: "restaurant cuisine locale",
+  cafe: "café restaurant léger",
   any: "restaurant",
 };
 
