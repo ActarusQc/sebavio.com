@@ -322,3 +322,38 @@
   --sidebar: #0e2d46;
   --sidebar-accent: #1a3a52;
 }
+
+/* Section « Pourquoi le nom Sebavio? » — animations discrètes */
+@keyframes name-road-dash {
+  to {
+    stroke-dashoffset: -52;
+  }
+}
+
+@keyframes name-star-pulse {
+  0%,
+  100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+.name-meaning-road {
+  animation: name-road-dash 8s linear infinite;
+}
+
+.name-meaning-star {
+  transform-origin: 258px 24px;
+  animation: name-star-pulse 3.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .name-meaning-road,
+  .name-meaning-star {
+    animation: none;
+  }
+}

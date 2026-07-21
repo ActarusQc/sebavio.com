@@ -174,6 +174,26 @@ export const LANDING = {
       },
     ],
   },
+  nameMeaning: {
+    title: "Pourquoi le nom Sebavio?",
+    intro:
+      "Le nom Sebavio unit deux symboles au cœur de notre vision : l’étoile et la route.",
+    seba: {
+      word: "Seba",
+      label: "L’étoile qui guide",
+      body: "« Seba » évoque l’étoile, ce repère qui guide les voyageurs depuis toujours.",
+    },
+    via: {
+      word: "Via",
+      label: "La route à parcourir",
+      body: "« Via » signifie la route, le chemin qui mène vers une destination, une découverte ou une nouvelle aventure.",
+    },
+    result: {
+      word: "Sebavio",
+      label: "L’étoile qui guide votre route",
+      body: "Sebavio représente ainsi l’étoile qui guide votre route. Une plateforme pensée pour vous accompagner dans la préparation de vos voyages, vous aider à prendre de meilleures décisions et simplifier chaque étape du trajet.",
+    },
+  },
   geo: {
     title: "Qu’est-ce que Sebavio?",
     questions: [

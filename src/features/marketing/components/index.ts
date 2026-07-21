@@ -16,6 +16,7 @@ export { UseCasesSection } from "./use-cases-section";
 export { FinalCta } from "./final-cta";
 export { GeoDefinitionSection } from "./geo-definition-section";
 export { AboutStrip } from "./about-strip";
+export { NameMeaningSection } from "./name-meaning-section";
 export { MarketingCtaButton } from "./marketing-cta-button";
 export {
   MarketingConversationMini,

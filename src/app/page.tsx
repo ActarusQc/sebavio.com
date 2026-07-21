@@ -3,6 +3,7 @@ import {
   FeatureGrid,
   FinalCta,
   AboutStrip,
+  NameMeaningSection,
   HeroSection,
   HowItWorksSection,
   JourneyLifecycleSection,
@@ -138,6 +139,7 @@ export default async function Home() {
         <JourneyLifecycleSection />
         <UseCasesSection />
         <AboutStrip />
+        <NameMeaningSection />
         <FinalCta />
       </main>
       <SiteFooter />
