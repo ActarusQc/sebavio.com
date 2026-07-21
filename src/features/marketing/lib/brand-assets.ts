@@ -18,6 +18,8 @@ export const BRAND_ASSETS = {
   heroCampingcar: "/assets/branding/sebavio/hero-campingcar.webp",
   /** Fond hero nuit — route et ciel étoilé (landing publique). */
   heroNightRoad: "/assets/branding/sebavio/hero-night-road.png",
+  /** Paysage seul (sans panneaux UI) pour le hero. */
+  heroLandscape: "/assets/branding/sebavio/hero-landscape-night.png",
   /** Composition desktop + mobile (image complète, ne pas découper). */
   appPreview: "/assets/branding/sebavio/sebavio-mobile-web.png",
   sparkle: "/assets/branding/sebavio/sparkle-dore.png",

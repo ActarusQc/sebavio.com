@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { Badge, Button } from "@/components/ui";
+import { Badge } from "@/components/ui";
 import { CheckoutButton } from "@/features/subscriptions/components/checkout-button";
 import {
   formatPassPrice,
@@ -16,6 +16,7 @@ import {
 import type { PricingCardPlan } from "@/features/subscriptions/components/pricing-plans-grid";
 import { cn } from "@/lib/utils";
 import { LANDING } from "../lib/landing-content";
+import { MarketingCtaButton } from "./marketing-cta-button";
 
 type PricingPreviewProps = {
   plans: PricingCardPlan[];
@@ -84,7 +85,10 @@ function priceLabel(plan: PricingCardPlan): string {
   return formatPlusPrice(plan.unitAmountCents ?? PLUS_PRICE_CENTS);
 }
 
-/** Aperçu forfaits — mêmes données que /pricing. */
+const gradientBtn =
+  "w-full rounded-xl bg-[linear-gradient(135deg,#3b82f6,#8b5cf6)] text-white hover:brightness-110";
+
+/** Aperçu forfaits — données réelles, présentation maquette. */
 export function PricingPreview({
   plans,
   isAuthenticated,
@@ -94,17 +98,17 @@ export function PricingPreview({
   return (
     <aside
       id="tarifs-apercu"
-      className="border-sebavio-sand/50 rounded-2xl border bg-white p-5 shadow-md sm:p-6"
+      className="rounded-2xl border border-[#dfe7ef] bg-white p-5 shadow-[0_12px_40px_rgba(8,43,70,0.08)] sm:p-5"
       aria-labelledby="pricing-preview-heading"
     >
       <h2
         id="pricing-preview-heading"
-        className="font-heading text-sebavio-navy text-xl font-bold"
+        className="font-heading text-lg font-bold text-[#082b46]"
       >
         {LANDING.pricing.title}
       </h2>
 
-      <ul className="mt-5 space-y-3">
+      <ul className="mt-4 space-y-2.5">
         {ordered.map((plan) => {
           const isPass = plan.slug === OFFICIAL_PLAN_SLUGS.PASS_30_JOURS;
           const isDiscovery = plan.slug === OFFICIAL_PLAN_SLUGS.DECOUVERTE;
@@ -114,42 +118,43 @@ export function PricingPreview({
             <li
               key={plan.slug}
               className={cn(
-                "relative rounded-xl border p-4",
+                "relative rounded-xl border px-3.5 py-3",
                 isPass
-                  ? "from-[#3b82f6]/08 border-[#8b5cf6]/35 bg-gradient-to-br to-[#8b5cf6]/10 ring-1 ring-[#8b5cf6]/20"
-                  : "border-sebavio-sand/40 bg-sebavio-surface/40",
+                  ? "from-[#3b82f6]/08 border-[#8b5cf6]/35 bg-gradient-to-br to-[#8b5cf6]/12"
+                  : "border-[#dfe7ef] bg-[#f7f9fc]/60",
               )}
             >
               {isPass ? (
-                <Badge className="bg-sebavio-gold text-sebavio-navy absolute -top-2.5 right-3">
+                <Badge className="absolute -top-2.5 right-3 border-0 bg-[linear-gradient(135deg,#3b82f6,#8b5cf6)] text-white">
                   Sans abonnement
                 </Badge>
               ) : null}
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="font-heading text-sebavio-navy font-semibold">
+                  <p className="font-heading text-sm font-semibold text-[#082b46]">
                     {plan.publicName}
                   </p>
-                  <p className="text-sebavio-muted mt-1 text-xs leading-relaxed">
+                  <p className="mt-0.5 line-clamp-2 text-[0.7rem] leading-snug text-[#60758a]">
                     {plan.shortDescription}
                   </p>
-                  <p className="text-sebavio-muted mt-2 text-[0.65rem]">
+                  <p className="mt-1 text-[0.62rem] text-[#60758a]">
                     {periodLabel(plan.slug)}
                   </p>
                 </div>
-                <p className="font-heading text-sebavio-navy shrink-0 text-lg font-bold">
+                <p className="font-heading shrink-0 text-base font-bold text-[#082b46]">
                   {priceLabel(plan)}
                 </p>
               </div>
-              <div className="mt-3">
+              <div className="mt-2.5">
                 {isDiscovery ? (
-                  <Button
+                  <MarketingCtaButton
+                    href="/register"
                     size="sm"
+                    variant="soft"
                     className="w-full"
-                    render={<Link href="/register" />}
                   >
                     Commencer gratuitement
-                  </Button>
+                  </MarketingCtaButton>
                 ) : null}
                 {isPass ? (
                   isAuthenticated ? (
@@ -157,17 +162,17 @@ export function PricingPreview({
                       kind="pass"
                       label="Choisir le Pass 30 jours"
                       returnPath="/"
-                      className="w-full"
+                      className={gradientBtn}
                       size="sm"
                     />
                   ) : (
-                    <Button
+                    <MarketingCtaButton
+                      href="/login?callbackUrl=/pricing"
                       size="sm"
                       className="w-full"
-                      render={<Link href="/login?callbackUrl=/pricing" />}
                     >
                       Choisir le Pass 30 jours
-                    </Button>
+                    </MarketingCtaButton>
                   )
                 ) : null}
                 {isPlus ? (
@@ -176,19 +181,17 @@ export function PricingPreview({
                       kind="plus"
                       label="Choisir Sebavio Plus"
                       returnPath="/"
-                      className="w-full"
+                      className={gradientBtn}
                       size="sm"
-                      variant="outline"
                     />
                   ) : (
-                    <Button
+                    <MarketingCtaButton
+                      href="/login?callbackUrl=/pricing"
                       size="sm"
-                      variant="outline"
                       className="w-full"
-                      render={<Link href="/login?callbackUrl=/pricing" />}
                     >
                       Choisir Sebavio Plus
-                    </Button>
+                    </MarketingCtaButton>
                   )
                 ) : null}
               </div>
@@ -199,7 +202,7 @@ export function PricingPreview({
 
       <Link
         href="/pricing"
-        className="text-sebavio-slate hover:text-sebavio-navy mt-5 inline-flex items-center gap-1.5 text-sm font-medium transition-colors"
+        className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-[#3b82f6] transition-colors hover:text-[#8b5cf6]"
       >
         {LANDING.pricing.seeAll}
         <ArrowRight className="size-4" aria-hidden />

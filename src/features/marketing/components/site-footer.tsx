@@ -48,8 +48,8 @@ export function SiteFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-sebavio-night text-white">
-      <div className="mx-auto max-w-[90rem] px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+    <footer className="bg-[#050b1c] text-white">
+      <div className="mx-auto max-w-[100rem] px-4 py-12 sm:px-6 lg:px-10 lg:py-14">
         <div className="grid gap-10 md:grid-cols-[1.5fr_repeat(3,1fr)]">
           <div>
             <Link

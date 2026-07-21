@@ -65,6 +65,11 @@
   --color-sebavio-night-elevated: var(--sebavio-night-elevated);
   --color-sebavio-gradient-from: var(--sebavio-gradient-from);
   --color-sebavio-gradient-to: var(--sebavio-gradient-to);
+  --color-sebavio-cyan: var(--sebavio-cyan);
+  --color-sebavio-landing-text: var(--sebavio-landing-text);
+  --color-sebavio-landing-muted: var(--sebavio-landing-muted);
+  --color-sebavio-landing-soft: var(--sebavio-landing-soft);
+  --color-sebavio-landing-border: var(--sebavio-landing-border);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);

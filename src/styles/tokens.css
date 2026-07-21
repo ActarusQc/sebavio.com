@@ -25,13 +25,21 @@
   --sebavio-orange-soft: #fff3e8;
   --sebavio-surface: #f0f4f8;
 
-  /* Landing marketing (hero nuit / CTA) */
-  --sebavio-night: #0a0b1e;
-  --sebavio-night-elevated: #12132a;
+  /* Landing marketing (hero nuit / CTA) — palette maquette */
+  --sebavio-night: #050b1c;
+  --sebavio-night-elevated: #0c1e38;
+  --sebavio-navy-900: #071329;
+  --sebavio-navy-800: #0c1e38;
   --sebavio-gradient-from: #3b82f6;
   --sebavio-gradient-to: #8b5cf6;
+  --sebavio-cyan: #38bdf8;
+  --sebavio-landing-text: #082b46;
+  --sebavio-landing-muted: #60758a;
+  --sebavio-landing-surface: #ffffff;
+  --sebavio-landing-soft: #f7f9fc;
+  --sebavio-landing-border: #dfe7ef;
   --sebavio-gradient: linear-gradient(
-    90deg,
+    135deg,
     var(--sebavio-gradient-from),
     var(--sebavio-gradient-to)
   );

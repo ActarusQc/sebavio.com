@@ -6,7 +6,7 @@ export function FinalCta() {
   const { finalCta } = LANDING;
 
   return (
-    <section className="bg-sebavio-night relative overflow-hidden py-16 text-white sm:py-20 lg:py-24">
+    <section className="relative overflow-hidden bg-[#050b1c] py-14 text-white sm:py-16 lg:py-[4.5rem]">
       <div
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(59,130,246,0.25),_transparent_55%),radial-gradient(ellipse_at_bottom_right,_rgba(139,92,246,0.2),_transparent_50%)]"
         aria-hidden

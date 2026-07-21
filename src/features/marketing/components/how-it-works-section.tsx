@@ -1,8 +1,8 @@
-import { Car, MessageSquare, Map } from "lucide-react";
+import { Car, Map, MessageSquare } from "lucide-react";
 import { FadeIn } from "@/components/common";
+import type { PricingCardPlan } from "@/features/subscriptions/components/pricing-plans-grid";
 import { LANDING } from "../lib/landing-content";
 import { PricingPreview } from "./pricing-preview";
-import type { PricingCardPlan } from "@/features/subscriptions/components/pricing-plans-grid";
 
 type HowItWorksSectionProps = {
   plans: PricingCardPlan[];
@@ -18,41 +18,39 @@ export function HowItWorksSection({
   return (
     <section
       id="comment-ca-fonctionne"
-      className="bg-sebavio-background scroll-mt-24 py-16 sm:py-20 lg:py-24"
+      className="scroll-mt-24 bg-[#f7f9fc] py-16 lg:py-[5rem]"
       aria-labelledby="how-heading"
     >
-      <div className="mx-auto max-w-[90rem] px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-12">
+      <div className="mx-auto max-w-[100rem] px-4 sm:px-6 lg:px-10">
+        <div className="grid items-start gap-8 lg:grid-cols-[1.7fr_1fr] lg:gap-10">
           <div>
             <FadeIn>
               <h2
                 id="how-heading"
-                className="font-heading text-sebavio-navy text-2xl font-bold tracking-tight sm:text-3xl"
+                className="font-heading text-[1.65rem] font-bold tracking-tight text-[#082b46] sm:text-[2rem]"
               >
                 {howItWorks.title}
               </h2>
             </FadeIn>
 
-            <ol className="mt-8 space-y-5">
+            <ol className="mt-8 grid gap-4 sm:grid-cols-3 sm:gap-5">
               {howItWorks.steps.map((step, index) => (
-                <FadeIn key={step.n} delay={0.04 * index}>
-                  <li className="border-sebavio-sand/40 flex gap-4 rounded-2xl border bg-white p-4 shadow-sm sm:p-5">
+                <FadeIn key={step.n} delay={0.03 * index}>
+                  <li className="flex h-full flex-col rounded-2xl border border-[#dfe7ef] bg-white p-4 shadow-sm">
                     <span
-                      className="font-heading from-sebavio-gradient-from to-sebavio-gradient-to flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-sm font-bold text-white"
+                      className="font-heading mb-3 inline-flex size-9 items-center justify-center rounded-full bg-[linear-gradient(135deg,#3b82f6,#8b5cf6)] text-sm font-bold text-white"
                       aria-hidden
                     >
                       {step.n}
                     </span>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-heading text-sebavio-navy text-base font-semibold sm:text-lg">
-                        {step.title}
-                      </h3>
-                      <p className="text-sebavio-muted mt-1 text-sm leading-relaxed">
-                        {step.body}
-                      </p>
-                      <div className="mt-3">
-                        <StepVisual n={step.n} />
-                      </div>
+                    <h3 className="font-heading text-[0.98rem] font-semibold text-[#082b46]">
+                      {step.title}
+                    </h3>
+                    <p className="mt-1.5 flex-1 text-[0.8125rem] leading-relaxed text-[#60758a]">
+                      {step.body}
+                    </p>
+                    <div className="mt-3">
+                      <StepVisual n={step.n} />
                     </div>
                   </li>
                 </FadeIn>
@@ -60,7 +58,7 @@ export function HowItWorksSection({
             </ol>
           </div>
 
-          <FadeIn delay={0.08} className="lg:pt-14">
+          <FadeIn delay={0.06}>
             <PricingPreview plans={plans} isAuthenticated={isAuthenticated} />
           </FadeIn>
         </div>
@@ -72,29 +70,27 @@ export function HowItWorksSection({
 function StepVisual({ n }: { n: number }) {
   if (n === 1) {
     return (
-      <div className="bg-sebavio-surface inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs">
-        <Car className="text-sebavio-teal size-4" aria-hidden />
-        <span className="text-sebavio-navy font-medium">
-          Véhicule · consommation ajustable
+      <div className="flex items-center gap-2 rounded-xl bg-[#f7f9fc] px-2.5 py-2 text-[0.7rem]">
+        <Car className="size-4 text-[#2dd4bf]" aria-hidden />
+        <span className="font-medium text-[#082b46]">
+          Véhicule · conso. ajustable
         </span>
       </div>
     );
   }
   if (n === 2) {
     return (
-      <div className="bg-sebavio-navy/95 inline-flex max-w-sm items-start gap-2 rounded-xl rounded-tl-sm px-3 py-2 text-xs text-white">
+      <div className="flex items-start gap-2 rounded-xl rounded-tl-sm bg-[#0c1e38] px-2.5 py-2 text-[0.7rem] text-white">
         <MessageSquare className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-        <span>
-          « Nous partons de Montréal vers Percé, avec des pauses familiales. »
-        </span>
+        <span>« Direction Percé, pauses familiales. »</span>
       </div>
     );
   }
   return (
-    <div className="bg-sebavio-surface inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs">
-      <Map className="text-sebavio-slate size-4" aria-hidden />
-      <span className="text-sebavio-navy font-medium">
-        Montréal → Percé · itinéraire + arrêts
+    <div className="flex items-center gap-2 rounded-xl bg-[#f7f9fc] px-2.5 py-2 text-[0.7rem]">
+      <Map className="size-4 text-[#3b82f6]" aria-hidden />
+      <span className="font-medium text-[#082b46]">
+        Montréal → Percé · prêt
       </span>
     </div>
   );

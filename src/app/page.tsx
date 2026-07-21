@@ -35,7 +35,7 @@ export const metadata: Metadata = {
       "Planifiez votre itinéraire, vos arrêts de carburant, vos activités et votre météo avec Sebavio, le copilote intelligent conçu au Québec.",
     images: [
       {
-        url: BRAND_ASSETS.heroNightRoad,
+        url: BRAND_ASSETS.heroLandscape,
         width: 1200,
         height: 630,
         alt: "Sebavio — copilote intelligent de voyage",
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     title: "Sebavio | Copilote intelligent pour planifier vos voyages",
     description:
       "Planifiez votre itinéraire, vos arrêts de carburant, vos activités et votre météo avec Sebavio.",
-    images: [BRAND_ASSETS.heroNightRoad],
+    images: [BRAND_ASSETS.heroLandscape],
   },
   robots: {
     index: true,

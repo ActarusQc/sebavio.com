@@ -17,14 +17,14 @@ export function UseCasesSection() {
 
   return (
     <section
-      className="bg-sebavio-background py-16 sm:py-20 lg:py-24"
+      className="bg-[#f7f9fc] py-16 lg:py-[5rem]"
       aria-labelledby="usecases-heading"
     >
       <div className="mx-auto max-w-[90rem] px-4 sm:px-6 lg:px-8">
         <FadeIn>
           <h2
             id="usecases-heading"
-            className="font-heading text-sebavio-navy mx-auto max-w-3xl text-center text-2xl font-bold tracking-tight sm:text-3xl"
+            className="font-heading mx-auto max-w-3xl text-center text-[1.65rem] font-bold tracking-tight text-[#082b46] sm:text-[2rem]"
           >
             {useCases.title}
           </h2>
@@ -35,14 +35,14 @@ export function UseCasesSection() {
             const Icon = ICONS[item.id as keyof typeof ICONS] ?? Route;
             return (
               <FadeIn key={item.id} delay={0.04 * index}>
-                <article className="border-sebavio-sand/40 flex h-full flex-col rounded-2xl border bg-white p-6 shadow-sm">
-                  <span className="from-sebavio-gradient-from/15 to-sebavio-gradient-to/20 mb-4 inline-flex size-11 items-center justify-center rounded-xl bg-gradient-to-br">
-                    <Icon className="text-sebavio-slate size-5" aria-hidden />
+                <article className="flex h-full flex-col rounded-2xl border border-[#dfe7ef] bg-white p-5 shadow-sm">
+                  <span className="mb-3 inline-flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-[#3b82f6]/15 to-[#8b5cf6]/20">
+                    <Icon className="size-5 text-[#3b82f6]" aria-hidden />
                   </span>
-                  <h3 className="font-heading text-sebavio-navy text-lg font-semibold">
+                  <h3 className="font-heading text-lg font-semibold text-[#082b46]">
                     {item.title}
                   </h3>
-                  <p className="text-sebavio-muted mt-2 text-sm leading-relaxed">
+                  <p className="mt-2 text-[0.9375rem] leading-relaxed text-[#60758a]">
                     {item.body}
                   </p>
                 </article>
