@@ -203,7 +203,10 @@ export async function getTripWeather(
       type: "origin",
       latitude: Number(trip.originLatitude.toString()),
       longitude: Number(trip.originLongitude.toString()),
-      date: trip.departureDate.toISOString().slice(0, 10),
+      date:
+        trip.status === "in_progress"
+          ? new Date().toISOString().slice(0, 10)
+          : trip.departureDate.toISOString().slice(0, 10),
     });
   }
 

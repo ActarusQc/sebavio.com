@@ -61,14 +61,20 @@ function todayIsoLocal(): string {
 }
 
 /**
- * Sélectionne les 3 jours à partir de l’ancre (`location.date` si présent
- * dans `daily`, sinon les 3 premiers jours renvoyés par le provider —
- * déjà réordonnés côté serveur avec le jour cible en tête).
+ * Sélectionne 3 jours. Le serveur met déjà le jour d’ancre en tête.
+ * Si l’ancre est passée, bascule sur aujourd’hui et la suite.
  */
 export function selectThreeDays(
   location: TripWeatherLocation | null | undefined,
+  options?: { todayIso?: string },
 ): WeatherDailyForecast[] {
   if (!location || location.daily.length === 0) return [];
+  const today = options?.todayIso;
+  const anchor = location.date;
+  if (today && anchor && anchor < today) {
+    const fromToday = location.daily.filter((d) => d.date >= today);
+    if (fromToday.length > 0) return fromToday.slice(0, DAYS_PER_BLOCK);
+  }
   return location.daily.slice(0, DAYS_PER_BLOCK);
 }
 
@@ -101,8 +107,8 @@ export function buildDualWeatherBlocks(input: BuildDualWeatherBlocksInput): {
   const left = live ?? origin;
   const leftIsLive = live != null;
 
-  const departureDays = selectThreeDays(left);
-  const arrivalDays = selectThreeDays(destination);
+  const departureDays = selectThreeDays(left, { todayIso: today });
+  const arrivalDays = selectThreeDays(destination, { todayIso: today });
 
   const departure: WeatherDayBlock = {
     kind: leftIsLive ? "live" : "departure",
