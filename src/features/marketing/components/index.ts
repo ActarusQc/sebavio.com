@@ -23,3 +23,10 @@ export {
   MarketingRouteAdaptMini,
   MarketingVehicleMini,
 } from "./marketing-feature-minis";
+export { PricingHero } from "./pricing-hero";
+export { PricingAgentSection } from "./pricing-agent-section";
+export { PricingComparison } from "./pricing-comparison";
+export { PricingChooser } from "./pricing-chooser";
+export { PricingTrust } from "./pricing-trust";
+export { PricingFaq } from "./pricing-faq";
+export { PricingFinalCta } from "./pricing-final-cta";

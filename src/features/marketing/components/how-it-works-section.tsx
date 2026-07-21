@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { FadeIn } from "@/components/common";
-import type { PricingCardPlan } from "@/features/subscriptions/components/pricing-plans-grid";
+import type { PricingCardPlan } from "@/features/subscriptions/lib/resolve-pricing-plans";
 import { LANDING } from "../lib/landing-content";
 import { MARKETING_ASSETS } from "../lib/marketing-assets";
 import { PricingPreview } from "./pricing-preview";

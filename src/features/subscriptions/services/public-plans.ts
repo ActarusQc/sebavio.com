@@ -14,6 +14,13 @@ export type PublicPlanPrice = {
   unitAmount: number;
 };
 
+export type PublicPlanEntitlement = {
+  key: string;
+  enabled: boolean;
+  limit: number | null;
+  value: string | null;
+};
+
 export type PublicOfficialPlan = {
   id: string;
   internalName: string;
@@ -23,6 +30,7 @@ export type PublicOfficialPlan = {
   displayOrder: number;
   isFeatured: boolean;
   currentPrices: PublicPlanPrice[];
+  entitlements: PublicPlanEntitlement[];
 };
 
 const OFFICIAL_SLUG_LIST = Object.values(OFFICIAL_PLAN_SLUGS);
@@ -59,6 +67,14 @@ export async function listPublicOfficialPlans(): Promise<PublicOfficialPlan[]> {
         },
         orderBy: { createdAt: "asc" },
       },
+      entitlements: {
+        select: {
+          key: true,
+          enabled: true,
+          limit: true,
+          value: true,
+        },
+      },
     },
   });
 
@@ -71,5 +87,6 @@ export async function listPublicOfficialPlans(): Promise<PublicOfficialPlan[]> {
     displayOrder: plan.displayOrder,
     isFeatured: plan.isFeatured,
     currentPrices: plan.prices,
+    entitlements: plan.entitlements,
   }));
 }

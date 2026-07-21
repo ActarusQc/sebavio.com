@@ -82,11 +82,18 @@ export {
   UnlockTripPanel,
   PassStatusCard,
   PricingPlansGrid,
-  type PricingCardPlan,
 } from "./components";
+
+export {
+  resolvePricingPlans,
+  type PricingCardPlan,
+} from "./lib/resolve-pricing-plans";
 
 export {
   formatCadCents,
   formatPassPrice,
   formatPlusPrice,
+  formatMonthlyFromAnnual,
 } from "./lib/format-price";
+
+export type { PublicPlanEntitlement } from "./services/public-plans";

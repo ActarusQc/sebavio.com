@@ -13,7 +13,7 @@ import {
   PASS_PRICE_CENTS,
   PLUS_PRICE_CENTS,
 } from "@/features/subscriptions/lib/official-plan-slugs";
-import type { PricingCardPlan } from "@/features/subscriptions/components/pricing-plans-grid";
+import type { PricingCardPlan } from "@/features/subscriptions/lib/resolve-pricing-plans";
 import { cn } from "@/lib/utils";
 import { LANDING } from "../lib/landing-content";
 import { MarketingCtaButton } from "./marketing-cta-button";

@@ -16,5 +16,11 @@ export function formatPassPrice(cents: number = PASS_PRICE_CENTS): string {
 }
 
 export function formatPlusPrice(cents: number = PLUS_PRICE_CENTS): string {
-  return `${formatCadCents(cents)}/an`;
+  return `${formatCadCents(cents)} / an`;
+}
+
+/** Équivalent mensuel discret dérivé du prix annuel (arrondi supérieur au centime). */
+export function formatMonthlyFromAnnual(annualCents: number): string {
+  const monthlyCents = Math.ceil(annualCents / 12);
+  return formatCadCents(monthlyCents);
 }
