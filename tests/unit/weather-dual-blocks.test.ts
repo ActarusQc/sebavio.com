@@ -103,24 +103,44 @@ describe("formatWeatherDayHeading", () => {
 });
 
 describe("selectThreeDays", () => {
-  it("limite à 3 jours dans l’ordre fourni (ancre déjà en tête côté serveur)", () => {
+  it("limite à 3 jours chronologiques à partir de l’ancre", () => {
     const location = loc({
       id: "d",
       type: "destination",
       name: "Percé",
+      date: "2026-07-22",
       daily: [
         day("2026-07-22"),
+        day("2026-07-20"),
         day("2026-07-23"),
         day("2026-07-24"),
         day("2026-07-25"),
       ],
     });
-    const days = selectThreeDays(location);
+    const days = selectThreeDays(location, { todayIso: "2026-07-21" });
     expect(days.map((d) => d.date)).toEqual([
       "2026-07-22",
       "2026-07-23",
       "2026-07-24",
     ]);
+  });
+
+  it("ignore les jours passés mélangés après l’ancre serveur", () => {
+    const location = loc({
+      id: "o",
+      type: "origin",
+      name: "Montréal",
+      date: "2026-07-21",
+      daily: [
+        day("2026-07-21"),
+        day("2026-07-20"),
+        day("2026-07-22"),
+        day("2026-07-23"),
+      ],
+    });
+    expect(
+      selectThreeDays(location, { todayIso: "2026-07-21" }).map((d) => d.date),
+    ).toEqual(["2026-07-21", "2026-07-22", "2026-07-23"]);
   });
 });
 

@@ -61,8 +61,8 @@ function todayIsoLocal(): string {
 }
 
 /**
- * Sélectionne 3 jours. Le serveur met déjà le jour d’ancre en tête.
- * Si l’ancre est passée, bascule sur aujourd’hui et la suite.
+ * Sélectionne 3 jours chronologiques à partir de max(ancre, aujourd’hui).
+ * Évite les jours passés encore présents dans la liste provider.
  */
 export function selectThreeDays(
   location: TripWeatherLocation | null | undefined,
@@ -71,11 +71,21 @@ export function selectThreeDays(
   if (!location || location.daily.length === 0) return [];
   const today = options?.todayIso;
   const anchor = location.date;
-  if (today && anchor && anchor < today) {
-    const fromToday = location.daily.filter((d) => d.date >= today);
-    if (fromToday.length > 0) return fromToday.slice(0, DAYS_PER_BLOCK);
+  const start =
+    today && anchor
+      ? anchor < today
+        ? today
+        : anchor
+      : (anchor ?? today ?? null);
+
+  const sorted = [...location.daily].sort((a, b) =>
+    a.date.localeCompare(b.date),
+  );
+  if (start) {
+    const from = sorted.filter((d) => d.date >= start);
+    if (from.length > 0) return from.slice(0, DAYS_PER_BLOCK);
   }
-  return location.daily.slice(0, DAYS_PER_BLOCK);
+  return sorted.slice(0, DAYS_PER_BLOCK);
 }
 
 export type BuildDualWeatherBlocksInput = {
