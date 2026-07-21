@@ -207,6 +207,15 @@ model UserProfile {
   timezone     String   @default("America/Toronto") @db.VarChar(100)
   travelStyle  String?  @map("travel_style") @db.VarChar(50)
   budgetLevel  String?  @map("budget_level") @db.VarChar(30)
+  /// Adresse de domicile (départ proposé — planification IA).
+  homeAddressLabel      String?  @map("home_address_label") @db.Text
+  homeAddressPlaceId    String?  @map("home_address_place_id") @db.VarChar(255)
+  homeAddressLatitude   Decimal? @map("home_address_latitude") @db.Decimal(10, 7)
+  homeAddressLongitude  Decimal? @map("home_address_longitude") @db.Decimal(10, 7)
+  homeAddressCity       String?  @map("home_address_city") @db.VarChar(120)
+  homeAddressProvince   String?  @map("home_address_province") @db.VarChar(120)
+  homeAddressPostalCode String?  @map("home_address_postal_code") @db.VarChar(20)
+  homeAddressCountry    String?  @map("home_address_country") @db.VarChar(2)
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 

@@ -5,6 +5,7 @@ import type {
   TripPlannerAccessDto,
   TripPlannerSessionDto,
 } from "@/features/ai-trip-planner/types";
+import type { AddressSelection } from "@/types/address";
 
 type ApiOk<T> = { success: true; data: T };
 type ApiFail = {
@@ -183,6 +184,54 @@ export function useAITripPlanningSession() {
     }
   }, [session]);
 
+  const selectPlace = useCallback(
+    async (
+      field: "origin" | "destination",
+      options: { useHome?: boolean; address?: AddressSelection | null },
+    ) => {
+      if (!session || sending) return;
+      setSending(true);
+      setError(null);
+      try {
+        const res = await fetch(
+          `/api/ai-trip-planner/session/${session.id}/place`,
+          {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              field,
+              useHome: Boolean(options.useHome),
+              address: options.address
+                ? {
+                    formattedAddress: options.address.formattedAddress,
+                    placeId: options.address.placeId,
+                    latitude: options.address.latitude,
+                    longitude: options.address.longitude,
+                    city: options.address.city,
+                    province: options.address.province,
+                    postalCode: options.address.postalCode,
+                    country: options.address.country,
+                  }
+                : null,
+            }),
+          },
+        );
+        const data = await parseJson<{ session: TripPlannerSessionDto }>(res);
+        startTransition(() => setSession(data.session));
+      } catch (e) {
+        setError(
+          e instanceof Error
+            ? e.message
+            : "Impossible d’enregistrer l’adresse. Réessayez.",
+        );
+      } finally {
+        setSending(false);
+      }
+    },
+    [session, sending],
+  );
+
   const createTrip = useCallback(async () => {
     if (!session || createLockRef.current || creating) return null;
     createLockRef.current = true;
@@ -227,6 +276,7 @@ export function useAITripPlanningSession() {
     error,
     successTripId,
     sendMessage,
+    selectPlace,
     restart,
     createTrip,
     retry: bootstrap,

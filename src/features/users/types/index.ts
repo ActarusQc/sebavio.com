@@ -1,3 +1,14 @@
+export type HomeAddressDto = {
+  label: string;
+  placeId: string;
+  latitude: number;
+  longitude: number;
+  city: string | null;
+  province: string | null;
+  postalCode: string | null;
+  country: string | null;
+};
+
 export type UserProfileDto = {
   userId: string;
   firstName: string;
@@ -8,6 +19,7 @@ export type UserProfileDto = {
   timezone: string;
   travelStyle: string | null;
   budgetLevel: string | null;
+  homeAddress: HomeAddressDto | null;
   updatedAt: string;
 };
 

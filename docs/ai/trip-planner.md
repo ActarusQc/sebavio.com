@@ -3,18 +3,33 @@
 Assistant spécialisé pour préparer et créer un **nouveau voyage** Sebavio.
 Distinct de l’agent conversationnel de voyage (`docs/ai/trip-assistant.md`).
 
+## Contexte géographique
+
+Par défaut : Québec / Canada, français canadien, kilomètres, CAD.
+Suggestions de départ : domicile → récents → profil → villes québécoises → saisie manuelle.
+Jamais de Paris / Lyon / Marseille spontanément sans indice Europe/France.
+
+## Adresse de domicile
+
+Champs `UserProfile.home_address_*` (nullable). Section Paramètres « Adresse de domicile ».
+Réutilise `AddressAutocomplete`. L’assistant propose « partir du domicile à {ville} » ; le résumé affiche `Domicile — {ville}`.
+
 ## Architecture
 
 - Feature : `src/features/ai-trip-planner/`
 - Page : `/dashboard/ai` (libellé menu « Planifier avec l’IA »)
 - Persistance : table `ai_trip_planning_sessions`
-- IA : `createAiProvider().generateRawJsonResponse` + schéma Zod `tripPlanningAiResponseSchema`
+- IA : `createAiProvider().generateRawJsonResponse` + schéma Zod + patch `tripDraftPatch`
+- Adresses : `AddressAutocomplete` + `POST …/place` (pas d’invention de placeId par l’IA)
 - Création : réutilise `createTrip`, `addStop`, `rebuildTripRouteFromCanonicalData`, `estimateTripFuel`
 
-## Schéma de réponse IA
+## Résilience des réponses IA
 
-Voir `src/features/ai-trip-planner/schemas/draft.ts` (`tripPlanningAiResponseSchema`).
-Le serveur valide, nettoie (IDs véhicule/groupe), géocode et recalcule distances/durées.
+1. Validation Zod (champs inconnus encore optionnels / null)
+2. Normalisation (markdown, enums FR, listes absentes → `[]`)
+3. Une seule nouvelle tentative automatique de réparation
+4. Fallback conversationnel + conservation du dernier brouillon
+5. Erreur utilisateur seulement après échec des niveaux précédents
 
 ## API
 
@@ -23,6 +38,7 @@ Le serveur valide, nettoie (IDs véhicule/groupe), géocode et recalcule distanc
 | GET/POST | `/api/ai-trip-planner/session` | Session active / création |
 | GET/DELETE | `/api/ai-trip-planner/session/:id` | Lecture / abandon |
 | POST | `/api/ai-trip-planner/session/:id/message` | Message utilisateur |
+| POST | `/api/ai-trip-planner/session/:id/place` | Confirmation lieu (adresse validée / domicile) |
 | POST | `/api/ai-trip-planner/session/:id/recalculate` | Recalcul itinéraire |
 | POST | `/api/ai-trip-planner/session/:id/create-trip` | Création confirmée (`confirm: true`) |
 
@@ -32,21 +48,16 @@ Le serveur valide, nettoie (IDs véhicule/groupe), géocode et recalcule distanc
 - Limite de rate : `assertAiRateLimit`
 - Création de voyage : `assertCanCreateTrip` via `createTrip`
 
-## Variables d’environnement
-
-Réutilise la configuration IA existante (`AI_PROVIDER`, clés fournisseur, etc.).
-Aucune nouvelle clé secrète spécifique.
-
 ## Tests
 
 ```bash
-npm run test -- tests/unit/ai-trip-planner.test.ts
+npx vitest run tests/unit/ai-trip-planner*.test.ts tests/unit/home-address.test.ts tests/integration/ai-trip-planner.test.ts
 ```
 
 ## Procédure de validation
 
-1. Ouvrir https://sebavio.com/dashboard/ai
-2. Répondre aux questions (départ, destination, dates, véhicule)
-3. Vérifier le résumé évolutif
-4. Confirmer « Créer le voyage »
-5. Vérifier la fiche voyage créée
+1. Enregistrer un domicile sur https://sebavio.com/dashboard/settings
+2. Ouvrir https://sebavio.com/dashboard/ai
+3. Road trip → accepter le domicile → destination → dates → véhicule
+4. Vérifier le résumé (`Domicile — {ville}`)
+5. Confirmer « Créer le voyage »

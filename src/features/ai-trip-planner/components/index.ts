@@ -7,5 +7,6 @@ export { AITripComposer } from "./ai-trip-composer";
 export { AITripSummary } from "./ai-trip-summary";
 export { AITripStats } from "./ai-trip-stats";
 export { AISuggestions } from "./ai-suggestions";
+export { AIAddressInput } from "./ai-address-input";
 export { CreateTripConfirmationDialog } from "./create-trip-confirmation-dialog";
 export { RestartPlanningDialog } from "./restart-planning-dialog";

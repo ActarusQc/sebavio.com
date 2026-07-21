@@ -10,7 +10,10 @@ import {
   updateProfile,
   updatePreferences,
   changePassword,
+  upsertHomeAddress,
+  clearHomeAddress,
 } from "@/features/users/services";
+import { homeAddressSchema } from "@/features/users/schemas/home-address";
 import { isAppError } from "@/lib/errors";
 
 export type UsersActionResult =
@@ -99,6 +102,61 @@ export async function updatePreferencesAction(
       return { ok: false, message: error.message };
     }
     return { ok: false, message: "Enregistrement impossible" };
+  }
+}
+
+export async function upsertHomeAddressAction(
+  _prev: UsersActionResult | undefined,
+  formData: FormData,
+): Promise<UsersActionResult> {
+  const lat = formString(formData, "homeAddressLatitude");
+  const lng = formString(formData, "homeAddressLongitude");
+  const parsed = homeAddressSchema.safeParse({
+    homeAddressLabel: formString(formData, "homeAddressLabel"),
+    homeAddressPlaceId: formString(formData, "homeAddressPlaceId"),
+    homeAddressLatitude: lat != null ? Number(lat) : Number.NaN,
+    homeAddressLongitude: lng != null ? Number(lng) : Number.NaN,
+    homeAddressCity: formNullable(formData, "homeAddressCity"),
+    homeAddressProvince: formNullable(formData, "homeAddressProvince"),
+    homeAddressPostalCode: formNullable(formData, "homeAddressPostalCode"),
+    homeAddressCountry: formNullable(formData, "homeAddressCountry"),
+  });
+
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message:
+        parsed.error.issues[0]?.message ??
+        "Sélectionnez une adresse valide dans les suggestions.",
+    };
+  }
+
+  try {
+    const user = await requireActiveUser();
+    await upsertHomeAddress(user.id, parsed.data);
+    return { ok: true, message: "Adresse de domicile enregistrée." };
+  } catch (error) {
+    if (isAppError(error)) {
+      return { ok: false, message: error.message };
+    }
+    return { ok: false, message: "Enregistrement impossible" };
+  }
+}
+
+export async function clearHomeAddressAction(
+  _prev: UsersActionResult | undefined,
+  _formData: FormData,
+): Promise<UsersActionResult> {
+  void _formData;
+  try {
+    const user = await requireActiveUser();
+    await clearHomeAddress(user.id);
+    return { ok: true, message: "Adresse de domicile supprimée." };
+  } catch (error) {
+    if (isAppError(error)) {
+      return { ok: false, message: error.message };
+    }
+    return { ok: false, message: "Suppression impossible" };
   }
 }
 

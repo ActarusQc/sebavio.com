@@ -61,6 +61,7 @@ export async function ensureDraftPlacesGeocoded(
   ) {
     const resolved = await resolvePlaceName(userId, next.origin.name);
     next.origin = {
+      ...next.origin,
       name: resolved.name,
       placeId: resolved.placeId,
       latitude: resolved.latitude,
@@ -74,6 +75,7 @@ export async function ensureDraftPlacesGeocoded(
   ) {
     const resolved = await resolvePlaceName(userId, next.destination.name);
     next.destination = {
+      ...next.destination,
       name: resolved.name,
       placeId: resolved.placeId,
       latitude: resolved.latitude,

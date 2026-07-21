@@ -1,5 +1,6 @@
 import {
   emptyTripDraft,
+  placeRefSchema,
   tripDraftSchema,
   type TripDraftParsed,
 } from "@/features/ai-trip-planner/schemas/draft";
@@ -9,16 +10,59 @@ export type OwnedGroupRef = { id: string; name: string };
 
 function placeNameChanged(
   prev: TripDraftParsed["origin"],
-  next: TripDraftParsed["origin"],
+  next: TripDraftParsed["origin"] | null | undefined,
 ): boolean {
+  if (!next?.name?.trim()) return false;
   const a = (prev.name ?? "").trim().toLowerCase();
-  const b = (next.name ?? "").trim().toLowerCase();
-  return Boolean(b) && a !== b;
+  const b = next.name.trim().toLowerCase();
+  return a !== b;
+}
+
+function mergePlace(
+  prev: TripDraftParsed["origin"],
+  incoming: unknown,
+): TripDraftParsed["origin"] {
+  if (incoming == null) return prev;
+  const parsed = placeRefSchema.safeParse(incoming);
+  if (!parsed.success) return prev;
+  const next = parsed.data;
+  if (!next.name?.trim()) return prev;
+
+  const changed = placeNameChanged(prev, next);
+  if (changed) {
+    return {
+      name: next.name,
+      placeId: null,
+      latitude: null,
+      longitude: null,
+      city: next.city,
+      province: next.province,
+      postalCode: null,
+      country: next.country,
+      isHome: false,
+    };
+  }
+
+  return {
+    name: prev.name ?? next.name,
+    placeId: prev.placeId,
+    latitude: prev.latitude,
+    longitude: prev.longitude,
+    city: prev.city ?? next.city,
+    province: prev.province ?? next.province,
+    postalCode: prev.postalCode,
+    country: prev.country ?? next.country,
+    isHome: prev.isHome,
+  };
+}
+
+function pickScalar<T>(incoming: T | null | undefined, previous: T): T {
+  if (incoming === undefined || incoming === null) return previous;
+  return incoming;
 }
 
 /**
- * Fusionne le brouillon IA avec l’existant.
- * Ne fait jamais confiance aux IDs proposés par le modèle hors listes propriétaires.
+ * Fusionne un patch / brouillon IA avec l’existant.
  */
 export function sanitizeAndMergeDraft(input: {
   previous: TripDraftParsed;
@@ -26,33 +70,40 @@ export function sanitizeAndMergeDraft(input: {
   ownedVehicles: OwnedVehicleRef[];
   ownedGroups: OwnedGroupRef[];
 }): TripDraftParsed {
-  const parsedIncoming = tripDraftSchema.safeParse(input.incoming);
-  const incoming = parsedIncoming.success
-    ? parsedIncoming.data
-    : emptyTripDraft();
+  const raw =
+    input.incoming && typeof input.incoming === "object"
+      ? (input.incoming as Record<string, unknown>)
+      : {};
   const prev = input.previous;
 
   const vehicleIds = new Set(input.ownedVehicles.map((v) => v.id));
   const groupIds = new Set(input.ownedGroups.map((g) => g.id));
 
-  let vehicleId = incoming.vehicleId;
-  if (vehicleId && !vehicleIds.has(vehicleId)) {
-    vehicleId =
-      prev.vehicleId && vehicleIds.has(prev.vehicleId) ? prev.vehicleId : null;
-  }
-  if (!vehicleId && prev.vehicleId && vehicleIds.has(prev.vehicleId)) {
-    vehicleId = prev.vehicleId;
-  }
+  let vehicleId = pickScalar(
+    typeof raw.vehicleId === "string" || raw.vehicleId === null
+      ? (raw.vehicleId as string | null)
+      : undefined,
+    prev.vehicleId,
+  );
+  vehicleId = rejectForeignVehicleId(vehicleId, vehicleIds);
 
   const vehicleLabel =
     (vehicleId
       ? input.ownedVehicles.find((v) => v.id === vehicleId)?.label
       : null) ??
-    incoming.vehicleLabel ??
-    prev.vehicleLabel ??
-    null;
+    pickScalar(
+      typeof raw.vehicleLabel === "string" || raw.vehicleLabel === null
+        ? (raw.vehicleLabel as string | null)
+        : undefined,
+      prev.vehicleLabel,
+    );
 
-  let travelGroupId = incoming.travelGroupId;
+  let travelGroupId = pickScalar(
+    typeof raw.travelGroupId === "string" || raw.travelGroupId === null
+      ? (raw.travelGroupId as string | null)
+      : undefined,
+    prev.travelGroupId,
+  );
   if (travelGroupId && !groupIds.has(travelGroupId)) {
     travelGroupId =
       prev.travelGroupId && groupIds.has(prev.travelGroupId)
@@ -60,90 +111,168 @@ export function sanitizeAndMergeDraft(input: {
         : null;
   }
 
-  const originChanged = placeNameChanged(prev.origin, incoming.origin);
-  const destChanged = placeNameChanged(prev.destination, incoming.destination);
+  const origin = mergePlace(prev.origin, raw.origin);
+  const destination = mergePlace(prev.destination, raw.destination);
 
-  // placeId : jamais de confiance à l’IA (re-géocodage serveur ensuite).
-  const origin = {
-    name: incoming.origin.name ?? prev.origin.name,
-    placeId: null,
-    latitude: originChanged
-      ? (incoming.origin.latitude ?? null)
-      : (incoming.origin.latitude ?? prev.origin.latitude),
-    longitude: originChanged
-      ? (incoming.origin.longitude ?? null)
-      : (incoming.origin.longitude ?? prev.origin.longitude),
-  };
+  const stopsRaw = Array.isArray(raw.stops) ? raw.stops : null;
+  const activitiesRaw = Array.isArray(raw.activities) ? raw.activities : null;
+  const suggestionsRaw = Array.isArray(raw.suggestions)
+    ? raw.suggestions
+    : null;
 
-  const destination = {
-    name: incoming.destination.name ?? prev.destination.name,
-    placeId: null,
-    latitude: destChanged
-      ? (incoming.destination.latitude ?? null)
-      : (incoming.destination.latitude ?? prev.destination.latitude),
-    longitude: destChanged
-      ? (incoming.destination.longitude ?? null)
-      : (incoming.destination.longitude ?? prev.destination.longitude),
-  };
-
-  const mergedStops =
-    incoming.stops.length > 0
-      ? incoming.stops.map((s) => ({
-          ...s,
-          placeId: null,
-        }))
-      : prev.stops;
-
-  const mergedActivities =
-    incoming.activities.length > 0
-      ? incoming.activities.map((a) => ({
-          ...a,
-          placeId: null,
-        }))
-      : prev.activities;
-
-  const suggestions =
-    incoming.suggestions.length > 0 ? incoming.suggestions : prev.suggestions;
-
-  return tripDraftSchema.parse({
-    title: incoming.title ?? prev.title,
+  const draftCandidate = {
+    title: pickScalar(
+      typeof raw.title === "string" || raw.title === null
+        ? (raw.title as string | null)
+        : undefined,
+      prev.title,
+    ),
     origin,
     destination,
-    departureDate: incoming.departureDate ?? prev.departureDate,
-    returnDate: incoming.returnDate ?? prev.returnDate,
-    durationDays: incoming.durationDays ?? prev.durationDays,
-    travelerCount: incoming.travelerCount ?? prev.travelerCount,
-    adults: incoming.adults ?? prev.adults,
-    children: incoming.children ?? prev.children,
+    departureDate: pickScalar(
+      typeof raw.departureDate === "string" || raw.departureDate === null
+        ? (raw.departureDate as string | null)
+        : undefined,
+      prev.departureDate,
+    ),
+    returnDate: pickScalar(
+      typeof raw.returnDate === "string" || raw.returnDate === null
+        ? (raw.returnDate as string | null)
+        : undefined,
+      prev.returnDate,
+    ),
+    durationDays: pickScalar(
+      typeof raw.durationDays === "number" || raw.durationDays === null
+        ? (raw.durationDays as number | null)
+        : undefined,
+      prev.durationDays,
+    ),
+    travelerCount: pickScalar(
+      typeof raw.travelerCount === "number" || raw.travelerCount === null
+        ? (raw.travelerCount as number | null)
+        : undefined,
+      prev.travelerCount,
+    ),
+    adults: pickScalar(
+      typeof raw.adults === "number" || raw.adults === null
+        ? (raw.adults as number | null)
+        : undefined,
+      prev.adults,
+    ),
+    children: pickScalar(
+      typeof raw.children === "number" || raw.children === null
+        ? (raw.children as number | null)
+        : undefined,
+      prev.children,
+    ),
     vehicleId,
     vehicleLabel,
     travelGroupId,
-    budgetLevel: incoming.budgetLevel ?? prev.budgetLevel,
-    travelStyle:
-      incoming.travelStyle.length > 0 ? incoming.travelStyle : prev.travelStyle,
-    preferences:
-      incoming.preferences.length > 0 ? incoming.preferences : prev.preferences,
-    constraints:
-      incoming.constraints.length > 0 ? incoming.constraints : prev.constraints,
-    lodgingType: incoming.lodgingType ?? prev.lodgingType,
-    pace: incoming.pace ?? prev.pace,
-    stops: mergedStops,
-    activities: mergedActivities,
-    suggestions,
-    estimatedDistanceKm:
-      incoming.estimatedDistanceKm ?? prev.estimatedDistanceKm,
-    estimatedDurationMinutes:
-      incoming.estimatedDurationMinutes ?? prev.estimatedDurationMinutes,
-    estimatedFuelStops: incoming.estimatedFuelStops ?? prev.estimatedFuelStops,
-    softWarnings: incoming.softWarnings,
+    budgetLevel: pickScalar(
+      typeof raw.budgetLevel === "string" || raw.budgetLevel === null
+        ? (raw.budgetLevel as TripDraftParsed["budgetLevel"])
+        : undefined,
+      prev.budgetLevel,
+    ),
+    travelStyle: Array.isArray(raw.travelStyle)
+      ? (raw.travelStyle as string[])
+      : prev.travelStyle,
+    preferences: Array.isArray(raw.preferences)
+      ? (raw.preferences as string[])
+      : prev.preferences,
+    constraints: Array.isArray(raw.constraints)
+      ? (raw.constraints as string[])
+      : prev.constraints,
+    lodgingType: pickScalar(
+      typeof raw.lodgingType === "string" || raw.lodgingType === null
+        ? (raw.lodgingType as string | null)
+        : undefined,
+      prev.lodgingType,
+    ),
+    pace: pickScalar(
+      typeof raw.pace === "string" || raw.pace === null
+        ? (raw.pace as string | null)
+        : undefined,
+      prev.pace,
+    ),
+    stops: stopsRaw ?? prev.stops,
+    activities: activitiesRaw ?? prev.activities,
+    suggestions: suggestionsRaw ?? prev.suggestions,
+    estimatedDistanceKm: pickScalar(
+      typeof raw.estimatedDistanceKm === "number" ||
+        raw.estimatedDistanceKm === null
+        ? (raw.estimatedDistanceKm as number | null)
+        : undefined,
+      prev.estimatedDistanceKm,
+    ),
+    estimatedDurationMinutes: pickScalar(
+      typeof raw.estimatedDurationMinutes === "number" ||
+        raw.estimatedDurationMinutes === null
+        ? (raw.estimatedDurationMinutes as number | null)
+        : undefined,
+      prev.estimatedDurationMinutes,
+    ),
+    estimatedFuelStops: pickScalar(
+      typeof raw.estimatedFuelStops === "number" ||
+        raw.estimatedFuelStops === null
+        ? (raw.estimatedFuelStops as number | null)
+        : undefined,
+      prev.estimatedFuelStops,
+    ),
+    softWarnings: Array.isArray(raw.softWarnings)
+      ? (raw.softWarnings as string[])
+      : prev.softWarnings,
+  };
+
+  const parsed = tripDraftSchema.safeParse({
+    ...draftCandidate,
+    stops: (draftCandidate.stops as TripDraftParsed["stops"]).map((s) => ({
+      ...s,
+      placeId: null,
+    })),
+    activities: (
+      draftCandidate.activities as TripDraftParsed["activities"]
+    ).map((a) => ({
+      ...a,
+      placeId: null,
+    })),
   });
+
+  return parsed.success ? parsed.data : prev;
 }
 
-/** Refuse un vehicleId qui n’appartient pas à l’utilisateur. */
 export function rejectForeignVehicleId(
   vehicleId: string | null | undefined,
   ownedVehicleIds: ReadonlySet<string>,
 ): string | null {
   if (!vehicleId) return null;
   return ownedVehicleIds.has(vehicleId) ? vehicleId : null;
+}
+
+export function placeFromAddressSelection(input: {
+  formattedAddress: string;
+  placeId: string;
+  latitude: number;
+  longitude: number;
+  city: string | null;
+  province: string | null;
+  postalCode: string | null;
+  country: string | null;
+  isHome?: boolean;
+}): TripDraftParsed["origin"] {
+  return placeRefSchema.parse({
+    name: input.formattedAddress,
+    placeId: input.placeId,
+    latitude: input.latitude,
+    longitude: input.longitude,
+    city: input.city,
+    province: input.province,
+    postalCode: input.postalCode,
+    country: input.country,
+    isHome: Boolean(input.isHome),
+  });
+}
+
+export function emptyPlaceRef(): TripDraftParsed["origin"] {
+  return emptyTripDraft().origin;
 }

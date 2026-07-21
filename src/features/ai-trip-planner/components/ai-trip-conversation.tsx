@@ -4,14 +4,28 @@ import { useEffect, useRef } from "react";
 import { Loader2, Sparkles } from "lucide-react";
 import { AITripComposer } from "@/features/ai-trip-planner/components/ai-trip-composer";
 import { AITripMessage } from "@/features/ai-trip-planner/components/ai-trip-message";
-import type { PlannerMessage } from "@/features/ai-trip-planner/types";
+import { AIAddressInput } from "@/features/ai-trip-planner/components/ai-address-input";
+import type {
+  OriginSuggestionDto,
+  PlannerMessage,
+  RequestedInputDto,
+} from "@/features/ai-trip-planner/types";
+import type { AddressSelection } from "@/types/address";
 
 type Props = {
   messages: PlannerMessage[];
   sending?: boolean;
   disabled?: boolean;
   error?: string | null;
+  requestedInput?: RequestedInputDto;
+  homeCity?: string | null;
+  originSuggestions?: OriginSuggestionDto[];
   onSend: (content: string) => void;
+  onSelectAddress?: (
+    field: "origin" | "destination",
+    address: AddressSelection,
+  ) => void;
+  onUseHome?: () => void;
   onRetry?: () => void;
 };
 
@@ -20,7 +34,12 @@ export function AITripConversation({
   sending,
   disabled,
   error,
+  requestedInput,
+  homeCity,
+  originSuggestions,
   onSend,
+  onSelectAddress,
+  onUseHome,
   onRetry,
 }: Props) {
   const listRef = useRef<HTMLDivElement>(null);
@@ -30,7 +49,7 @@ export function AITripConversation({
     const el = listRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
-  }, [messages, sending]);
+  }, [messages, sending, requestedInput]);
 
   useEffect(() => {
     if (!liveRef.current) return;
@@ -46,6 +65,13 @@ export function AITripConversation({
     }
     return -1;
   })();
+
+  const showAddress =
+    !disabled &&
+    !sending &&
+    requestedInput?.type === "address" &&
+    (requestedInput.field === "origin" ||
+      requestedInput.field === "destination");
 
   return (
     <section className="flex min-h-[28rem] flex-col overflow-hidden rounded-2xl border border-[#dfe7ef] bg-white shadow-[0_8px_28px_rgba(8,43,70,0.05)] lg:min-h-[36rem]">
@@ -74,6 +100,28 @@ export function AITripConversation({
             quickRepliesDisabled={disabled || sending}
           />
         ))}
+
+        {showAddress && onSelectAddress ? (
+          <AIAddressInput
+            field={requestedInput.field as "origin" | "destination"}
+            placeholder={requestedInput.placeholder}
+            homeCity={homeCity}
+            suggestions={
+              requestedInput.field === "origin" ? originSuggestions : []
+            }
+            disabled={disabled || sending}
+            onSelectAddress={(addr) =>
+              onSelectAddress(
+                requestedInput.field as "origin" | "destination",
+                addr,
+              )
+            }
+            onUseHome={
+              requestedInput.field === "origin" ? onUseHome : undefined
+            }
+            onQuickCity={onSend}
+          />
+        ) : null}
 
         {sending ? (
           <div

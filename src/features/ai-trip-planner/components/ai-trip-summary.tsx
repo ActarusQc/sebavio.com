@@ -18,6 +18,7 @@ import { AITripStats } from "@/features/ai-trip-planner/components/ai-trip-stats
 import {
   formatBudgetLevel,
   formatDateRangeFr,
+  formatPlaceSummary,
   formatTravelers,
   MISSING_FIELD_LABELS,
 } from "@/features/ai-trip-planner/lib/format";
@@ -113,12 +114,12 @@ export function AITripSummary({
         <SummaryRow
           icon={<MapPin />}
           label="Départ"
-          value={draft.origin.name}
+          value={formatPlaceSummary(draft.origin)}
         />
         <SummaryRow
           icon={<Compass />}
           label="Destination"
-          value={draft.destination.name}
+          value={formatPlaceSummary(draft.destination)}
         />
         <SummaryRow icon={<CalendarDays />} label="Dates" value={dates} />
         <SummaryRow icon={<Users />} label="Voyageurs" value={travelers} />

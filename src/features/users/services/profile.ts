@@ -7,20 +7,12 @@ import {
   type UpdateProfileInput,
 } from "@/features/users/schemas";
 import { defaultProfileData } from "@/features/users/services/defaults";
+import { getHomeAddress } from "@/features/users/services/home-address";
 import type { CurrentUserDto, UserProfileDto } from "@/features/users/types";
 
-function toProfileDto(row: {
-  userId: string;
-  firstName: string;
-  lastName: string;
-  language: string;
-  country: string;
-  currency: string;
-  timezone: string;
-  travelStyle: string | null;
-  budgetLevel: string | null;
-  updatedAt: Date;
-}): UserProfileDto {
+async function toProfileDto(userId: string): Promise<UserProfileDto> {
+  const row = await prisma.userProfile.findUniqueOrThrow({ where: { userId } });
+  const homeAddress = await getHomeAddress(userId);
   return {
     userId: row.userId,
     firstName: row.firstName,
@@ -31,6 +23,7 @@ function toProfileDto(row: {
     timezone: row.timezone,
     travelStyle: row.travelStyle,
     budgetLevel: row.budgetLevel,
+    homeAddress,
     updatedAt: row.updatedAt.toISOString(),
   };
 }
@@ -65,7 +58,7 @@ export async function getCurrentUserWithProfile(
     throw new AppError("USR_001", "Utilisateur introuvable", 404);
   }
 
-  const profile = await ensureProfile(userId);
+  await ensureProfile(userId);
 
   return {
     id: user.id,
@@ -73,7 +66,7 @@ export async function getCurrentUserWithProfile(
     role: user.role,
     status: user.status,
     emailVerified: user.emailVerified?.toISOString() ?? null,
-    profile: toProfileDto(profile),
+    profile: await toProfileDto(userId),
   };
 }
 
@@ -152,5 +145,5 @@ export async function updateProfile(
     ipAddress,
   });
 
-  return toProfileDto(updated);
+  return toProfileDto(userId);
 }

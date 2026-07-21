@@ -18,3 +18,8 @@ export {
   updatePreferences,
 } from "./preferences";
 export { changePassword } from "./change-password";
+export {
+  getHomeAddress,
+  upsertHomeAddress,
+  clearHomeAddress,
+} from "./home-address";

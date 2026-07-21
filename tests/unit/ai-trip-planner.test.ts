@@ -173,6 +173,6 @@ describe("schéma réponse IA", () => {
       JSON.parse(result.rawText),
     );
     expect(parsed.assistantMessage.length).toBeGreaterThan(5);
-    expect(parsed.tripDraft).toBeTruthy();
+    expect(parsed.tripDraftPatch ?? parsed.tripDraft).toBeTruthy();
   });
 });

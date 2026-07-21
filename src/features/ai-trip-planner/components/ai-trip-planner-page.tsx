@@ -29,6 +29,7 @@ export function AITripPlannerPage() {
     error,
     successTripId,
     sendMessage,
+    selectPlace,
     restart,
     createTrip,
     retry,
@@ -128,7 +129,14 @@ export function AITripPlannerPage() {
             sending={sending}
             disabled={session.status === "created" || creating}
             error={error}
+            requestedInput={session.requestedInput}
+            homeCity={session.homeCity}
+            originSuggestions={session.originSuggestions}
             onSend={(content) => void sendMessage(content)}
+            onSelectAddress={(field, address) =>
+              void selectPlace(field, { address })
+            }
+            onUseHome={() => void selectPlace("origin", { useHome: true })}
             onRetry={() => void retry()}
           />
         </div>

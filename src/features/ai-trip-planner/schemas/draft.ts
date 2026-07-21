@@ -18,16 +18,40 @@ const nullableNumber = z
 export const placeRefSchema = z
   .object({
     name: nullableString(500),
+    /** Alias éventuel du modèle pour name. */
+    label: nullableString(500).optional(),
     placeId: nullableString(255),
     latitude: nullableNumber,
     longitude: nullableNumber,
+    city: nullableString(120),
+    province: nullableString(120),
+    postalCode: nullableString(20),
+    country: nullableString(2),
+    isHome: z.boolean().optional().default(false),
   })
   .transform((p) => ({
-    name: p.name ?? null,
+    name: p.name ?? p.label ?? null,
     placeId: p.placeId ?? null,
     latitude: p.latitude ?? null,
     longitude: p.longitude ?? null,
+    city: p.city ?? null,
+    province: p.province ?? null,
+    postalCode: p.postalCode ?? null,
+    country: p.country ?? null,
+    isHome: Boolean(p.isHome),
   }));
+
+const emptyPlace = {
+  name: null,
+  placeId: null,
+  latitude: null,
+  longitude: null,
+  city: null,
+  province: null,
+  postalCode: null,
+  country: null,
+  isHome: false,
+};
 
 export const stopCategorySchema = z.enum([
   "activity",
@@ -117,18 +141,8 @@ export const sessionStatusSchema = z.enum([
 export const tripDraftSchema = z
   .object({
     title: nullableString(150),
-    origin: placeRefSchema.default({
-      name: null,
-      placeId: null,
-      latitude: null,
-      longitude: null,
-    }),
-    destination: placeRefSchema.default({
-      name: null,
-      placeId: null,
-      latitude: null,
-      longitude: null,
-    }),
+    origin: placeRefSchema.default(emptyPlace),
+    destination: placeRefSchema.default(emptyPlace),
     departureDate: nullableString(40),
     returnDate: nullableString(40),
     durationDays: z
@@ -214,16 +228,69 @@ export function emptyTripDraft(): TripDraftParsed {
   return tripDraftSchema.parse({});
 }
 
+export const plannerStepSchema = z.enum([
+  "trip_type",
+  "origin",
+  "destination",
+  "dates",
+  "travelers",
+  "vehicle",
+  "preferences",
+  "proposal",
+  "confirmation",
+]);
+
+export const requestedInputSchema = z
+  .object({
+    type: z.enum(["text", "address", "date", "choice", "number", "vehicle"]),
+    field: z
+      .enum([
+        "origin",
+        "destination",
+        "activity",
+        "detour",
+        "lodging",
+        "stop",
+        "departureDate",
+        "returnDate",
+        "travelers",
+        "vehicleId",
+        "other",
+      ])
+      .optional()
+      .default("other"),
+    placeholder: nullableString(200),
+    countryBias: z.string().trim().max(2).optional().default("CA"),
+    regionBias: z.string().trim().max(10).optional().default("QC"),
+  })
+  .optional()
+  .nullable()
+  .transform((v) => v ?? null);
+
+/** Patch partiel (objet libre normalisé ensuite). */
+export const tripDraftPatchSchema = z
+  .record(z.string(), z.unknown())
+  .optional()
+  .nullable()
+  .transform((v) => v ?? undefined);
+
 export const tripPlanningAiResponseSchema = z.object({
   sessionStatus: sessionStatusSchema.default("collecting"),
   assistantMessage: z.string().trim().min(1).max(4000),
+  currentStep: plannerStepSchema.optional().nullable().catch(null),
   missingFields: z.array(z.string().max(80)).max(30).default([]),
   quickReplies: z.array(z.string().max(80)).max(12).default([]),
-  tripDraft: tripDraftSchema,
+  requestedInput: requestedInputSchema,
+  /** Complet (rétrocompat) ou absent si tripDraftPatch est fourni. */
+  tripDraft: tripDraftSchema.optional().catch(undefined),
+  tripDraftPatch: tripDraftPatchSchema,
   suggestions: z.array(suggestionSchema).max(3).optional(),
   destinationIdeas: z.array(suggestionSchema).max(4).optional(),
 });
 
 export type TripPlanningAiResponse = z.infer<
   typeof tripPlanningAiResponseSchema
+>;
+export type RequestedInput = NonNullable<
+  TripPlanningAiResponse["requestedInput"]
 >;

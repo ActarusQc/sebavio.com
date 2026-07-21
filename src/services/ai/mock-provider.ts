@@ -88,15 +88,44 @@ function buildMockTripPlanningJson(userPayload: string): string {
     ? `Parfait, je prépare un voyage vers ${destination}. Précisons encore les détails manquants.`
     : "Je peux vous proposer des idées ou partir d’une destination précise. Que préférez-vous ?";
 
+  const needsOrigin = !tripDraft.origin.name;
+  const assistantMsg = needsOrigin
+    ? "D’où souhaitez-vous partir? Vous pouvez saisir une adresse complète ou choisir une ville."
+    : assistantMessage;
+
   return JSON.stringify({
     sessionStatus:
       missingFields.length > 0 ? "collecting" : "ready_for_confirmation",
-    assistantMessage,
+    assistantMessage: assistantMsg,
+    currentStep: needsOrigin ? "origin" : destination ? "dates" : "destination",
     missingFields,
-    quickReplies: destination
-      ? ["5 jours", "En famille", "Budget modéré", "Choisir mon véhicule"]
-      : ["Road trip", "Escapade", "Voyage en famille", "Je cherche des idées"],
-    tripDraft,
+    quickReplies: needsOrigin
+      ? [
+          "Montréal",
+          "Québec",
+          "Laval",
+          "Sherbrooke",
+          "Gatineau",
+          "Saisir une adresse",
+        ]
+      : destination
+        ? ["5 jours", "En famille", "Budget modéré", "Choisir mon véhicule"]
+        : [
+            "Road trip",
+            "Escapade",
+            "Voyage en famille",
+            "Je cherche des idées",
+          ],
+    requestedInput: needsOrigin
+      ? {
+          type: "address",
+          field: "origin",
+          placeholder: "Entrez une adresse ou une ville",
+          countryBias: "CA",
+          regionBias: "QC",
+        }
+      : null,
+    tripDraftPatch: tripDraft,
     suggestions: [],
     destinationIdeas:
       !destination && (lower.includes("idée") || lower.includes("idee"))
@@ -114,6 +143,14 @@ function buildMockTripPlanningJson(userPayload: string): string {
               name: "Charlevoix",
               category: "scenic",
               justification: "Route panoramique et gastronomie.",
+              imageUrl: null,
+              accepted: false,
+            },
+            {
+              id: "idea-cantons",
+              name: "Cantons-de-l’Est",
+              category: "nature",
+              justification: "Lacs, villages et routes panoramiques.",
               imageUrl: null,
               accepted: false,
             },

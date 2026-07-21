@@ -17,3 +17,18 @@ export const ACTIVE_SESSION_STATUSES = [
 ] as const;
 
 export const SESSION_RETENTION_DAYS = 30;
+
+/** Suggestions de départ par défaut (Québec) — jamais de villes françaises. */
+export const DEFAULT_QUEBEC_ORIGIN_SUGGESTIONS = [
+  "Montréal",
+  "Québec",
+  "Laval",
+  "Longueuil",
+  "Sherbrooke",
+  "Trois-Rivières",
+  "Gatineau",
+] as const;
+
+export const HOME_QUICK_YES = "Oui, partir de mon domicile";
+export const HOME_QUICK_OTHER = "Choisir une autre adresse";
+export const HOME_QUICK_RECENT = "Utiliser un départ récent";

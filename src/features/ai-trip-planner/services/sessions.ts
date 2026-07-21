@@ -13,8 +13,20 @@ import { emptyTripDraft } from "@/features/ai-trip-planner/schemas/draft";
 import type { PlannerMessageStored } from "@/features/ai-trip-planner/schemas/session";
 import { toSessionDto } from "@/features/ai-trip-planner/services/dto";
 import { assertTripPlannerAccess } from "@/features/ai-trip-planner/services/access";
+import { loadPlannerUserContext } from "@/features/ai-trip-planner/services/user-context";
 import type { TripPlannerSessionDto } from "@/features/ai-trip-planner/types";
 import type { Prisma } from "@prisma/client";
+
+async function withUserExtras(
+  userId: string,
+  session: Parameters<typeof toSessionDto>[0],
+): Promise<TripPlannerSessionDto> {
+  const ctx = await loadPlannerUserContext(userId);
+  return toSessionDto(session, {
+    originSuggestions: ctx.originSuggestions,
+    homeCity: ctx.homeCity,
+  });
+}
 
 function welcomeMessages(): PlannerMessageStored[] {
   return [
@@ -59,7 +71,7 @@ export async function createSession(
 
   if (!options?.forceNew) {
     const existing = await getActiveSession(userId);
-    if (existing) return toSessionDto(existing);
+    if (existing) return withUserExtras(userId, existing);
   } else {
     await prisma.aiTripPlanningSession.updateMany({
       where: {
@@ -79,7 +91,7 @@ export async function createSession(
     },
   });
 
-  return toSessionDto(created);
+  return withUserExtras(userId, created);
 }
 
 export async function abandonSession(

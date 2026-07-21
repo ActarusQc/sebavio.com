@@ -114,3 +114,17 @@ export const MISSING_FIELD_LABELS: Record<string, string> = {
   vehicleId: "véhicule",
   title: "titre",
 };
+
+export function formatPlaceSummary(place: {
+  name: string | null;
+  city: string | null;
+  isHome?: boolean;
+}): string | null {
+  if (place.isHome) {
+    return place.city ? `Domicile — ${place.city}` : "Domicile";
+  }
+  if (place.city && place.name && place.name.length > 48) {
+    return place.city;
+  }
+  return place.name?.trim() || place.city || null;
+}

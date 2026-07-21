@@ -12,6 +12,11 @@ export type PlaceRef = {
   placeId: string | null;
   latitude: number | null;
   longitude: number | null;
+  city: string | null;
+  province: string | null;
+  postalCode: string | null;
+  country: string | null;
+  isHome: boolean;
 };
 
 export type StopDraft = {
@@ -65,6 +70,25 @@ export type TripDraft = {
   softWarnings: string[];
 };
 
+export type RequestedInputDto = {
+  type: "text" | "address" | "date" | "choice" | "number" | "vehicle";
+  field:
+    | "origin"
+    | "destination"
+    | "activity"
+    | "detour"
+    | "lodging"
+    | "stop"
+    | "departureDate"
+    | "returnDate"
+    | "travelers"
+    | "vehicleId"
+    | "other";
+  placeholder: string | null;
+  countryBias: string;
+  regionBias: string;
+} | null;
+
 export type PlannerMessage = {
   id: string;
   role: "user" | "assistant";
@@ -73,12 +97,21 @@ export type PlannerMessage = {
   quickReplies?: string[];
 };
 
+export type OriginSuggestionDto = {
+  kind: "home" | "recent" | "city";
+  label: string;
+  city: string | null;
+};
+
 export type TripPlannerSessionDto = {
   id: string;
   status: TripPlannerSessionStatus;
   messages: PlannerMessage[];
   draft: TripDraft;
   missingFields: string[];
+  requestedInput: RequestedInputDto;
+  originSuggestions: OriginSuggestionDto[];
+  homeCity: string | null;
   createdTripId: string | null;
   canCreate: boolean;
   createdAt: string;

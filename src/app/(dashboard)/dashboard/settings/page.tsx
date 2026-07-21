@@ -11,6 +11,7 @@ import {
   ProfileForm,
   PreferencesForm,
   ChangePasswordForm,
+  HomeAddressForm,
 } from "@/features/users/components";
 import {
   getCurrentUserWithProfile,
@@ -40,6 +41,18 @@ export default async function SettingsPage() {
         </CardHeader>
         <CardContent>
           <ProfileForm profile={user.profile} email={user.email} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Adresse de domicile</CardTitle>
+          <CardDescription>
+            Point de départ proposé pour la planification de vos voyages.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <HomeAddressForm homeAddress={user.profile.homeAddress} />
         </CardContent>
       </Card>
 
