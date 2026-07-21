@@ -45,6 +45,7 @@ const DEFAULT_MOCK: TripAssistantResponse = {
   sources: [],
   restaurantRecommendations: [],
   clarification: null,
+  pendingRequest: null,
 };
 
 /**

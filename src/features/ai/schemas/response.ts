@@ -6,6 +6,7 @@ import {
   assistantClarificationSchema,
   restaurantRecommendationSchema,
 } from "@/features/ai/schemas/sources";
+import { pendingAssistantRequestSchema } from "@/features/ai/lib/pending-assistant-request";
 
 export const tripAssistantWarningSchema = z.object({
   code: z.string().min(1).max(80),
@@ -65,6 +66,10 @@ export const tripAssistantResponseSchema = z.object({
     .optional()
     .default([]),
   clarification: assistantClarificationSchema
+    .nullable()
+    .optional()
+    .default(null),
+  pendingRequest: pendingAssistantRequestSchema
     .nullable()
     .optional()
     .default(null),

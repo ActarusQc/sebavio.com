@@ -45,6 +45,9 @@ export function normalizeModelJson(raw: unknown): unknown {
   } else if (obj.clarification === undefined) {
     obj.clarification = null;
   }
+  if (obj.pendingRequest === undefined) {
+    obj.pendingRequest = null;
+  }
   if (!Array.isArray(obj.warnings)) obj.warnings = [];
   else obj.warnings = normalizeWarnings(obj.warnings);
   if (!Array.isArray(obj.suggestions)) obj.suggestions = [];

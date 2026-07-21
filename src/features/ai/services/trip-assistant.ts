@@ -47,10 +47,19 @@ import {
 } from "@/features/ai/lib/restaurant-preferences";
 import {
   combineTripDateAndClock,
-  parseDepartureClockTime,
-  parseMealClockTime,
   resolveTripPositionAtTime,
 } from "@/features/ai/services/resolve-position-at-time";
+import {
+  formatLocalClock,
+  mealTypeLabelFr,
+  resolveDepartureTiming,
+  resolveMealTiming,
+} from "@/features/ai/lib/meal-timing";
+import {
+  buildPendingRestaurantRequest,
+  extractPendingRestaurantRequest,
+  isStyleOnlyClarificationReply,
+} from "@/features/ai/lib/pending-assistant-request";
 import {
   RESTAURANT_SEARCH_DEFAULT_RADIUS_KM,
   RESTAURANT_SEARCH_MAX_DETOUR_MINUTES,
@@ -70,6 +79,8 @@ import {
   collectTextsForLinguisticScan,
   findForbiddenAnglicisms,
 } from "@/features/ai/lib/linguistic";
+import type { TripAssistantIntent } from "@/features/ai/services/intent-router";
+import type { PendingAssistantRequest } from "@/features/ai/lib/pending-assistant-request";
 
 export type TripAssistantRunResult =
   | {
@@ -207,13 +218,50 @@ export async function runTripAssistant(params: {
       history?.messages.map((m) => ({
         role: m.role,
         content: m.content,
+        structuredPayload: m.structuredPayload,
       })) ?? [];
 
-    const routing = routeTripAssistantRequest({
-      message: input.message,
+    const pendingFromHistory = extractPendingRestaurantRequest(historyMessages);
+
+    let effectiveMessage = input.message;
+    let resumedPending: PendingAssistantRequest | null = null;
+    let forcedRestaurantStyle: RestaurantStyleId | null = null;
+
+    // Reprise automatique après clic sur un style (sans répéter la question)
+    if (pendingFromHistory && isStyleOnlyClarificationReply(input.message)) {
+      const style = detectRestaurantStyle(input.message);
+      if (style) {
+        resumedPending = pendingFromHistory;
+        forcedRestaurantStyle = style;
+        effectiveMessage = pendingFromHistory.originalMessage;
+      }
+    }
+
+    let routing = routeTripAssistantRequest({
+      message: effectiveMessage,
       requestType: input.requestType,
       hasExistingActivitiesInContext: (context.activities?.length ?? 0) > 0,
     });
+
+    if (resumedPending) {
+      routing = {
+        intent: "restaurant_recommendation",
+        knowledgeMode: "web_grounded",
+        requiresRecommendationsEntitlement: true,
+        needsRouteSearchContext: true,
+        reason: "reprise après clarification style",
+      };
+    }
+
+    // Changement de sujet pendant clarification → abandonne la demande en attente
+    if (
+      pendingFromHistory &&
+      !resumedPending &&
+      routing.intent !== "restaurant_recommendation" &&
+      !isStyleOnlyClarificationReply(input.message)
+    ) {
+      // pas de pending dans la réponse suivante
+    }
 
     if (
       routing.requiresRecommendationsEntitlement &&
@@ -226,13 +274,57 @@ export async function runTripAssistant(params: {
       );
     }
 
+    const departureFromMessage =
+      resolveDepartureTiming(effectiveMessage) ??
+      (resumedPending
+        ? {
+            hour: resumedPending.departureHour,
+            minute: resumedPending.departureMinute,
+            source: "conversation" as const,
+          }
+        : null);
+    const mealFromMessage =
+      resolveMealTiming(effectiveMessage) ??
+      (resumedPending
+        ? {
+            mealType: resumedPending.mealType,
+            targetHour: resumedPending.targetHour,
+            targetMinute: resumedPending.targetMinute,
+            targetTimeSource: "conversation" as const,
+          }
+        : null);
+
     // Clarification style restaurant (sans appel xAI)
-    if (routing.intent === "restaurant_recommendation") {
+    if (routing.intent === "restaurant_recommendation" && !resumedPending) {
       const styleFromMessage = detectRestaurantStyle(input.message);
-      const styleFromHistory =
-        styleFromMessage ?? detectRestaurantStyleFromHistory(historyMessages);
-      if (!styleFromHistory) {
-        const clarificationResponse = buildRestaurantClarificationResponse();
+      const styleKnown =
+        styleFromMessage ??
+        detectRestaurantStyleFromHistory(
+          historyMessages.map((m) => ({ role: m.role, content: m.content })),
+        );
+      if (!styleKnown) {
+        const dep = departureFromMessage ?? {
+          hour: 8,
+          minute: 0,
+          source: "trip_default" as const,
+        };
+        const meal = mealFromMessage ?? {
+          mealType: "lunch" as const,
+          targetHour: 12,
+          targetMinute: 0,
+          targetTimeSource: "trip_default" as const,
+        };
+        const pending = buildPendingRestaurantRequest({
+          tripId: input.tripId,
+          originalMessage: effectiveMessage,
+          departureHour: dep.hour,
+          departureMinute: dep.minute,
+          mealType: meal.mealType,
+          targetHour: meal.targetHour,
+          targetMinute: meal.targetMinute,
+        });
+        const clarificationResponse =
+          buildRestaurantClarificationResponse(pending);
         await appendConversationMessages({
           conversationId: conversationEarly.id,
           userContent: input.message,
@@ -269,8 +361,14 @@ export async function runTripAssistant(params: {
 
     const restaurantStyle: RestaurantStyleId | null =
       routing.intent === "restaurant_recommendation"
-        ? (detectRestaurantStyle(input.message) ??
-          detectRestaurantStyleFromHistory(historyMessages))
+        ? (forcedRestaurantStyle ??
+          detectRestaurantStyle(input.message) ??
+          detectRestaurantStyleFromHistory(
+            historyMessages.map((m) => ({
+              role: m.role,
+              content: m.content,
+            })),
+          ))
         : null;
 
     const knowledgeMode = routing.knowledgeMode;
@@ -281,6 +379,9 @@ export async function runTripAssistant(params: {
     let restaurantCandidatesJson: string | null = null;
     let placesFailed = false;
     let placesCandidateCount = 0;
+    let targetProgressKm: number | null = null;
+    let mealLocalClockLabel: string | null = null;
+    let mealPositionNearestCity: string | null = null;
 
     if (routing.knowledgeMode === "web_grounded") {
       if (!config.webSearchEnabled) {
@@ -314,7 +415,12 @@ export async function runTripAssistant(params: {
       });
       enableWebSearch = true;
 
-      if (routing.needsRouteSearchContext) {
+      // Pour restaurants : ne PAS injecter le mi-parcours (induit Québec).
+      // Garder routeSearch seulement pour hébergement / tourisme.
+      if (
+        routing.needsRouteSearchContext &&
+        routing.intent !== "restaurant_recommendation"
+      ) {
         routeSearch = await buildRouteSearchContext({
           tripId: input.tripId,
           userId: params.userId,
@@ -327,21 +433,27 @@ export async function runTripAssistant(params: {
       }
 
       if (routing.intent === "restaurant_recommendation" && restaurantStyle) {
-        const depClock = parseDepartureClockTime(input.message) ?? {
-          hour: 8,
-          minute: 0,
+        const depClock = departureFromMessage ?? {
+          hour: resumedPending?.departureHour ?? 8,
+          minute: resumedPending?.departureMinute ?? 0,
+          source: "trip_default" as const,
         };
-        const mealClock = parseMealClockTime(input.message) ?? {
-          hour: 12,
-          minute: 0,
+        const mealTiming = mealFromMessage ?? {
+          mealType: "lunch" as const,
+          targetHour: resumedPending?.targetHour ?? 12,
+          targetMinute: resumedPending?.targetMinute ?? 0,
+          targetTimeSource: "trip_default" as const,
         };
         const departureDateTime = combineTripDateAndClock(
           context.trip.departureDate,
-          depClock,
+          { hour: depClock.hour, minute: depClock.minute },
         );
         let targetDateTime = combineTripDateAndClock(
           context.trip.departureDate,
-          mealClock,
+          {
+            hour: mealTiming.targetHour,
+            minute: mealTiming.targetMinute,
+          },
         );
         if (targetDateTime <= departureDateTime) {
           targetDateTime = new Date(
@@ -349,26 +461,53 @@ export async function runTripAssistant(params: {
           );
         }
 
+        mealLocalClockLabel = formatLocalClock(targetDateTime);
+
         const mealPosition = await resolveTripPositionAtTime({
           tripId: input.tripId,
           userId: params.userId,
           departureDateTime,
           targetDateTime,
+          leg: "outbound",
         });
 
         if (mealPosition) {
+          targetProgressKm = mealPosition.routeProgressKm;
+          mealPositionNearestCity = mealPosition.nearestCity;
           mealPositionJson = JSON.stringify({
-            ...mealPosition,
-            departureClock: depClock,
-            mealClock,
+            targetLocalTime: mealLocalClockLabel,
+            mealTypeFr: mealTypeLabelFr(mealTiming.mealType),
+            departureLocalTime: formatLocalClock(departureDateTime),
+            departureSource: depClock.source,
+            mealSource: mealTiming.targetTimeSource,
+            estimatedPosition: {
+              latitude: mealPosition.latitude,
+              longitude: mealPosition.longitude,
+              nearestCity: mealPosition.nearestCity,
+              routeProgressKm: mealPosition.routeProgressKm,
+              routeProgressRatio: mealPosition.routeProgressRatio,
+              confidence: mealPosition.confidence,
+              elapsedDrivingMinutes: mealPosition.elapsedDrivingMinutes,
+              elapsedStopMinutes: mealPosition.elapsedStopMinutes,
+            },
+            allowedSearchRadiusKm: RESTAURANT_SEARCH_DEFAULT_RADIUS_KM,
+            maximumDetourMinutes: RESTAURANT_SEARCH_MAX_DETOUR_MINUTES,
             searchWindowMinutes: RESTAURANT_SEARCH_TIME_TOLERANCE_MINUTES,
-            maxDetourMinutes: RESTAURANT_SEARCH_MAX_DETOUR_MINUTES,
-            radiusKm: RESTAURANT_SEARCH_DEFAULT_RADIUS_KM,
             style: restaurantStyle,
             styleLabel: restaurantStyleLabel(restaurantStyle),
             proposedMealDurationMinutes:
               defaultMealDurationMinutes(restaurantStyle),
-            note: "Estimation basée sur l’itinéraire et les étapes planifiées.",
+            instruction:
+              "Rechercher uniquement près de estimatedPosition. Ne pas choisir une autre ville du corridor.",
+          });
+
+          console.info("[ai] restaurant_meal_position", {
+            nearestCity: mealPosition.nearestCity,
+            routeProgressKm: mealPosition.routeProgressKm,
+            confidence: mealPosition.confidence,
+            elapsedDrivingMinutes: mealPosition.elapsedDrivingMinutes,
+            departureSource: depClock.source,
+            mealType: mealTiming.mealType,
           });
 
           try {
@@ -411,7 +550,7 @@ export async function runTripAssistant(params: {
     });
     const userPayload = wrapUserPayload({
       requestType: input.requestType,
-      message: input.message,
+      message: effectiveMessage,
       contextJson: JSON.stringify(context),
       routeSearchJson,
       mealPositionJson,
@@ -421,6 +560,7 @@ export async function runTripAssistant(params: {
       restaurantStyle,
     });
 
+    void (routing.intent as TripAssistantIntent);
     const provider = createAiProvider();
     const providerInput = {
       systemPrompt,
@@ -474,7 +614,8 @@ export async function runTripAssistant(params: {
       sources: mergedSources,
       restaurantRecommendations:
         result.response.restaurantRecommendations ?? [],
-      clarification: result.response.clarification ?? null,
+      clarification: null,
+      pendingRequest: null,
     };
 
     response = enforceMichelinVerification(response, mergedSources);
@@ -483,8 +624,28 @@ export async function runTripAssistant(params: {
       userId: params.userId,
       response,
       routeSearch,
+      targetProgressKm,
+      mealLocalClockLabel,
     });
     response = filterOpenRestaurantRecommendations(response);
+
+    // Préfixe secteur déterministe si manquant
+    if (
+      routing.intent === "restaurant_recommendation" &&
+      mealPositionNearestCity &&
+      !response.answer
+        .toLowerCase()
+        .includes(mealPositionNearestCity.toLowerCase().slice(0, 8))
+    ) {
+      const depLabel =
+        departureFromMessage != null
+          ? `${departureFromMessage.hour} h${departureFromMessage.minute ? ` ${String(departureFromMessage.minute).padStart(2, "0")}` : ""}`
+          : "votre heure de départ";
+      response = {
+        ...response,
+        answer: `Selon votre départ à ${depLabel} et les étapes actuellement prévues, vous devriez être dans le secteur de ${mealPositionNearestCity} vers ${mealLocalClockLabel ?? "midi"}.\n\n${response.answer}`,
+      };
+    }
 
     if (
       routing.intent === "restaurant_recommendation" &&
@@ -509,7 +670,30 @@ export async function runTripAssistant(params: {
     }
 
     const linguistic = validateAndNormalizeFrenchResponse(response);
-    response = linguistic.response;
+    response = {
+      ...linguistic.response,
+      pendingRequest: null,
+      restaurantRecommendations: (
+        linguistic.response.restaurantRecommendations ?? []
+      ).map((r) => ({
+        ...r,
+        estimatedArrivalTime:
+          formatLocalClock(r.estimatedArrivalTime) ??
+          mealLocalClockLabel ??
+          (typeof r.estimatedArrivalTime === "string" &&
+          r.estimatedArrivalTime.includes("T")
+            ? mealLocalClockLabel
+            : r.estimatedArrivalTime),
+      })),
+    };
+
+    if (placesCandidateCount > 0) {
+      console.info("[ai] restaurant_places_candidates", {
+        placesCandidateCount,
+        finalCount: response.restaurantRecommendations?.length ?? 0,
+        nearestCity: mealPositionNearestCity,
+      });
+    }
 
     await appendConversationMessages({
       conversationId: conversationEarly.id,
@@ -539,7 +723,10 @@ export async function runTripAssistant(params: {
       webSearchUsed: response.webSearchUsed,
       webSearchCallCount: result.webSearchCallCount,
       intent: routing.intent,
-      sourceCount: response.sources.length,
+      sourceCount:
+        routing.intent === "restaurant_recommendation"
+          ? restaurantCount
+          : response.sources.length,
     });
     if (response.webSearchUsed) {
       await recordAiWebSearchConversationUse(

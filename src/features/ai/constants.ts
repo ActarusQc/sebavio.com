@@ -1,4 +1,5 @@
-export const TRIP_ASSISTANT_PROMPT_VERSION = "trip-assistant-v3-fr-restaurants";
+export const TRIP_ASSISTANT_PROMPT_VERSION =
+  "trip-assistant-v4-position-temporelle";
 
 export const QUICK_ACTIONS = [
   {
@@ -81,4 +82,5 @@ export const DEMO_STATIC_RESPONSE = {
   sources: [],
   restaurantRecommendations: [],
   clarification: null,
+  pendingRequest: null,
 };

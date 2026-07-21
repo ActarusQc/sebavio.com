@@ -53,6 +53,30 @@ function openingLabel(status: RestaurantRecommendation["openingStatus"]): {
   }
 }
 
+/** Jamais d’ISO brut dans l’UI. */
+function displayArrival(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  if (/\d{4}-\d{2}-\d{2}T/.test(raw) || /Z$/i.test(raw)) {
+    try {
+      const d = new Date(raw);
+      if (!Number.isNaN(d.getTime())) {
+        return new Intl.DateTimeFormat("fr-CA", {
+          timeZone: "America/Toronto",
+          hour: "numeric",
+          minute: "2-digit",
+          hourCycle: "h23",
+        })
+          .format(d)
+          .replace(":", " h ");
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  }
+  return raw;
+}
+
 function mapsUrl(r: RestaurantRecommendation): string | null {
   if (r.location.latitude != null && r.location.longitude != null) {
     return `https://www.google.com/maps/search/?api=1&query=${r.location.latitude},${r.location.longitude}`;
@@ -99,6 +123,7 @@ export function RestaurantRecommendationCards({
         const open = openingLabel(r.openingStatus);
         const map = mapsUrl(r);
         const site = officialUrl(r, response);
+        const arrival = displayArrival(r.estimatedArrivalTime);
         const action =
           onProposeAction &&
           ({
@@ -131,12 +156,12 @@ export function RestaurantRecommendationCards({
             </header>
 
             <dl className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2">
-              {r.estimatedArrivalTime ? (
+              {arrival ? (
                 <div>
                   <dt className="text-sebavio-navy/70 font-medium">
                     Arrivée estimée
                   </dt>
-                  <dd>{r.estimatedArrivalTime}</dd>
+                  <dd>{arrival}</dd>
                 </div>
               ) : null}
               <div>

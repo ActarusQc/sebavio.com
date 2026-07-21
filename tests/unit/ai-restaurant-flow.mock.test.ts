@@ -202,11 +202,16 @@ vi.mock("@/features/ai/services/resolve-position-at-time", async () => {
       latitude: 48.45,
       longitude: -68.52,
       nearestCity: "Rimouski",
+      nearestRoutePointLabel: "Rimouski",
+      estimatedLocalDateTime: new Date().toISOString(),
       estimatedArrivalAtPoint: new Date().toISOString(),
-      elapsedDrivingMinutes: 300,
+      elapsedDrivingMinutes: 360,
       elapsedStopMinutes: 0,
       confidence: "high",
-      routeDistanceFromOriginKm: 450,
+      routeDistanceFromOriginKm: 520,
+      routeProgressKm: 520,
+      routeProgressRatio: 0.65,
+      activeSegmentId: null,
     })),
   };
 });

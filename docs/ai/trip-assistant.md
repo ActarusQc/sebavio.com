@@ -112,33 +112,34 @@ AI_ROUTE_MAX_DETOUR_KM=30
 - `trip_context` : données Sebavio uniquement (analyse, carburant, horaire, météo)
 - `web_grounded` : recherche Web xAI (`tools: [{ type: "web_search" }]`) pour restaurants, hôtels, tourisme
 
-## Français (prompt `trip-assistant-v3-fr-restaurants`)
+## Français (prompt `trip-assistant-v4-position-temporelle`)
 
 Réponses exclusivement en français du Québec. Terminologie Sebavio :
 outbound → trajet aller, inbound → trajet retour, food → restauration/repas,
 fuel stop → arrêt de ravitaillement, ETA → heure d’arrivée estimée, etc.
 Validation linguistique post-réponse + normalisation sûre (noms propres conservés).
 
+QC : déjeuner=matin, dîner=midi, souper=soir.
+
 ## Recommandations restaurants
 
 1. Intention `restaurant_recommendation`
-2. Clarification du style (5 options) si absent — **sans appel xAI**
-3. Position temporelle `resolveTripPositionAtTime` (itinéraire réel + pauses, pas barycentre)
-4. Places (rayon 15 km) + `web_search` xAI
-5. Filtrage des établissements fermés à l’heure du repas
-6. Max 3 cartes + sources + ajout comme activité « Repas » après confirmation
+2. Clarification du style (5 options) si absent — **sans appel xAI**, avec `pendingRequest` (message + heures conservés)
+3. Reprise automatique au clic style (pas d’accusé seulement)
+4. Position temporelle `resolveTripPositionAtTime` (itinéraire + pauses, pas mi-parcours)
+5. Places centrés sur cette position — **pas** le midpoint corridor
+6. Exclusion des établissements derrière la progression (`RESTAURANT_MAX_BEHIND_TARGET_KM`)
+7. Filtrage fermés ; max 3 cartes ; heures locales (jamais ISO)
 
-Constantes centralisées : `RESTAURANT_SEARCH_*` dans `search-restaurants-near.ts`.
+Constantes : `RESTAURANT_*` dans `search-restaurants-near.ts`.
 
-Désactivation rapide recherche Web : `AI_WEB_SEARCH_ENABLED=false`.
-
-## Diagnostic (réponse générique antérieure)
+## Diagnostic (Québec / Lévis à tort)
 
 Causes corrigées :
-- position = mi-parcours distance, pas secteur à l’heure du repas ;
-- pas de pré-recherche Places injectée ;
-- pas de clarification de style → requête trop vague ;
-- prompt trop prudent → fallback « aucun établissement ».
+- après clarification, seul le label de style était envoyé → défaut 8 h + intent perdu ;
+- `route_search.midpoint` (~50 % Gaspésie ≈ Québec) injecté dans le prompt ;
+- enrichissement classait vs midpoint, pas vs progression repas ;
+- « dîner » mal mappé comme souper dans d’anciennes versions.
 
 
 ## Changer de modèle Grok

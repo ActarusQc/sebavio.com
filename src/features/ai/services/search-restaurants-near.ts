@@ -8,9 +8,16 @@ import {
 } from "@/features/trips/activities/google-places-activity-provider";
 import type { RestaurantStyleId } from "@/features/ai/lib/restaurant-preferences";
 
-export const RESTAURANT_SEARCH_DEFAULT_RADIUS_KM = 15;
+export const RESTAURANT_SEARCH_DEFAULT_RADIUS_KM = 10;
+export const RESTAURANT_SEARCH_MAX_RADIUS_KM = 25;
 export const RESTAURANT_SEARCH_MAX_DETOUR_MINUTES = 20;
 export const RESTAURANT_SEARCH_TIME_TOLERANCE_MINUTES = 30;
+export const RESTAURANT_MAX_BEHIND_TARGET_KM = 25;
+export const RESTAURANT_MAX_BEHIND_TARGET_MINUTES = 20;
+
+/** Alias historique */
+export const RESTAURANT_INITIAL_SEARCH_RADIUS_KM =
+  RESTAURANT_SEARCH_DEFAULT_RADIUS_KM;
 
 export type RestaurantPlaceCandidate = {
   name: string;

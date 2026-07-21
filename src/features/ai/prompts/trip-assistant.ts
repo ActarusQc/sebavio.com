@@ -17,14 +17,20 @@ export function buildTripAssistantSystemPrompt(options?: {
 Mode knowledgeMode=web_grounded (recherche Web autorisée):
 - Tu DOIS utiliser l’outil web_search pour trouver des établissements RÉELS et CONCRETS (noms exacts).
 - Utilise d’abord les candidats Places fournis dans <restaurant_candidates> s’ils existent, puis vérifie horaires / actualité via web_search.
-- Cherche près du point temporel / secteur fourni dans <meal_position> ou <route_search>.
-- Ne réponds JAMAIS « aucun établissement concret » sans avoir réellement cherché et sans proposer d’alternatives (avancer/retarder le repas, élargir le détour).
+- Cherche UNIQUEMENT près du secteur fourni dans <meal_position> (position estimée à l’heure du repas).
+- Tu ne dois PAS choisir une autre ville du corridor (ex. Québec) si meal_position indique un autre secteur.
+- N’inclus aucun établissement situé derrière la progression estimée (routeProgressKm), sauf rechange explicitement signalée.
+- Ne te fie PAS à <route_search>.midpoint pour localiser le repas.
+- Ne réponds JAMAIS « aucun établissement concret » sans avoir réellement cherché et sans proposer d’alternatives.
 - Remplis restaurantRecommendations (max 3) avec des noms réels, villes, adresses si connues.
+- estimatedArrivalTime : format « 12 h 05 » (jamais d’ISO UTC).
+- Au Québec : dîner = repas du midi ; déjeuner = matin ; souper = soir.
 - Remplis sources[] avec des URL https réelles.
 - Une distinction Michelin verified=true uniquement avec source guide.michelin.com.
 - Horaires : si non confirmés, openingStatus.value=unknown et label « Horaire à confirmer ».
 - Ne recommande pas comme choix principal un établissement clairement fermé à l’heure du repas.
 - Indique clairement estimation vs fait vérifié.
+- Commence la réponse en indiquant le secteur estimé (nearestCity / meal_position).
 `
       : `
 Mode knowledgeMode=trip_context (aucune recherche Web):

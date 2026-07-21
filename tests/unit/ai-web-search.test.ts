@@ -159,6 +159,7 @@ describe("enforceMichelinVerification", () => {
     webSearchUsed: true,
     sources: [],
     clarification: null,
+    pendingRequest: null,
     restaurantRecommendations: [
       {
         name: "Test",

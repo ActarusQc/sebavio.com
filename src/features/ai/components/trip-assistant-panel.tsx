@@ -249,7 +249,12 @@ export function TripAssistantSheet() {
                   )}
                 >
                   <p className="leading-relaxed whitespace-pre-wrap">
-                    {m.content}
+                    {m.role === "assistant" &&
+                    m.structured?.clarification?.required &&
+                    m.content.trim() ===
+                      (m.structured.clarification.question ?? "").trim()
+                      ? null
+                      : m.content}
                   </p>
                   {m.role === "assistant" && m.structured ? (
                     <div className="mt-3 space-y-3">
@@ -308,7 +313,8 @@ export function TripAssistantSheet() {
                 aria-live="polite"
               >
                 <Loader2 className="size-4 animate-spin" aria-hidden />
-                Sebavio analyse votre voyage…
+                Sebavio calcule où vous serez vers midi et vérifie les
+                restaurants près de votre trajet…
               </p>
             ) : null}
 

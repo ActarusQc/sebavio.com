@@ -17,6 +17,12 @@ import {
   buildRestaurantClarificationResponse,
   filterOpenRestaurantRecommendations,
 } from "@/features/ai/services/restaurant-flow";
+import { buildPendingRestaurantRequest } from "@/features/ai/lib/pending-assistant-request";
+import {
+  resolveDepartureTiming,
+  resolveMealTiming,
+} from "@/features/ai/lib/meal-timing";
+import { formatLocalClock } from "@/features/ai/lib/meal-timing";
 import { routeTripAssistantRequest } from "@/features/ai/services/intent-router";
 import type { TripAssistantResponse } from "@/features/ai/schemas/response";
 import { tripAssistantResponseSchema } from "@/features/ai/schemas/response";
@@ -81,8 +87,25 @@ describe("clarification restaurant", () => {
     const clar = buildRestaurantStyleClarification();
     expect(clar.required).toBe(true);
     expect(clar.options).toHaveLength(5);
-    const response = buildRestaurantClarificationResponse();
+    const pending = buildPendingRestaurantRequest({
+      tripId: "00000000-0000-4000-8000-000000000002",
+      originalMessage:
+        "Je compte partir à 6 h. Je voudrais dîner à midi. Restaurant?",
+      departureHour: 6,
+      departureMinute: 0,
+      mealType: "lunch",
+      targetHour: 12,
+      targetMinute: 0,
+    });
+    const response = buildRestaurantClarificationResponse(pending);
     expect(response.clarification?.required).toBe(true);
+    expect(response.answer).not.toContain(
+      "Quel type de restaurant préférez-vous",
+    );
+    expect(response.clarification?.question).toContain(
+      "Quel type de restaurant",
+    );
+    expect(response.pendingRequest?.originalMessage).toContain("6 h");
     expect(response.restaurantRecommendations).toHaveLength(0);
     expect(() => tripAssistantResponseSchema.parse(response)).not.toThrow();
   });
@@ -116,6 +139,25 @@ describe("horaires départ / repas", () => {
       hour: 18,
       minute: 30,
     });
+  });
+});
+
+describe("dîner québécois et horaires", () => {
+  it("dîner à midi = lunch 12 h, pas souper", () => {
+    const meal = resolveMealTiming(
+      "Je compte partir à 6 h. Je voudrais dîner à midi.",
+    );
+    expect(meal?.mealType).toBe("lunch");
+    expect(meal?.targetHour).toBe(12);
+    const dep = resolveDepartureTiming(
+      "Je compte partir à 6 h. Je voudrais dîner à midi.",
+    );
+    expect(dep?.hour).toBe(6);
+  });
+
+  it("n’affiche pas d’ISO brut", () => {
+    expect(formatLocalClock("2026-07-23T16:00:00.000Z")).not.toMatch(/T|Z/);
+    expect(formatLocalClock("12 h 05")).toBe("12 h 05");
   });
 });
 
@@ -157,6 +199,7 @@ describe("filtrage restaurants fermés", () => {
       webSearchUsed: true,
       sources: [],
       clarification: null,
+      pendingRequest: null,
       restaurantRecommendations: [
         {
           ...baseRec,

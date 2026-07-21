@@ -5,15 +5,27 @@ import { resolveRoutePointAtDistance } from "@/features/fuel/lib/resolve-route-p
 import { reverseGeocodeRoutePoint } from "@/features/fuel/services/reverse-geocode-route-point";
 import { prisma } from "@/lib/prisma";
 import type { LatLng } from "@/services/maps/types";
+import {
+  resolveDepartureTiming,
+  resolveMealTiming,
+  TRIP_TIME_ZONE,
+} from "@/features/ai/lib/meal-timing";
 
 export type EstimatedRoutePosition = {
   latitude: number;
   longitude: number;
+  routeProgressKm: number;
+  routeProgressRatio: number;
   nearestCity: string | null;
+  nearestRoutePointLabel: string | null;
+  estimatedLocalDateTime: string;
+  /** @deprecated utiliser estimatedLocalDateTime — conservé pour compat */
   estimatedArrivalAtPoint: string;
   elapsedDrivingMinutes: number;
   elapsedStopMinutes: number;
+  activeSegmentId: string | null;
   confidence: "high" | "medium" | "low";
+  /** alias de routeProgressKm */
   routeDistanceFromOriginKm: number;
 };
 
@@ -23,18 +35,16 @@ function toNum(v: unknown): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-/**
- * Extrait heure (0–23) et minutes depuis un texte FR.
- */
+/** Réexport pour les appels existants. */
+export { combineTripDateAndClock } from "@/features/ai/lib/meal-timing";
+
 export function parseClockTime(
   text: string,
 ): { hour: number; minute: number } | null {
   const msg = text.toLowerCase().normalize("NFD").replace(/\p{M}/gu, "");
   if (/\bmidi\b/.test(msg)) return { hour: 12, minute: 0 };
   if (/\bminuit\b/.test(msg)) return { hour: 0, minute: 0 };
-  const m = msg.match(
-    /\b(?:a|à|vers|pour|quitte|depart|départ|partir|partirai)?\s*(?:a|à)?\s*(\d{1,2})\s*[h:]\s*(\d{2})?\b/,
-  );
+  const m = msg.match(/\b(\d{1,2})\s*[h:]\s*(\d{2})?\b/);
   if (!m) return null;
   const hour = Number.parseInt(m[1]!, 10);
   const minute = m[2] ? Number.parseInt(m[2], 10) : 0;
@@ -45,48 +55,31 @@ export function parseClockTime(
 export function parseMealClockTime(
   text: string,
 ): { hour: number; minute: number } | null {
-  const msg = text.toLowerCase().normalize("NFD").replace(/\p{M}/gu, "");
-  if (/\b(midi|dejeuner|déjeuner)\b/.test(msg)) return { hour: 12, minute: 0 };
-  if (/\b(souper|diner|dîner)\b/.test(msg) && !/\bdejeuner\b/.test(msg)) {
-    return { hour: 18, minute: 30 };
-  }
-  // « à midi », « vers 12 h », « à 12h30 »
-  const afterMeal = msg.match(
-    /\b(?:manger|repas|arreter|arrêter|pause)\b[\s\S]{0,40}?\b(?:a|à|vers)?\s*(\d{1,2})\s*[h:]\s*(\d{2})?\b/,
-  );
-  if (afterMeal) {
-    const hour = Number.parseInt(afterMeal[1]!, 10);
-    const minute = afterMeal[2] ? Number.parseInt(afterMeal[2], 10) : 0;
-    if (hour >= 0 && hour <= 23) return { hour, minute };
-  }
-  if (/\bmidi\b/.test(msg)) return { hour: 12, minute: 0 };
-  return parseClockTime(text);
+  const meal = resolveMealTiming(text);
+  if (!meal) return null;
+  return { hour: meal.targetHour, minute: meal.targetMinute };
 }
 
 export function parseDepartureClockTime(
   text: string,
 ): { hour: number; minute: number } | null {
-  const msg = text.toLowerCase().normalize("NFD").replace(/\p{M}/gu, "");
-  const m = msg.match(
-    /\b(?:quitte|partir|depart|départ|laisse|laisse)\b[\s\S]{0,40}?\b(?:a|à|vers)?\s*(\d{1,2})\s*[h:]\s*(\d{2})?\b/,
-  );
-  if (m) {
-    const hour = Number.parseInt(m[1]!, 10);
-    const minute = m[2] ? Number.parseInt(m[2], 10) : 0;
-    if (hour >= 0 && hour <= 23) return { hour, minute };
-  }
-  return null;
+  const dep = resolveDepartureTiming(text);
+  if (!dep) return null;
+  return { hour: dep.hour, minute: dep.minute };
 }
 
 /**
- * Point sur l’itinéraire réel correspondant à une durée de conduite écoulée.
+ * Position sur l’itinéraire à une heure cible — progression temporelle
+ * (conduite + arrêts), interpolation sur la polyline (pas barycentre).
  */
 export async function resolveTripPositionAtTime(input: {
   tripId: string;
   userId: string;
   departureDateTime: Date;
   targetDateTime: Date;
+  leg?: "outbound" | "return";
 }): Promise<EstimatedRoutePosition | null> {
+  const leg = input.leg ?? "outbound";
   const trip = await prisma.trip.findFirst({
     where: { id: input.tripId, userId: input.userId, deletedAt: null },
     include: {
@@ -96,8 +89,16 @@ export async function resolveTripPositionAtTime(input: {
   });
   if (!trip?.route) return null;
 
-  const totalDistanceKm = toNum(trip.route.distanceKm);
-  const totalDurationMin = trip.route.estimatedDurationMin;
+  const totalDistanceKm =
+    leg === "return"
+      ? (toNum(trip.route.returnDistanceKm) ?? toNum(trip.route.distanceKm))
+      : toNum(trip.route.distanceKm);
+  const totalDurationMin =
+    leg === "return"
+      ? (trip.route.returnEstimatedDurationMin ??
+        trip.route.estimatedDurationMin)
+      : trip.route.estimatedDurationMin;
+
   if (
     totalDistanceKm == null ||
     totalDistanceKm <= 0 ||
@@ -113,12 +114,43 @@ export async function resolveTripPositionAtTime(input: {
 
   const elapsedTotalMinutes = elapsedMs / 60_000;
 
-  // Arrêts outbound avant l’heure cible (durée planifiée)
   let elapsedStopMinutes = 0;
+  let activeAtStopName: string | null = null;
+
   for (const stop of trip.stops) {
-    if (stop.direction !== "outbound") continue;
-    if (stop.arrivalTime && stop.arrivalTime > input.targetDateTime) continue;
-    elapsedStopMinutes += stop.durationMinutes ?? 0;
+    if (stop.direction !== leg) continue;
+    const stopDuration = stop.durationMinutes ?? 0;
+    if (stopDuration <= 0) continue;
+
+    // Si arrivalTime connue : compter seulement si avant la cible
+    if (stop.arrivalTime) {
+      if (stop.arrivalTime >= input.targetDateTime) continue;
+      const leave =
+        stop.departureTime ??
+        new Date(stop.arrivalTime.getTime() + stopDuration * 60_000);
+      if (
+        stop.arrivalTime <= input.targetDateTime &&
+        leave > input.targetDateTime
+      ) {
+        activeAtStopName = stop.name;
+        elapsedStopMinutes += Math.max(
+          0,
+          (input.targetDateTime.getTime() - stop.arrivalTime.getTime()) /
+            60_000,
+        );
+        continue;
+      }
+      if (leave <= input.targetDateTime) {
+        elapsedStopMinutes += stopDuration;
+      }
+      continue;
+    }
+
+    // Sans horaire d’arrivée : on additionne les arrêts « plausibles »
+    // dans l’ordre tant que le budget temps le permet (estimation basse).
+    if (elapsedStopMinutes + stopDuration < elapsedTotalMinutes * 0.9) {
+      elapsedStopMinutes += stopDuration;
+    }
   }
 
   const elapsedDrivingMinutes = Math.max(
@@ -130,7 +162,7 @@ export async function resolveTripPositionAtTime(input: {
     1,
     Math.max(0, elapsedDrivingMinutes / totalDurationMin),
   );
-  const routeDistanceFromOriginKm = fraction * totalDistanceKm;
+  const routeProgressKm = fraction * totalDistanceKm;
 
   let path: LatLng[] = [];
   if (trip.route.polyline) {
@@ -156,7 +188,7 @@ export async function resolveTripPositionAtTime(input: {
 
   const point = resolveRoutePointAtDistance({
     path,
-    distanceFromStartKm: routeDistanceFromOriginKm,
+    distanceFromStartKm: routeProgressKm,
     totalDistanceKm,
   });
   if (!point) return null;
@@ -177,26 +209,23 @@ export async function resolveTripPositionAtTime(input: {
   if (trip.route.polyline && totalDurationMin > 0) confidence = "high";
   if (!trip.route.polyline) confidence = "low";
 
+  const estimatedLocalDateTime = input.targetDateTime.toISOString();
+
   return {
     latitude: Math.round(point.latitude * 1000) / 1000,
     longitude: Math.round(point.longitude * 1000) / 1000,
+    routeProgressKm: Math.round(routeProgressKm * 10) / 10,
+    routeProgressRatio: Math.round(fraction * 1000) / 1000,
     nearestCity,
-    estimatedArrivalAtPoint: input.targetDateTime.toISOString(),
+    nearestRoutePointLabel: activeAtStopName ?? nearestCity,
+    estimatedLocalDateTime,
+    estimatedArrivalAtPoint: estimatedLocalDateTime,
     elapsedDrivingMinutes: Math.round(elapsedDrivingMinutes),
     elapsedStopMinutes: Math.round(elapsedStopMinutes),
+    activeSegmentId: null,
     confidence,
-    routeDistanceFromOriginKm: Math.round(routeDistanceFromOriginKm * 10) / 10,
+    routeDistanceFromOriginKm: Math.round(routeProgressKm * 10) / 10,
   };
 }
 
-/** Combine date de départ voyage + heure (locales America/Toronto approximatif via offset fixe -4/-5 non — utiliser composants locaux UTC-aware). */
-export function combineTripDateAndClock(
-  departureDateIso: string,
-  clock: { hour: number; minute: number },
-): Date {
-  const base = new Date(departureDateIso);
-  const d = new Date(base);
-  d.setHours(clock.hour, clock.minute, 0, 0);
-  // Si l’heure cible est avant le départ le même jour, garder le même jour (caller gère meal > departure)
-  return d;
-}
+export { TRIP_TIME_ZONE };

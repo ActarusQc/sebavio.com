@@ -1,10 +1,14 @@
 import type { TripAssistantResponse } from "@/features/ai/schemas/response";
 import { buildRestaurantStyleClarification } from "@/features/ai/lib/restaurant-preferences";
+import type { PendingAssistantRequest } from "@/features/ai/lib/pending-assistant-request";
 
-export function buildRestaurantClarificationResponse(): TripAssistantResponse {
+export function buildRestaurantClarificationResponse(
+  pending: PendingAssistantRequest,
+): TripAssistantResponse {
   return {
     summary: "Précision du style de restaurant",
-    answer: "Quel type de restaurant préférez-vous pour cet arrêt ?",
+    // Question affichée une seule fois via clarification.question (pas dans answer)
+    answer: "Pour vous proposer des options adaptées :",
     status: "incomplete",
     warnings: [],
     suggestions: [],
@@ -15,6 +19,7 @@ export function buildRestaurantClarificationResponse(): TripAssistantResponse {
     sources: [],
     restaurantRecommendations: [],
     clarification: buildRestaurantStyleClarification(),
+    pendingRequest: pending,
   };
 }
 

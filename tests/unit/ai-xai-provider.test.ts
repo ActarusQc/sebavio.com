@@ -26,6 +26,7 @@ const VALID_RESPONSE = {
   sources: [],
   restaurantRecommendations: [],
   clarification: null,
+  pendingRequest: null,
 };
 
 function makeTransport(
