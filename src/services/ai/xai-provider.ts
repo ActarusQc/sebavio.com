@@ -14,6 +14,8 @@ import {
   extractCitationsFromXaiResponse,
 } from "@/features/ai/services/extract-citations";
 import type {
+  AiGenerateRawJsonInput,
+  AiGenerateRawJsonResult,
   AiGenerateTripAssistantInput,
   AiGenerateTripAssistantResult,
   AiProvider,
@@ -92,9 +94,36 @@ export class XaiAiProvider implements AiProvider {
     return this.call(input);
   }
 
-  private async call(
-    input: AiGenerateTripAssistantInput,
-  ): Promise<AiGenerateTripAssistantResult> {
+  async generateRawJsonResponse(
+    input: AiGenerateRawJsonInput,
+  ): Promise<AiGenerateRawJsonResult> {
+    const { rawText, model, inputTokens, outputTokens, totalTokens } =
+      await this.fetchJsonObject({
+        systemPrompt: input.systemPrompt,
+        userPayload: input.userPayload,
+        model: input.model,
+        timeoutMs: input.timeoutMs,
+        enableWebSearch: false,
+      });
+
+    return { rawText, model, inputTokens, outputTokens, totalTokens };
+  }
+
+  private async fetchJsonObject(input: {
+    systemPrompt: string;
+    userPayload: string;
+    model: string;
+    timeoutMs: number;
+    enableWebSearch: boolean;
+  }): Promise<{
+    rawText: string;
+    model: string;
+    inputTokens: number | null;
+    outputTokens: number | null;
+    totalTokens: number | null;
+    webSearchCallCount: number;
+    citationSources: AiGenerateTripAssistantResult["citationSources"];
+  }> {
     if (!this.apiKey.trim()) {
       throw new AppError(
         "AI_CONFIGURATION",
@@ -181,18 +210,43 @@ export class XaiAiProvider implements AiProvider {
       );
     }
 
-    const structured = parseStructuredWithRetry(rawText);
-
     return {
-      response: structured,
+      rawText,
       model,
       inputTokens,
       outputTokens,
       totalTokens,
-      rawText,
-      webSearchUsed: enableWebSearch && webSearchCallCount > 0,
-      webSearchCallCount: enableWebSearch ? webSearchCallCount : 0,
+      webSearchCallCount,
       citationSources,
+    };
+  }
+
+  private async call(
+    input: AiGenerateTripAssistantInput,
+  ): Promise<AiGenerateTripAssistantResult> {
+    const fetched = await this.fetchJsonObject({
+      systemPrompt: input.systemPrompt,
+      userPayload: input.userPayload,
+      model: input.model,
+      timeoutMs: input.timeoutMs,
+      enableWebSearch: Boolean(input.enableWebSearch),
+    });
+
+    const structured = parseStructuredWithRetry(fetched.rawText);
+
+    return {
+      response: structured,
+      model: fetched.model,
+      inputTokens: fetched.inputTokens,
+      outputTokens: fetched.outputTokens,
+      totalTokens: fetched.totalTokens,
+      rawText: fetched.rawText,
+      webSearchUsed:
+        Boolean(input.enableWebSearch) && fetched.webSearchCallCount > 0,
+      webSearchCallCount: input.enableWebSearch
+        ? fetched.webSearchCallCount
+        : 0,
+      citationSources: fetched.citationSources,
     };
   }
 }

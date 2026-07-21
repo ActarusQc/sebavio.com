@@ -1,10 +1,5 @@
-import { ModulePlaceholder } from "@/components/layout";
+import { AITripPlannerPage } from "@/features/ai-trip-planner/components";
 
-export default function AiPage() {
-  return (
-    <ModulePlaceholder
-      title="Assistant IA"
-      description="Copilote conversationnel (feature ai)."
-    />
-  );
+export default function AiTripPlannerRoutePage() {
+  return <AITripPlannerPage />;
 }

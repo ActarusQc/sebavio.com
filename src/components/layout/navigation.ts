@@ -92,7 +92,7 @@ export const MAIN_NAV_ITEMS: readonly NavItemConfig[] = [
   },
   {
     href: "/dashboard/ai",
-    label: "Assistant IA",
+    label: "Planifier avec l’IA",
     icon: "sparkles",
     feature: "ai",
   },

@@ -26,6 +26,21 @@ export type AiGenerateTripAssistantResult = {
 
 export type AiAnalyzeTripInput = AiGenerateTripAssistantInput;
 
+export type AiGenerateRawJsonInput = {
+  systemPrompt: string;
+  userPayload: string;
+  model: string;
+  timeoutMs: number;
+};
+
+export type AiGenerateRawJsonResult = {
+  rawText: string;
+  model: string;
+  inputTokens: number | null;
+  outputTokens: number | null;
+  totalTokens: number | null;
+};
+
 /**
  * Abstraction multi-fournisseurs — jamais d’appel direct depuis le métier.
  */
@@ -37,4 +52,8 @@ export interface AiProvider {
   analyzeTrip(
     input: AiAnalyzeTripInput,
   ): Promise<AiGenerateTripAssistantResult>;
+  /** Réponse JSON brute (planification voyage) — sans parse trip-assistant. */
+  generateRawJsonResponse(
+    input: AiGenerateRawJsonInput,
+  ): Promise<AiGenerateRawJsonResult>;
 }

@@ -4,6 +4,8 @@ import { AppError } from "@/lib/errors";
 import { parseStructuredWithRetry } from "@/services/ai/parse-structured";
 import { normalizeProviderError } from "@/services/ai/normalize-provider-error";
 import type {
+  AiGenerateRawJsonInput,
+  AiGenerateRawJsonResult,
   AiGenerateTripAssistantInput,
   AiGenerateTripAssistantResult,
   AiProvider,
@@ -33,9 +35,31 @@ export class OpenAiResponsesProvider implements AiProvider {
     return this.call(input);
   }
 
-  private async call(
-    input: AiGenerateTripAssistantInput,
-  ): Promise<AiGenerateTripAssistantResult> {
+  async generateRawJsonResponse(
+    input: AiGenerateRawJsonInput,
+  ): Promise<AiGenerateRawJsonResult> {
+    const fetched = await this.fetchJsonObject(input);
+    return {
+      rawText: fetched.rawText,
+      model: fetched.model,
+      inputTokens: fetched.inputTokens,
+      outputTokens: fetched.outputTokens,
+      totalTokens: fetched.totalTokens,
+    };
+  }
+
+  private async fetchJsonObject(input: {
+    systemPrompt: string;
+    userPayload: string;
+    model: string;
+    timeoutMs: number;
+  }): Promise<{
+    rawText: string;
+    model: string;
+    inputTokens: number | null;
+    outputTokens: number | null;
+    totalTokens: number | null;
+  }> {
     if (!this.apiKey.trim()) {
       throw new AppError(
         "AI_CONFIGURATION",
@@ -101,15 +125,22 @@ export class OpenAiResponsesProvider implements AiProvider {
       );
     }
 
-    const structured = parseStructuredWithRetry(rawText);
+    return { rawText, model, inputTokens, outputTokens, totalTokens };
+  }
+
+  private async call(
+    input: AiGenerateTripAssistantInput,
+  ): Promise<AiGenerateTripAssistantResult> {
+    const fetched = await this.fetchJsonObject(input);
+    const structured = parseStructuredWithRetry(fetched.rawText);
 
     return {
       response: structured,
-      model,
-      inputTokens,
-      outputTokens,
-      totalTokens,
-      rawText,
+      model: fetched.model,
+      inputTokens: fetched.inputTokens,
+      outputTokens: fetched.outputTokens,
+      totalTokens: fetched.totalTokens,
+      rawText: fetched.rawText,
       webSearchUsed: false,
       webSearchCallCount: 0,
       citationSources: [],

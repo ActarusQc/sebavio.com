@@ -64,6 +64,7 @@ model User {
   aiUsages                AiUsage[]
   aiVoiceSessions         AiVoiceSession[]
   aiVoiceUsages           AiVoiceUsage[]
+  aiTripPlanningSessions  AiTripPlanningSession[]
 
   @@index([status])
   @@index([role])
@@ -1027,9 +1028,10 @@ model Trip {
   travelerProfile  TripTravelerProfile?
   tripActivities   TripActivity[]
   locations        TripLocation[]
-  aiConversations  AiConversation[]
-  aiUsages         AiUsage[]
-  aiVoiceSessions  AiVoiceSession[]
+  aiConversations         AiConversation[]
+  aiUsages                AiUsage[]
+  aiVoiceSessions         AiVoiceSession[]
+  aiTripPlanningSessions  AiTripPlanningSession[]
 
   @@index([userId, status])
   @@index([vehicleId])
@@ -2043,4 +2045,26 @@ model AiVoiceUsage {
   @@index([sessionId])
   @@index([createdAt])
   @@map("ai_voice_usages")
+}
+
+/// Session de planification de voyage guidée par l’IA (« Planifier avec l’IA »).
+model AiTripPlanningSession {
+  id              String    @id @default(uuid(4)) @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  /// collecting | proposing | ready_for_confirmation | created | abandoned
+  status          String    @default("collecting") @db.VarChar(40)
+  messages        Json      @db.JsonB
+  structuredDraft Json      @map("structured_draft") @db.JsonB
+  createdTripId   String?   @map("created_trip_id") @db.Uuid
+  completedAt     DateTime? @map("completed_at") @db.Timestamptz(6)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user        User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdTrip Trip? @relation(fields: [createdTripId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status])
+  @@index([userId, updatedAt])
+  @@index([createdTripId])
+  @@map("ai_trip_planning_sessions")
 }
