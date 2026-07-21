@@ -1,81 +1,132 @@
 import Image from "next/image";
+import {
+  Fuel,
+  MapPinCheckInside,
+  MessageSquare,
+  Play,
+  Route,
+} from "lucide-react";
 import { FadeIn } from "@/components/common";
 import { BRAND_ASSETS } from "../lib/brand-assets";
-import { HeroPlanner } from "./hero-planner";
+import { LANDING } from "../lib/landing-content";
+import { ConversationPreview } from "./conversation-preview";
+import { MarketingCtaButton } from "./marketing-cta-button";
+import { TripPreview } from "./trip-preview";
 
-/** Bleu marine des avantages — fin exacte du dégradé vertical. */
-const HERO_NAVY = "#0E2D46";
+const BENEFIT_ICONS = {
+  MessageSquare,
+  Fuel,
+  Route,
+  MapPinCheck: MapPinCheckInside,
+} as const;
 
 export function HeroSection() {
+  const { hero } = LANDING;
+
   return (
-    <section className="relative w-full min-w-0 overflow-x-clip">
-      {/* Photo + overlays + texte — overflow image uniquement */}
-      <div
-        className="relative min-h-[22rem] overflow-hidden sm:min-h-[32rem] md:min-h-[38rem] lg:min-h-[44rem]"
-        style={{ backgroundColor: HERO_NAVY }}
-      >
-        <div className="absolute inset-0 z-0">
-          <Image
-            src={BRAND_ASSETS.heroCampingcar}
-            alt="Camping-car sur une route de montagne au coucher du soleil"
-            fill
-            priority
-            className="object-cover object-center"
-            sizes="100vw"
-          />
-        </div>
-
-        <div
-          className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-r from-[#faf9f6] from-0% via-[#faf9f6]/80 via-40% to-transparent to-85% sm:via-[#faf9f6]/75 sm:via-35% sm:to-70%"
+    <section className="bg-sebavio-night relative isolate overflow-hidden text-white">
+      <div className="absolute inset-0 -z-10">
+        <Image
+          src={BRAND_ASSETS.heroNightRoad}
+          alt=""
+          fill
+          priority
+          className="object-cover object-[center_40%] opacity-70"
+          sizes="100vw"
           aria-hidden
         />
-
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-[60%] sm:h-[52%] lg:h-[48%]"
-          style={{
-            background: `linear-gradient(
-              to bottom,
-              transparent 0%,
-              rgba(14, 45, 70, 0.15) 28%,
-              rgba(14, 45, 70, 0.55) 58%,
-              rgba(14, 45, 70, 0.88) 82%,
-              ${HERO_NAVY} 100%
-            )`,
-          }}
+          className="from-sebavio-night via-sebavio-night/85 to-sebavio-night/40 absolute inset-0 bg-gradient-to-r"
           aria-hidden
         />
-
-        <div className="relative z-10 mx-auto flex w-full max-w-[90rem] min-w-0 flex-col px-4 pt-10 pb-16 sm:px-6 sm:pt-14 sm:pb-24 md:pb-28 lg:px-8 lg:pt-20 lg:pb-32">
-          <FadeIn className="max-w-xl min-w-0">
-            <h1 className="font-heading text-sebavio-navy text-[1.75rem] leading-[1.15] font-bold tracking-tight break-words sm:text-4xl md:text-5xl lg:text-[3.5rem]">
-              Planifiez.
-              <br />
-              Voyagez.
-              <br />
-              <span className="relative inline-block max-w-full pb-1">
-                Profitez pleinement.
-                <Image
-                  src={BRAND_ASSETS.swoosh}
-                  alt=""
-                  width={160}
-                  height={14}
-                  className="absolute -bottom-0.5 left-0 w-[5.5rem] sm:w-[7.5rem] md:w-[9rem]"
-                  aria-hidden
-                />
-              </span>
-            </h1>
-            <p className="text-sebavio-muted mt-4 max-w-md text-sm leading-relaxed sm:mt-6 sm:text-base md:text-lg">
-              Sebavio est votre compagnon intelligent pour des voyages plus
-              simples, plus économiques et inoubliables.
-            </p>
-          </FadeIn>
-        </div>
+        <div
+          className="from-sebavio-night to-sebavio-night/50 absolute inset-0 bg-gradient-to-t via-transparent"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute inset-0 [background-image:radial-gradient(1px_1px_at_20%_30%,white,transparent),radial-gradient(1px_1px_at_60%_15%,white,transparent),radial-gradient(1.5px_1.5px_at_80%_40%,white,transparent),radial-gradient(1px_1px_at_40%_70%,white,transparent),radial-gradient(1px_1px_at_10%_60%,white,transparent)] [background-size:100%_100%] opacity-40 motion-safe:animate-pulse"
+          aria-hidden
+        />
       </div>
 
-      {/* Formulaire hors overflow image — largeur bornée, pas de débordement */}
-      <div className="relative z-30 mx-auto -mt-14 w-full max-w-[min(1120px,100%)] min-w-0 px-4 sm:-mt-20 sm:px-6 md:-mt-24 lg:px-8">
-        <FadeIn delay={0.04} className="min-w-0">
-          <HeroPlanner />
+      <div className="mx-auto grid max-w-[90rem] gap-10 px-4 pt-10 pb-14 sm:px-6 sm:pt-14 sm:pb-20 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:items-center lg:gap-8 lg:px-8 lg:pt-16 lg:pb-24">
+        <FadeIn className="min-w-0">
+          <h1 className="font-heading text-[1.75rem] leading-[1.15] font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-[3.15rem]">
+            {hero.titleBefore}{" "}
+            <span className="from-sebavio-gradient-from to-sebavio-gradient-to bg-gradient-to-r bg-clip-text text-transparent">
+              {hero.titleHighlight}
+            </span>
+          </h1>
+          <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/75 sm:mt-5 sm:text-base md:text-lg">
+            {hero.subtitle}
+          </p>
+
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <MarketingCtaButton
+              href="/register"
+              size="lg"
+              className="w-full sm:w-auto"
+            >
+              {hero.primaryCta}
+            </MarketingCtaButton>
+            <MarketingCtaButton
+              href="/#demo-agent"
+              size="lg"
+              variant="secondary"
+              className="w-full sm:w-auto"
+            >
+              <Play className="size-4" aria-hidden />
+              {hero.secondaryCta}
+            </MarketingCtaButton>
+          </div>
+
+          <ul className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {hero.benefits.map((benefit) => {
+              const Icon =
+                BENEFIT_ICONS[benefit.icon as keyof typeof BENEFIT_ICONS] ??
+                MessageSquare;
+              return (
+                <li
+                  key={benefit.id}
+                  className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 backdrop-blur-sm"
+                >
+                  <span className="from-sebavio-gradient-from/30 to-sebavio-gradient-to/30 mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br">
+                    <Icon className="size-4 text-white" aria-hidden />
+                  </span>
+                  <span className="text-xs leading-snug text-white/85 sm:text-sm">
+                    {benefit.label}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+
+          <p className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-white/55">
+            {hero.trust.map((item, index) => (
+              <span key={item} className="inline-flex items-center gap-2">
+                {index > 0 ? (
+                  <span className="text-white/25" aria-hidden>
+                    |
+                  </span>
+                ) : null}
+                {item}
+              </span>
+            ))}
+          </p>
+        </FadeIn>
+
+        <FadeIn
+          delay={0.06}
+          className="relative mx-auto flex w-full max-w-xl flex-col items-stretch gap-4 sm:max-w-2xl lg:mx-0 lg:max-w-none"
+        >
+          <div className="flex flex-col items-center gap-4 xl:flex-row xl:items-end xl:justify-end">
+            <div className="w-full max-w-md xl:flex-1">
+              <TripPreview />
+            </div>
+            <div className="w-full max-w-xs xl:mb-4 xl:-ml-8 xl:w-[17.5rem] xl:shrink-0">
+              <ConversationPreview />
+            </div>
+          </div>
         </FadeIn>
       </div>
     </section>

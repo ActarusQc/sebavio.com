@@ -25,6 +25,17 @@
   --sebavio-orange-soft: #fff3e8;
   --sebavio-surface: #f0f4f8;
 
+  /* Landing marketing (hero nuit / CTA) */
+  --sebavio-night: #0a0b1e;
+  --sebavio-night-elevated: #12132a;
+  --sebavio-gradient-from: #3b82f6;
+  --sebavio-gradient-to: #8b5cf6;
+  --sebavio-gradient: linear-gradient(
+    90deg,
+    var(--sebavio-gradient-from),
+    var(--sebavio-gradient-to)
+  );
+
   /* Palette héritée (compatibilité Document 7 / tests) — alignée sur l’identité */
   --sebavio-green-50: #f3f7f7;
   --sebavio-green-100: #e4eff0;

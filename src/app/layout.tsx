@@ -18,9 +18,16 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Sebavio — L’étoile qui guide votre route",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
+      "https://sebavio.com",
+  ),
+  title: {
+    default: "Sebavio | Copilote intelligent pour planifier vos voyages",
+    template: "%s | Sebavio",
+  },
   description:
-    "Compagnon intelligent pour planifier des voyages plus simples, économiques et inoubliables.",
+    "Planifiez votre itinéraire, vos arrêts de carburant, vos activités et votre météo avec Sebavio, le copilote intelligent conçu au Québec.",
 };
 
 export default function RootLayout({

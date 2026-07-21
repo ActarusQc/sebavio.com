@@ -61,6 +61,10 @@
   --color-sebavio-orange: var(--sebavio-orange);
   --color-sebavio-orange-soft: var(--sebavio-orange-soft);
   --color-sebavio-surface: var(--sebavio-surface);
+  --color-sebavio-night: var(--sebavio-night);
+  --color-sebavio-night-elevated: var(--sebavio-night-elevated);
+  --color-sebavio-gradient-from: var(--sebavio-gradient-from);
+  --color-sebavio-gradient-to: var(--sebavio-gradient-to);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
