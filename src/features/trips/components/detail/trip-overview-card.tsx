@@ -90,7 +90,7 @@ export function TripOverviewCard({
   return (
     <section
       id="trip-overview-section"
-      className="trip-card flex h-full flex-col p-4 sm:p-5"
+      className="trip-card flex h-full scroll-mt-28 flex-col p-4 sm:scroll-mt-32 sm:p-5"
       data-testid="trip-overview-card"
       aria-labelledby="trip-overview-title"
     >
@@ -98,7 +98,7 @@ export function TripOverviewCard({
         id="trip-overview-title"
         className="font-heading text-sebavio-navy mb-4 text-base font-semibold"
       >
-        Détails du voyage
+        Informations du voyage
       </h2>
 
       <dl className="grid flex-1 gap-3 sm:grid-cols-2">
@@ -141,40 +141,28 @@ export function TripOverviewCard({
       </dl>
 
       {!readonly ? (
-        <div className="mt-5 flex flex-col-reverse gap-2 border-t border-[rgb(14_45_70/0.08)] pt-4 sm:flex-row sm:items-center sm:justify-between">
-          {(trip.status === "planned" || trip.status === "in_progress") && (
+        <div className="mt-5 flex flex-wrap gap-2 border-t border-[rgb(14_45_70/0.08)] pt-4">
+          {trip.status === "planned" ? (
+            <Button
+              type="button"
+              className="bg-sebavio-teal hover:bg-sebavio-teal/90 min-h-10 text-white"
+              disabled={startPending}
+              onClick={onStart}
+            >
+              Démarrer
+            </Button>
+          ) : null}
+          {trip.status === "planned" || trip.status === "in_progress" ? (
             <Button
               type="button"
               variant="outline"
-              className="text-destructive border-destructive/30 hover:bg-destructive/5 hover:text-destructive min-h-10 justify-center text-sm"
-              disabled={cancelPending}
-              onClick={onCancel}
+              className="border-sebavio-navy/20 min-h-10"
+              disabled={completePending}
+              onClick={onComplete}
             >
-              Annuler le voyage
+              Clôturer
             </Button>
-          )}
-          <div className="flex flex-wrap gap-2 sm:ml-auto">
-            {trip.status === "planned" ? (
-              <Button
-                type="button"
-                className="bg-sebavio-teal hover:bg-sebavio-teal/90 min-h-10 text-white"
-                disabled={startPending}
-                onClick={onStart}
-              >
-                Démarrer
-              </Button>
-            ) : null}
-            {trip.status === "planned" || trip.status === "in_progress" ? (
-              <Button
-                type="button"
-                className="bg-sebavio-navy hover:bg-sebavio-navy/90 min-h-10 text-white"
-                disabled={completePending}
-                onClick={onComplete}
-              >
-                Clôturer
-              </Button>
-            ) : null}
-          </div>
+          ) : null}
         </div>
       ) : (
         <p className="text-muted-foreground mt-4 border-t border-[rgb(14_45_70/0.08)] pt-3 text-sm">
@@ -183,6 +171,27 @@ export function TripOverviewCard({
             : "Voyage terminé — consultation uniquement."}
         </p>
       )}
+
+      {!readonly &&
+      (trip.status === "planned" || trip.status === "in_progress") ? (
+        <div
+          className="mt-4 border-t border-rose-100 pt-4"
+          data-testid="trip-danger-zone"
+        >
+          <p className="text-muted-foreground mb-2 text-xs font-medium">
+            Zone sensible
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            className="text-destructive border-destructive/30 hover:bg-destructive/5 hover:text-destructive min-h-10 justify-center text-sm"
+            disabled={cancelPending}
+            onClick={onCancel}
+          >
+            Annuler le voyage
+          </Button>
+        </div>
+      ) : null}
     </section>
   );
 }

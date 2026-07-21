@@ -9,12 +9,15 @@ import {
 } from "@testing-library/react";
 import { afterEach } from "vitest";
 import { TripHeader } from "@/features/trips/components/detail/trip-header";
+import { TripSectionNav } from "@/features/trips/components/detail/trip-section-nav";
 import { TripAssistantProvider } from "@/features/ai/components/trip-assistant-context";
 import {
   TripAssistantFab,
   TripAssistantSheet,
 } from "@/features/ai/components/trip-assistant-panel";
 import { TripAiSummaryCard } from "@/features/ai/components/trip-ai-summary-card";
+import { TripStatsCard } from "@/features/trips/components/detail/trip-stats-card";
+import { TripFuelEstimateProvider } from "@/features/fuel/components/trip-fuel-estimate";
 
 vi.mock("next/link", () => ({
   default: ({
@@ -206,5 +209,80 @@ describe("Assistant Sebavio — page voyage", () => {
     );
     expect(screen.queryByTestId("trip-ai-analyze")).not.toBeInTheDocument();
     expect(sendMessage).not.toHaveBeenCalled();
+  });
+});
+
+describe("TripSectionNav", () => {
+  it("affiche les onglets de navigation interne", () => {
+    render(<TripSectionNav />);
+    expect(screen.getByTestId("trip-section-nav")).toBeInTheDocument();
+    expect(screen.getByTestId("trip-nav-apercu")).toHaveTextContent("Aperçu");
+    expect(screen.getByTestId("trip-nav-itineraire")).toHaveTextContent(
+      "Itinéraire",
+    );
+    expect(screen.getByTestId("trip-nav-carburant")).toHaveTextContent(
+      "Carburant",
+    );
+    expect(screen.getByTestId("trip-nav-activites")).toHaveTextContent(
+      "Activités",
+    );
+    expect(screen.getByTestId("trip-nav-informations")).toHaveTextContent(
+      "Informations",
+    );
+  });
+
+  it("met à jour l’onglet actif au clic", () => {
+    const root = document.createElement("div");
+    root.innerHTML = `
+      <div id="trip-overview-map"></div>
+      <div id="trip-itinerary-section"></div>
+      <div id="trip-fuel-section"></div>
+      <div id="trip-activities-section"></div>
+      <div id="trip-overview-section"></div>
+    `;
+    document.body.appendChild(root);
+    Element.prototype.scrollIntoView = vi.fn();
+    render(<TripSectionNav />);
+    fireEvent.click(screen.getByTestId("trip-nav-carburant"));
+    expect(screen.getByTestId("trip-nav-carburant")).toHaveAttribute(
+      "aria-current",
+      "true",
+    );
+    root.remove();
+  });
+});
+
+describe("TripStatsCard — résumé sans litres/coût", () => {
+  it("affiche Résumé du trajet et les métriques attendues", () => {
+    render(
+      <TripFuelEstimateProvider
+        tripId="t1"
+        vehicleId={null}
+        vehicleLabel={null}
+        distanceKm="100"
+        estimatedFuelCost={null}
+        routeFresh
+        routeVersion="v1"
+        fuelEstimateStale={false}
+        vehicleSpecsVersion={null}
+        defaultFuelType={null}
+      >
+        <TripStatsCard
+          routeFresh
+          distanceKm="100"
+          durationMin={120}
+          estimatedArrival={null}
+          activityCount={2}
+          pauseCount={1}
+        />
+      </TripFuelEstimateProvider>,
+    );
+    expect(
+      screen.getByRole("heading", { name: "Résumé du trajet" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Distance totale")).toBeInTheDocument();
+    expect(screen.getByText("Durée de conduite")).toBeInTheDocument();
+    expect(screen.getByTestId("summary-fuel-stops")).toBeInTheDocument();
+    expect(screen.queryByText(/CAD/i)).not.toBeInTheDocument();
   });
 });

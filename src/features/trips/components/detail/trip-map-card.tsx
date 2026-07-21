@@ -3,12 +3,14 @@
 import dynamic from "next/dynamic";
 import { useRef } from "react";
 import { Maximize2 } from "lucide-react";
-import { Button, Skeleton } from "@/components/ui";
+import { Skeleton } from "@/components/ui";
 import type {
   ActivityMapMarker,
   FuelMapMarker,
   UserLocationMarker,
 } from "@/features/maps/components/trip-map";
+import { formatKm } from "@/features/fuel/components/trip-fuel-form-shared";
+import { formatTripDuration } from "@/features/trips/lib/format-duration";
 import type { TripDetailDto } from "@/features/trips/types";
 
 const TripMap = dynamic(
@@ -16,7 +18,7 @@ const TripMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <Skeleton className="h-[320px] w-full rounded-xl sm:h-[350px] lg:h-[370px]" />
+      <Skeleton className="h-[320px] w-full rounded-xl sm:h-[350px] lg:h-[400px]" />
     ),
   },
 );
@@ -36,25 +38,32 @@ type TripMapCardProps = {
   onToggleMapEdit?: () => void;
   onMapClickAddWaypoint?: (lat: number, lng: number) => void;
   onWaypointDragEnd?: (stopId: string, lat: number, lng: number) => void;
+  /** Masque les boutons Modifier/Recalculer (actions sur la section Itinéraire). */
+  compactActions?: boolean;
 };
 
 export function TripMapCard({
   trip,
-  readonly,
   routeStale,
-  optimizePending,
   fuelMarkers,
   activityMarkers = [],
   focusFuelMarkerId,
   userLocation = null,
   centerOnUserToken = 0,
-  onOptimize,
   mapEditMode = false,
-  onToggleMapEdit,
   onMapClickAddWaypoint,
   onWaypointDragEnd,
+  compactActions = true,
 }: TripMapCardProps) {
   const mapShellRef = useRef<HTMLDivElement>(null);
+
+  const distanceKm = trip.route?.distanceKm ?? null;
+  const durationMin =
+    trip.totalDurationMin ?? trip.route?.estimatedDurationMin ?? null;
+  const overlayLabel =
+    trip.route && !trip.route.isStale && distanceKm
+      ? `${formatKm(distanceKm)} km — ${formatTripDuration(durationMin)}`
+      : null;
 
   function requestFullscreen() {
     const el = mapShellRef.current;
@@ -77,37 +86,17 @@ export function TripMapCard({
           id="trip-map-title"
           className="font-heading text-sebavio-navy text-[16px] font-bold sm:text-[17px]"
         >
-          Carte du voyage
+          Carte
         </h2>
-        {!readonly ? (
-          <div className="flex flex-wrap gap-2">
-            {onToggleMapEdit ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="border-sebavio-navy/20 min-h-9"
-                onClick={onToggleMapEdit}
-                aria-pressed={mapEditMode}
-              >
-                {mapEditMode ? "Quitter l'édition" : "Modifier sur la carte"}
-              </Button>
-            ) : null}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="border-sebavio-navy/20 min-h-9"
-              disabled={optimizePending}
-              onClick={onOptimize}
-            >
-              {optimizePending
-                ? "Recalcul…"
-                : routeStale || !trip.route
-                  ? "Calculer"
-                  : "Recalculer"}
-            </Button>
-          </div>
+        {compactActions ? (
+          <button
+            type="button"
+            onClick={requestFullscreen}
+            className="text-sebavio-navy inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[rgb(14_45_70/0.12)] bg-white px-3 text-[13px] font-semibold hover:bg-slate-50"
+          >
+            Plein écran
+            <Maximize2 className="size-3.5" aria-hidden />
+          </button>
         ) : null}
       </div>
 
@@ -123,7 +112,7 @@ export function TripMapCard({
 
       <div
         id="trip-map-section"
-        className="relative min-h-[320px] flex-1 px-1.5 pb-1.5 sm:min-h-[350px] sm:px-2 sm:pb-2 lg:min-h-[370px]"
+        className="relative min-h-[320px] flex-1 px-1.5 pb-1.5 sm:min-h-[350px] sm:px-2 sm:pb-2 lg:min-h-[400px]"
       >
         <div
           ref={mapShellRef}
@@ -159,16 +148,26 @@ export function TripMapCard({
             mapEditMode={mapEditMode}
             onMapClickAddWaypoint={onMapClickAddWaypoint}
             onWaypointDragEnd={onWaypointDragEnd}
-            className="h-full min-h-[320px] w-full sm:min-h-[350px] lg:min-h-[370px]"
+            className="h-full min-h-[320px] w-full sm:min-h-[350px] lg:min-h-[400px]"
           />
-          <button
-            type="button"
-            onClick={requestFullscreen}
-            className="text-sebavio-navy absolute right-3 bottom-3 z-[1] inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-[rgb(14_45_70/0.12)] bg-white/95 px-3 text-[13px] font-semibold shadow-sm hover:bg-white"
-          >
-            Voir en plein écran
-            <Maximize2 className="size-3.5" aria-hidden />
-          </button>
+          {overlayLabel ? (
+            <p
+              className="text-sebavio-navy absolute bottom-3 left-3 z-[1] rounded-lg border border-[rgb(14_45_70/0.12)] bg-white/95 px-3 py-1.5 text-[13px] font-semibold tabular-nums shadow-sm"
+              data-testid="trip-map-route-overlay"
+            >
+              {overlayLabel}
+            </p>
+          ) : null}
+          {!compactActions ? (
+            <button
+              type="button"
+              onClick={requestFullscreen}
+              className="text-sebavio-navy absolute right-3 bottom-3 z-[1] inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-[rgb(14_45_70/0.12)] bg-white/95 px-3 text-[13px] font-semibold shadow-sm hover:bg-white"
+            >
+              Voir en plein écran
+              <Maximize2 className="size-3.5" aria-hidden />
+            </button>
+          ) : null}
         </div>
       </div>
     </section>

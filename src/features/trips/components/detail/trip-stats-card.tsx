@@ -31,7 +31,7 @@ function StatRow({
 }) {
   return (
     <div
-      className="flex items-start gap-3.5 border-b border-[rgb(14_45_70/0.06)] py-4 last:border-b-0"
+      className="flex items-start gap-3.5 border-b border-[rgb(14_45_70/0.06)] py-3.5 last:border-b-0"
       data-testid={testId}
     >
       <span
@@ -42,7 +42,7 @@ function StatRow({
       </span>
       <div className="min-w-0 flex-1">
         <p className="text-muted-foreground text-[13px] font-medium">{label}</p>
-        <p className="text-sebavio-navy mt-1 text-[22px] leading-tight font-bold tabular-nums">
+        <p className="text-sebavio-navy mt-1 text-[20px] leading-tight font-bold tabular-nums sm:text-[22px]">
           {value}
         </p>
       </div>
@@ -99,7 +99,7 @@ export function TripStatsCard({
 
   return (
     <section
-      className="trip-card flex h-full flex-col p-6 sm:p-7"
+      className="trip-card flex h-full flex-col p-5 sm:p-6"
       data-testid="trip-stats-card"
       aria-labelledby="trip-stats-heading"
     >
@@ -107,39 +107,52 @@ export function TripStatsCard({
         id="trip-stats-heading"
         className="font-heading text-sebavio-navy text-[17px] font-bold"
       >
-        Détails du voyage
+        Résumé du trajet
       </h2>
 
       <div className="mt-1 flex-1">
         <StatRow icon={Route} label="Distance totale" value={distanceLabel} />
         <StatRow icon={Timer} label="Durée de conduite" value={durationLabel} />
         <StatRow
-          icon={Fuel}
-          label="Arrêts carburant"
-          value={fuelLabel}
-          testId="summary-fuel-stops"
-        />
-        <StatRow
           icon={Clock}
           label="Arrivée estimée"
           value={arrivalLabel}
           testId="summary-arrival"
         />
-        {activityCount > 0 || pauseCount > 0 ? (
-          <StatRow
-            icon={MapPinned}
-            label="Activités / pauses"
-            value={`${activityCount} act. · ${pauseCount} pause${pauseCount !== 1 ? "s" : ""}`}
-          />
-        ) : null}
+        <StatRow
+          icon={MapPinned}
+          label="Activités"
+          value={
+            activityCount > 0
+              ? `${activityCount} activité${activityCount > 1 ? "s" : ""}`
+              : "Aucune"
+          }
+          testId="summary-activities"
+        />
+        <StatRow
+          icon={MapPinned}
+          label="Pauses"
+          value={
+            pauseCount > 0
+              ? `${pauseCount} pause${pauseCount > 1 ? "s" : ""}`
+              : "Aucune"
+          }
+          testId="summary-pauses"
+        />
+        <StatRow
+          icon={Fuel}
+          label="Arrêts carburant"
+          value={fuelLabel}
+          testId="summary-fuel-stops"
+        />
       </div>
 
       <div className="mt-auto border-t border-[rgb(14_45_70/0.06)] pt-4">
         <a
-          href="#trip-overview-section"
+          href="#trip-itinerary-section"
           className="text-sebavio-navy hover:text-sebavio-navy/80 inline-flex min-h-11 items-center text-[14px] font-semibold underline-offset-2 hover:underline"
         >
-          Voir tous les détails →
+          Voir l&apos;itinéraire →
         </a>
       </div>
     </section>

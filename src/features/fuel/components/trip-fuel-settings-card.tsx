@@ -12,8 +12,6 @@ import {
 import { FormField } from "@/components/common";
 import { Button, Input, Skeleton } from "@/components/ui";
 import { useTripFuelEstimateContext } from "@/features/fuel/components/trip-fuel-estimate-context";
-import { FuelStopsList } from "@/features/fuel/components/fuel-stops-list";
-import { FuelRefuelPlanSection } from "@/features/fuel/components/fuel-refuel-plan";
 import { FuelPriceWarningCard } from "@/features/fuel/components/fuel-price-warning-card";
 import type { FuelFillStopDto } from "@/features/fuel/types";
 import {
@@ -207,16 +205,12 @@ export function TripFuelSettingsCard() {
     routeFresh,
     recalculate,
     fdeUnsupported,
-    departureStops,
-    destinationStops,
-    finalStops,
     onFocusFuelStop,
     userFuelWarnings,
     vehicleSpecRecalcNotice,
     fuelCalculationStatus,
   } = useTripFuelEstimateContext();
 
-  const [showDetailedPlan, setShowDetailedPlan] = useState(false);
   const openManualPrice = Boolean(needsManualPrice && error);
 
   const outbound = calc?.outbound?.refuelStops ?? [];
@@ -245,17 +239,26 @@ export function TripFuelSettingsCard() {
       ? `${formatLiters(calc.remainingFuelL)} L`
       : null;
 
-  const highlightSentence =
+  const firstRefuelKmRaw =
     calc && estimate && !pending && calc.feasible
-      ? stopCount > 0
-        ? `Prévoyez environ ${formatCost(calc.moneySpent)} CAD de carburant pour ce voyage — ${stopCount} arrêt${stopCount > 1 ? "s" : ""} prévu${stopCount > 1 ? "s" : ""}.`
-        : `Prévoyez environ ${formatCost(calc.moneySpent)} CAD de carburant pour ce voyage — aucun plein en route requis.`
+      ? (calc.outbound?.refuelStops?.[0]?.distanceFromStartKm ??
+        calc.returnLeg?.refuelStops?.[0]?.distanceFromStartKm ??
+        null)
       : null;
+  const firstRefuelKm =
+    firstRefuelKmRaw != null ? Number(firstRefuelKmRaw) : null;
+
+  const usefulTip =
+    firstRefuelKm != null && Number.isFinite(firstRefuelKm) && firstRefuelKm > 0
+      ? `Premier ravitaillement prévu après environ ${formatKm(String(firstRefuelKm))} km.`
+      : calc && estimate && !pending && calc.feasible && stopCount === 0
+        ? "Aucun plein en route requis pour ce trajet."
+        : null;
 
   return (
     <section
       id="trip-fuel-section"
-      className="trip-card flex flex-col space-y-5 p-5 sm:p-6"
+      className="trip-card flex scroll-mt-28 flex-col space-y-5 p-5 sm:scroll-mt-32 sm:p-6"
       data-testid="trip-fuel-estimate-panel"
       aria-labelledby="trip-fuel-title"
     >
@@ -277,7 +280,7 @@ export function TripFuelSettingsCard() {
             id="trip-fuel-title"
             className="font-heading text-sebavio-navy text-lg font-semibold"
           >
-            Estimation carburant
+            Plan carburant
           </h2>
           <p className="text-muted-foreground mt-0.5 text-sm">
             {hasVehicle
@@ -347,11 +350,11 @@ export function TripFuelSettingsCard() {
             className="grid grid-cols-2 gap-2 sm:grid-cols-4"
             data-testid="fuel-summary-metrics"
           >
-            <Metric label="Coût total estimé" value={costValue} emphasize />
-            <Metric label="Litres nécessaires" value={litersValue} />
-            <Metric label="Arrêts carburant" value={stopsValue} />
+            <Metric label="Coût estimé" value={costValue} emphasize />
+            <Metric label="Volume total" value={litersValue} />
+            <Metric label="Arrêts" value={stopsValue} />
             {remainingValue ? (
-              <Metric label="Restant à l'arrivée" value={remainingValue} />
+              <Metric label="À l'arrivée" value={remainingValue} />
             ) : (
               <Metric
                 label="Distance"
@@ -360,13 +363,13 @@ export function TripFuelSettingsCard() {
             )}
           </div>
 
-          {highlightSentence ? (
+          {usefulTip ? (
             <p className="text-sebavio-navy flex items-start gap-2 text-sm font-medium">
               <CircleDollarSign
                 className="text-sebavio-teal mt-0.5 size-4 shrink-0"
                 aria-hidden
               />
-              <span>{highlightSentence}</span>
+              <span>{usefulTip}</span>
             </p>
           ) : null}
 
@@ -381,9 +384,6 @@ export function TripFuelSettingsCard() {
           ) : null}
 
           <div className="space-y-3">
-            <h3 className="text-sebavio-navy text-sm font-semibold">
-              Plan de ravitaillement
-            </h3>
             {calc.feasible ? (
               !(calc.includeReturnTrip || form.includeReturnTrip) &&
               stopCount === 0 ? (
@@ -454,42 +454,6 @@ export function TripFuelSettingsCard() {
                   "Aucun arrêt carburant accessible n’a été trouvé."}
               </p>
             )}
-
-            <button
-              type="button"
-              className="text-sebavio-teal inline-flex min-h-10 items-center gap-1 text-sm font-medium underline-offset-2 hover:underline"
-              onClick={() => setShowDetailedPlan((v) => !v)}
-              aria-expanded={showDetailedPlan}
-            >
-              {showDetailedPlan
-                ? "Masquer le plan détaillé"
-                : "Voir le plan détaillé"}{" "}
-              →
-            </button>
-
-            {showDetailedPlan ? (
-              <div className="space-y-3 border-t border-[rgb(14_45_70/0.06)] pt-3">
-                <FuelStopsList
-                  outboundRefuelStops={outbound}
-                  returnRefuelStops={inbound}
-                  departureStops={departureStops}
-                  destinationStops={destinationStops}
-                  finalStops={finalStops}
-                  includeReturnTrip={
-                    Boolean(calc.includeReturnTrip) || form.includeReturnTrip
-                  }
-                  feasible={calc.feasible}
-                  failureMessage={calc.failureMessage}
-                  fuelType={calc.fuelType}
-                  destinationLabel={null}
-                  onFocusStop={onFocusFuelStop}
-                  variant="detailed"
-                />
-                {estimate.refuelPlan && form.refillStrategy === "optimized" ? (
-                  <FuelRefuelPlanSection plan={estimate.refuelPlan} hideStops />
-                ) : null}
-              </div>
-            ) : null}
           </div>
         </>
       ) : null}
@@ -500,308 +464,339 @@ export function TripFuelSettingsCard() {
         </p>
       ) : null}
 
-      {/* Contrôles essentiels */}
+      {/* Paramètres techniques — repliés par défaut */}
       {hasVehicle ? (
-        <div
-          className="space-y-3 rounded-xl bg-[#f5f8fa] px-4 py-4"
-          data-testid="fuel-vehicle-section"
+        <FuelAccordion
+          title="Modifier les paramètres de carburant"
+          summary={
+            canCalculate
+              ? `${summarizeTripLeg(form.includeReturnTrip, distanceKm)} · ${summarizeInitialFuel(form.initialFuelMode, form.initialFuelValue)}`
+              : "Type de carburant et réservoir"
+          }
+          defaultOpen={openManualPrice}
         >
-          <div className="grid gap-3 sm:grid-cols-2">
-            <FormField
-              htmlFor="trip-fuel-type"
-              label="Type de carburant"
-              className="w-full min-w-0"
-            >
-              <select
-                id="trip-fuel-type"
-                name="fuelType"
-                data-testid="fuel-type-select"
-                className={selectClass}
-                value={form.fuelType}
-                onChange={(e) => {
-                  const next = e.target.value as TripFuelTypeValue;
-                  setForm((f) => ({
-                    ...f,
-                    fuelType: next,
-                    forceManualPrice: fdeUnsupported.has(next)
-                      ? true
-                      : f.forceManualPrice,
-                  }));
-                }}
+          <div className="space-y-3" data-testid="fuel-vehicle-section">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <FormField
+                htmlFor="trip-fuel-type"
+                label="Type de carburant"
+                className="w-full min-w-0"
               >
-                {TRIP_FUEL_TYPE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </FormField>
+                <select
+                  id="trip-fuel-type"
+                  name="fuelType"
+                  data-testid="fuel-type-select"
+                  className={selectClass}
+                  value={form.fuelType}
+                  onChange={(e) => {
+                    const next = e.target.value as TripFuelTypeValue;
+                    setForm((f) => ({
+                      ...f,
+                      fuelType: next,
+                      forceManualPrice: fdeUnsupported.has(next)
+                        ? true
+                        : f.forceManualPrice,
+                    }));
+                  }}
+                >
+                  {TRIP_FUEL_TYPE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+
+              {canCalculate ? (
+                <FormField htmlFor="initial-fuel" label="Niveau du réservoir">
+                  <select
+                    id="initial-fuel"
+                    className={selectClass}
+                    value={form.initialFuelMode}
+                    onChange={(e) => patch("initialFuelMode", e.target.value)}
+                  >
+                    <option value="full">Plein</option>
+                    <option value="three_quarters">3/4</option>
+                    <option value="half">1/2</option>
+                    <option value="quarter">1/4</option>
+                    <option value="empty">Vide</option>
+                    <option value="percentage">Pourcentage personnalisé</option>
+                    <option value="litres">Litres personnalisés</option>
+                  </select>
+                </FormField>
+              ) : null}
+            </div>
+
+            {canCalculate &&
+            (form.initialFuelMode === "percentage" ||
+              form.initialFuelMode === "litres") ? (
+              <FormField
+                htmlFor="initial-value"
+                label={
+                  form.initialFuelMode === "percentage"
+                    ? "Pourcentage"
+                    : "Litres"
+                }
+              >
+                <Input
+                  id="initial-value"
+                  type="number"
+                  min={0}
+                  step="0.1"
+                  className="min-h-11 w-full"
+                  value={form.initialFuelValue}
+                  onChange={(e) => patch("initialFuelValue", e.target.value)}
+                />
+              </FormField>
+            ) : null}
 
             {canCalculate ? (
-              <FormField htmlFor="initial-fuel" label="Niveau du réservoir">
+              <FormField htmlFor="dep-mode" label="Situation au départ">
                 <select
-                  id="initial-fuel"
+                  id="dep-mode"
                   className={selectClass}
-                  value={form.initialFuelMode}
-                  onChange={(e) => patch("initialFuelMode", e.target.value)}
+                  value={form.departureRefillMode}
+                  onChange={(e) => patch("departureRefillMode", e.target.value)}
                 >
-                  <option value="full">Plein</option>
-                  <option value="three_quarters">3/4</option>
-                  <option value="half">1/2</option>
-                  <option value="quarter">1/4</option>
-                  <option value="empty">Vide</option>
-                  <option value="percentage">Pourcentage personnalisé</option>
-                  <option value="litres">Litres personnalisés</option>
+                  <option value="none">Ne pas facturer de plein initial</option>
+                  <option value="automatic">Calculer le plein au départ</option>
+                  <option value="manual_total">
+                    Entrer manuellement le prix du plein
+                  </option>
                 </select>
               </FormField>
             ) : null}
-          </div>
 
-          {canCalculate &&
-          (form.initialFuelMode === "percentage" ||
-            form.initialFuelMode === "litres") ? (
-            <FormField
-              htmlFor="initial-value"
-              label={
-                form.initialFuelMode === "percentage" ? "Pourcentage" : "Litres"
-              }
-            >
-              <Input
-                id="initial-value"
-                type="number"
-                min={0}
-                step="0.1"
-                className="min-h-11 w-full"
-                value={form.initialFuelValue}
-                onChange={(e) => patch("initialFuelValue", e.target.value)}
-              />
-            </FormField>
-          ) : null}
+            {canCalculate && form.departureRefillMode === "manual_total" ? (
+              <FormField htmlFor="dep-manual" label="Montant du plein (CAD)">
+                <Input
+                  id="dep-manual"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  placeholder="ex. 50.00"
+                  className="min-h-11 w-full"
+                  value={form.departureManualTotal}
+                  onChange={(e) =>
+                    patch("departureManualTotal", e.target.value)
+                  }
+                />
+              </FormField>
+            ) : null}
 
-          {canCalculate ? (
-            <FormField htmlFor="dep-mode" label="Situation au départ">
-              <select
-                id="dep-mode"
-                className={selectClass}
-                value={form.departureRefillMode}
-                onChange={(e) => patch("departureRefillMode", e.target.value)}
+            {needsManualPrice ? (
+              <FormField
+                htmlFor="manual-price"
+                label="Prix manuel par litre"
+                hint="Aucun prix automatique disponible pour ce type de carburant."
+                className="w-full min-w-0"
               >
-                <option value="none">Ne pas facturer de plein initial</option>
-                <option value="automatic">Calculer le plein au départ</option>
-                <option value="manual_total">
-                  Entrer manuellement le prix du plein
-                </option>
-              </select>
-            </FormField>
-          ) : null}
+                <Input
+                  id="manual-price"
+                  data-testid="manual-price-input"
+                  type="number"
+                  min={0.001}
+                  step="0.001"
+                  inputMode="decimal"
+                  placeholder="0,000"
+                  className="min-h-11 w-full min-w-0"
+                  value={form.defaultPricePerLiter}
+                  onChange={(e) =>
+                    patch("defaultPricePerLiter", e.target.value)
+                  }
+                />
+              </FormField>
+            ) : null}
 
-          {canCalculate && form.departureRefillMode === "manual_total" ? (
-            <FormField htmlFor="dep-manual" label="Montant du plein (CAD)">
-              <Input
-                id="dep-manual"
-                type="number"
-                min={0}
-                step="0.01"
-                placeholder="ex. 50.00"
-                className="min-h-11 w-full"
-                value={form.departureManualTotal}
-                onChange={(e) => patch("departureManualTotal", e.target.value)}
-              />
-            </FormField>
-          ) : null}
+            {canCalculate ? (
+              <div className="space-y-2">
+                <FuelAccordion
+                  title="Paramètres avancés"
+                  summary={`${summarizeTripLeg(form.includeReturnTrip, distanceKm)} · ${summarizeStrategy(form.refillStrategy, form.reserveMode, form.reserveValue)}`}
+                >
+                  <label className="flex min-h-11 items-center gap-2 text-sm">
+                    <input
+                      id="includeReturnTrip"
+                      data-testid="include-return-trip"
+                      type="checkbox"
+                      checked={form.includeReturnTrip}
+                      onChange={(e) =>
+                        patch("includeReturnTrip", e.target.checked)
+                      }
+                    />
+                    Calculer l&apos;aller-retour
+                  </label>
 
-          {needsManualPrice ? (
-            <FormField
-              htmlFor="manual-price"
-              label="Prix manuel par litre"
-              hint="Aucun prix automatique disponible pour ce type de carburant."
-              className="w-full min-w-0"
-            >
-              <Input
-                id="manual-price"
-                data-testid="manual-price-input"
-                type="number"
-                min={0.001}
-                step="0.001"
-                inputMode="decimal"
-                placeholder="0,000"
-                className="min-h-11 w-full min-w-0"
-                value={form.defaultPricePerLiter}
-                onChange={(e) => patch("defaultPricePerLiter", e.target.value)}
-              />
-            </FormField>
-          ) : null}
+                  <FormField
+                    htmlFor="strategy"
+                    label="Stratégie de remplissage"
+                  >
+                    <select
+                      id="strategy"
+                      className={selectClass}
+                      value={form.refillStrategy}
+                      onChange={(e) => patch("refillStrategy", e.target.value)}
+                    >
+                      <option value="full_tank">
+                        Remplir complètement le réservoir
+                      </option>
+                      <option value="required_only">
+                        Ajouter seulement la quantité nécessaire
+                      </option>
+                      <option value="optimized">Optimisation de coût</option>
+                    </select>
+                  </FormField>
 
-          {canCalculate ? (
-            <Button
-              type="button"
-              className="bg-sebavio-navy hover:bg-sebavio-navy/90 min-h-11 w-full text-white"
-              disabled={pending}
-              onClick={recalculate}
-            >
-              <Fuel className="size-4" aria-hidden />
-              Recalculer
-            </Button>
-          ) : null}
-        </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <FormField htmlFor="reserve-mode" label="Réserve minimale">
+                      <select
+                        id="reserve-mode"
+                        className={selectClass}
+                        value={form.reserveMode}
+                        onChange={(e) => patch("reserveMode", e.target.value)}
+                      >
+                        <option value="percentage">
+                          Pourcentage du réservoir
+                        </option>
+                        <option value="litres">Litres</option>
+                      </select>
+                    </FormField>
+                    <FormField htmlFor="reserve-value" label="Valeur">
+                      <Input
+                        id="reserve-value"
+                        type="number"
+                        min={0.1}
+                        step="0.1"
+                        className="min-h-11 w-full"
+                        value={form.reserveValue}
+                        onChange={(e) => patch("reserveValue", e.target.value)}
+                      />
+                    </FormField>
+                  </div>
+
+                  <label className="flex min-h-11 items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={form.refillAtDestination}
+                      onChange={(e) =>
+                        patch("refillAtDestination", e.target.checked)
+                      }
+                    />
+                    Prévoir un plein à destination
+                  </label>
+                  <label className="flex min-h-11 items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={form.finishWithFullTank}
+                      onChange={(e) =>
+                        patch("finishWithFullTank", e.target.checked)
+                      }
+                    />
+                    Terminer le voyage avec un réservoir plein
+                  </label>
+
+                  <label className="flex items-start gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      className="mt-1"
+                      checked={form.includeExistingFuelValue}
+                      onChange={(e) =>
+                        patch("includeExistingFuelValue", e.target.checked)
+                      }
+                    />
+                    <span>
+                      Inclure le coût du carburant déjà présent dans le
+                      réservoir
+                    </span>
+                  </label>
+
+                  {!needsManualPrice ? (
+                    <label className="text-muted-foreground flex min-h-11 items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={form.forceManualPrice}
+                        onChange={(e) =>
+                          patch("forceManualPrice", e.target.checked)
+                        }
+                      />
+                      Forcer un prix manuel ($/L)
+                    </label>
+                  ) : null}
+                </FuelAccordion>
+
+                <FuelAccordion
+                  title="Corrections manuelles"
+                  summary={
+                    form.defaultPricePerLiter || form.consumptionL100
+                      ? "Corrections actives"
+                      : "Aucune correction"
+                  }
+                >
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {!needsManualPrice ? (
+                      <FormField
+                        htmlFor="est-price"
+                        label="Prix / L (correction)"
+                      >
+                        <Input
+                          id="est-price"
+                          type="number"
+                          min={0.001}
+                          step="0.001"
+                          placeholder="ex. 1.650"
+                          className="min-h-11 w-full"
+                          value={form.defaultPricePerLiter}
+                          onChange={(e) =>
+                            patch("defaultPricePerLiter", e.target.value)
+                          }
+                        />
+                      </FormField>
+                    ) : null}
+                    <FormField htmlFor="est-conso" label="Conso L/100">
+                      <Input
+                        id="est-conso"
+                        type="number"
+                        min={0.1}
+                        step="0.1"
+                        placeholder="ex. 9.4"
+                        className="min-h-11 w-full"
+                        value={form.consumptionL100}
+                        onChange={(e) =>
+                          patch("consumptionL100", e.target.value)
+                        }
+                      />
+                    </FormField>
+                  </div>
+                  <p className="text-muted-foreground text-xs">
+                    Réservoir :{" "}
+                    {summarizeInitialFuel(
+                      form.initialFuelMode,
+                      form.initialFuelValue,
+                    )}{" "}
+                    · Départ :{" "}
+                    {summarizeDepartureRefill(form.departureRefillMode)}
+                  </p>
+                </FuelAccordion>
+
+                <Button
+                  type="button"
+                  className="bg-sebavio-navy hover:bg-sebavio-navy/90 min-h-11 w-full text-white"
+                  disabled={pending}
+                  onClick={recalculate}
+                  data-testid="fuel-recalculate-settings"
+                >
+                  <Fuel className="size-4" aria-hidden />
+                  Recalculer
+                </Button>
+              </div>
+            ) : null}
+          </div>
+        </FuelAccordion>
       ) : (
         <p className="text-muted-foreground text-sm">
           Sélectionnez un véhicule pour estimer le carburant.
         </p>
       )}
-
-      {canCalculate ? (
-        <div className="space-y-2">
-          <FuelAccordion
-            title="Paramètres avancés"
-            summary={`${summarizeTripLeg(form.includeReturnTrip, distanceKm)} · ${summarizeStrategy(form.refillStrategy, form.reserveMode, form.reserveValue)}`}
-            defaultOpen={openManualPrice}
-          >
-            <label className="flex min-h-11 items-center gap-2 text-sm">
-              <input
-                id="includeReturnTrip"
-                data-testid="include-return-trip"
-                type="checkbox"
-                checked={form.includeReturnTrip}
-                onChange={(e) => patch("includeReturnTrip", e.target.checked)}
-              />
-              Calculer l&apos;aller-retour
-            </label>
-
-            <FormField htmlFor="strategy" label="Stratégie de remplissage">
-              <select
-                id="strategy"
-                className={selectClass}
-                value={form.refillStrategy}
-                onChange={(e) => patch("refillStrategy", e.target.value)}
-              >
-                <option value="full_tank">
-                  Remplir complètement le réservoir
-                </option>
-                <option value="required_only">
-                  Ajouter seulement la quantité nécessaire
-                </option>
-                <option value="optimized">Optimisation de coût</option>
-              </select>
-            </FormField>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <FormField htmlFor="reserve-mode" label="Réserve minimale">
-                <select
-                  id="reserve-mode"
-                  className={selectClass}
-                  value={form.reserveMode}
-                  onChange={(e) => patch("reserveMode", e.target.value)}
-                >
-                  <option value="percentage">Pourcentage du réservoir</option>
-                  <option value="litres">Litres</option>
-                </select>
-              </FormField>
-              <FormField htmlFor="reserve-value" label="Valeur">
-                <Input
-                  id="reserve-value"
-                  type="number"
-                  min={0.1}
-                  step="0.1"
-                  className="min-h-11 w-full"
-                  value={form.reserveValue}
-                  onChange={(e) => patch("reserveValue", e.target.value)}
-                />
-              </FormField>
-            </div>
-
-            <label className="flex min-h-11 items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={form.refillAtDestination}
-                onChange={(e) => patch("refillAtDestination", e.target.checked)}
-              />
-              Prévoir un plein à destination
-            </label>
-            <label className="flex min-h-11 items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={form.finishWithFullTank}
-                onChange={(e) => patch("finishWithFullTank", e.target.checked)}
-              />
-              Terminer le voyage avec un réservoir plein
-            </label>
-
-            <label className="flex items-start gap-2 text-sm">
-              <input
-                type="checkbox"
-                className="mt-1"
-                checked={form.includeExistingFuelValue}
-                onChange={(e) =>
-                  patch("includeExistingFuelValue", e.target.checked)
-                }
-              />
-              <span>
-                Inclure le coût du carburant déjà présent dans le réservoir
-              </span>
-            </label>
-
-            {!needsManualPrice ? (
-              <label className="text-muted-foreground flex min-h-11 items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={form.forceManualPrice}
-                  onChange={(e) => patch("forceManualPrice", e.target.checked)}
-                />
-                Forcer un prix manuel ($/L)
-              </label>
-            ) : null}
-          </FuelAccordion>
-
-          <FuelAccordion
-            title="Corrections manuelles"
-            summary={
-              form.defaultPricePerLiter || form.consumptionL100
-                ? "Corrections actives"
-                : "Aucune correction"
-            }
-          >
-            <div className="grid gap-3 sm:grid-cols-2">
-              {!needsManualPrice ? (
-                <FormField htmlFor="est-price" label="Prix / L (correction)">
-                  <Input
-                    id="est-price"
-                    type="number"
-                    min={0.001}
-                    step="0.001"
-                    placeholder="ex. 1.650"
-                    className="min-h-11 w-full"
-                    value={form.defaultPricePerLiter}
-                    onChange={(e) =>
-                      patch("defaultPricePerLiter", e.target.value)
-                    }
-                  />
-                </FormField>
-              ) : null}
-              <FormField htmlFor="est-conso" label="Conso L/100">
-                <Input
-                  id="est-conso"
-                  type="number"
-                  min={0.1}
-                  step="0.1"
-                  placeholder="ex. 9.4"
-                  className="min-h-11 w-full"
-                  value={form.consumptionL100}
-                  onChange={(e) => patch("consumptionL100", e.target.value)}
-                />
-              </FormField>
-            </div>
-            <p className="text-muted-foreground text-xs">
-              Réservoir :{" "}
-              {summarizeInitialFuel(
-                form.initialFuelMode,
-                form.initialFuelValue,
-              )}{" "}
-              · Départ : {summarizeDepartureRefill(form.departureRefillMode)}
-            </p>
-          </FuelAccordion>
-        </div>
-      ) : null}
 
       {canCalculate && estimate && calc ? (
         <FuelPriceWarningCard

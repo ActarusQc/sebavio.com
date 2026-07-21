@@ -4,6 +4,7 @@ export { TripQuickSummary } from "./trip-quick-summary";
 export { TripOverviewCard } from "./trip-overview-card";
 export { TripMapCard } from "./trip-map-card";
 export { TripStatsCard } from "./trip-stats-card";
+export { TripSectionNav } from "./trip-section-nav";
 export { TripItineraryPreview } from "./trip-itinerary-preview";
 export { TripFuelSummaryCard } from "./trip-fuel-summary-card";
 export { TripStopsOverview } from "./trip-stops-overview";

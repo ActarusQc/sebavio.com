@@ -249,7 +249,8 @@ export function TripActivitiesSection({
   if (variant === "selected") {
     return (
       <section
-        className="trip-card flex h-full flex-col gap-3 p-4 sm:p-5"
+        id="trip-activities-section"
+        className="trip-card flex h-full scroll-mt-28 flex-col gap-3 p-4 sm:scroll-mt-32 sm:p-5"
         data-testid="trip-selected-activities"
         aria-labelledby="trip-selected-activities-heading"
       >

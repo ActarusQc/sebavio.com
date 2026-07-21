@@ -27,9 +27,7 @@ import { TripHeader } from "@/features/trips/components/detail/trip-header";
 import { TripOverviewCard } from "@/features/trips/components/detail/trip-overview-card";
 import { TripMapCard } from "@/features/trips/components/detail/trip-map-card";
 import { TripStatsCard } from "@/features/trips/components/detail/trip-stats-card";
-import { TripItineraryPreview } from "@/features/trips/components/detail/trip-itinerary-preview";
-import { TripFuelSummaryCard } from "@/features/trips/components/detail/trip-fuel-summary-card";
-import { TripStopsOverview } from "@/features/trips/components/detail/trip-stops-overview";
+import { TripSectionNav } from "@/features/trips/components/detail/trip-section-nav";
 import { TripFutureModules } from "@/features/trips/components/detail/trip-future-modules";
 import { TripItinerarySection } from "@/features/trips/components/detail/trip-itinerary-section";
 import { TripConfirmDialog } from "@/features/trips/components/detail/trip-confirm-dialog";
@@ -39,10 +37,7 @@ import {
   useTripLiveLocation,
 } from "@/features/trips/components/detail/trip-live-location-context";
 import { useTripLocationTracking } from "@/features/trips/hooks/use-trip-location-tracking";
-import {
-  TripWeatherCompact,
-  TripWeatherSection,
-} from "@/features/weather/components";
+import { TripWeatherCompact } from "@/features/weather/components";
 import { countRouteStopsByKind } from "@/features/trips/lib/stop-counts";
 import { TripAssistantProvider } from "@/features/ai/components/trip-assistant-context";
 import { TripAiSummaryCard } from "@/features/ai/components/trip-ai-summary-card";
@@ -433,56 +428,65 @@ function TripDetailPanelsInner({
         {/* 2. Assistant Sebavio */}
         <TripAiSummaryCard />
 
-        {/* 3. Carte + détails — mobile : détails avant carte */}
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,2.8fr)_minmax(285px,1fr)] lg:items-stretch lg:gap-[18px]">
-          <div className="order-2 space-y-3 lg:order-1">
-            {geoPanel}
-            <TripMapCard
-              trip={trip}
-              readonly={readonly}
-              routeStale={routeStale}
-              optimizePending={recalculating}
-              fuelMarkers={fuelMarkers}
-              activityMarkers={activityMarkers}
-              focusFuelMarkerId={focusFuelMarkerId}
-              userLocation={userLocation}
-              centerOnUserToken={centerOnUserToken}
-              onOptimize={() => submitHidden(optimizeAction, { id: trip.id })}
-              mapEditMode={mapEditMode && !readonly}
-              onToggleMapEdit={() => setMapEditMode((v) => !v)}
-              onMapClickAddWaypoint={handleMapClickAdd}
-              onWaypointDragEnd={handleWaypointDrag}
-            />
+        {/* 3. Aperçu du trajet — carte ~70 % + résumé ~30 % */}
+        <section
+          id="trip-overview-map"
+          className="scroll-mt-28 space-y-3 sm:scroll-mt-32"
+          aria-labelledby="trip-overview-map-title"
+        >
+          <h2
+            id="trip-overview-map-title"
+            className="font-heading text-sebavio-navy text-[18px] font-bold sm:text-[20px]"
+          >
+            Aperçu du trajet
+          </h2>
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,2.7fr)_minmax(280px,1fr)] lg:items-stretch lg:gap-[18px]">
+            <div className="order-2 space-y-3 lg:order-1">
+              {geoPanel}
+              <TripMapCard
+                trip={trip}
+                readonly={readonly}
+                routeStale={routeStale}
+                optimizePending={recalculating}
+                fuelMarkers={fuelMarkers}
+                activityMarkers={activityMarkers}
+                focusFuelMarkerId={focusFuelMarkerId}
+                userLocation={userLocation}
+                centerOnUserToken={centerOnUserToken}
+                onOptimize={() => submitHidden(optimizeAction, { id: trip.id })}
+                mapEditMode={mapEditMode && !readonly}
+                onToggleMapEdit={() => setMapEditMode((v) => !v)}
+                onMapClickAddWaypoint={handleMapClickAdd}
+                onWaypointDragEnd={handleWaypointDrag}
+                compactActions
+              />
+            </div>
+            <div className="order-1 lg:order-2">
+              <TripStatsCard
+                routeFresh={Boolean(routeFresh)}
+                distanceKm={
+                  routeFresh ? (trip.route?.distanceKm ?? null) : null
+                }
+                durationMin={
+                  routeFresh
+                    ? (trip.totalDurationMin ??
+                      trip.route?.estimatedDurationMin ??
+                      null)
+                    : null
+                }
+                estimatedArrival={estimatedArrival}
+                activityCount={stopCounts.activityStopCount}
+                pauseCount={pauseCount}
+              />
+            </div>
           </div>
-          <div className="order-1 lg:order-2">
-            <TripStatsCard
-              routeFresh={Boolean(routeFresh)}
-              distanceKm={routeFresh ? (trip.route?.distanceKm ?? null) : null}
-              durationMin={
-                routeFresh
-                  ? (trip.totalDurationMin ??
-                    trip.route?.estimatedDurationMin ??
-                    null)
-                  : null
-              }
-              estimatedArrival={estimatedArrival}
-              activityCount={stopCounts.activityStopCount}
-              pauseCount={pauseCount}
-            />
-          </div>
-        </div>
+        </section>
 
-        {/* 4. Itinéraire + carburant */}
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:items-stretch lg:gap-[18px]">
-          <TripItineraryPreview trip={trip} />
-          <TripFuelSummaryCard
-            hasVehicle={Boolean(trip.vehicleId)}
-            fuelEstimateStale={Boolean(trip.route?.fuelEstimateStale)}
-          />
-        </div>
+        {/* 4. Navigation interne sticky */}
+        <TripSectionNav />
 
-        {/* Sections détaillées existantes */}
-        <div className="mt-1 flex flex-col gap-5 sm:mt-2 sm:gap-6">
+        {/* 5. Itinéraire + Plan carburant (~58 / 42) */}
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-start lg:gap-6">
           <TripItinerarySection
             trip={trip}
             readonly={readonly}
@@ -495,64 +499,57 @@ function TripDetailPanelsInner({
             onDelete={handleDelete}
             onReorder={handleReorder}
           />
-
-          <div className="grid gap-5 lg:grid-cols-2 lg:items-stretch lg:gap-6">
-            <TripActivitiesSection
-              tripId={trip.id}
-              readonly={readonly}
-              variant="selected"
-              onActivitiesChange={onActivitiesChange}
-              tripOrigin={
-                live.isLiveUseful &&
-                live.latitude != null &&
-                live.longitude != null
-                  ? {
-                      address: "Ma position actuelle",
-                      lat: live.latitude,
-                      lng: live.longitude,
-                    }
-                  : trip.originLatitude != null && trip.originLongitude != null
-                    ? {
-                        address: trip.origin,
-                        lat: Number(trip.originLatitude),
-                        lng: Number(trip.originLongitude),
-                      }
-                    : { address: trip.origin, lat: NaN, lng: NaN }
-              }
-              tripDestination={
-                trip.destinationLatitude != null &&
-                trip.destinationLongitude != null
-                  ? {
-                      address: trip.destination,
-                      lat: Number(trip.destinationLatitude),
-                      lng: Number(trip.destinationLongitude),
-                    }
-                  : { address: trip.destination, lat: NaN, lng: NaN }
-              }
-            />
-            <TripOverviewCard
-              trip={trip}
-              readonly={readonly}
-              startPending={startPending}
-              completePending={completePending}
-              cancelPending={cancelPending}
-              onStart={() => submitHidden(startAction, { id: trip.id })}
-              onComplete={() => setConfirm("complete")}
-              onCancel={() => setConfirm("cancel")}
-            />
-          </div>
-
           <TripFuelSettingsCard />
-
-          <TripWeatherSection
-            tripId={trip.id}
-            liveLatitude={liveLat}
-            liveLongitude={liveLng}
-          />
-
-          <TripStopsOverview />
-          <TripFutureModules />
         </div>
+
+        {/* 6. Activités + Informations */}
+        <div className="grid gap-5 lg:grid-cols-2 lg:items-stretch lg:gap-6">
+          <TripActivitiesSection
+            tripId={trip.id}
+            readonly={readonly}
+            variant="selected"
+            onActivitiesChange={onActivitiesChange}
+            tripOrigin={
+              live.isLiveUseful &&
+              live.latitude != null &&
+              live.longitude != null
+                ? {
+                    address: "Ma position actuelle",
+                    lat: live.latitude,
+                    lng: live.longitude,
+                  }
+                : trip.originLatitude != null && trip.originLongitude != null
+                  ? {
+                      address: trip.origin,
+                      lat: Number(trip.originLatitude),
+                      lng: Number(trip.originLongitude),
+                    }
+                  : { address: trip.origin, lat: NaN, lng: NaN }
+            }
+            tripDestination={
+              trip.destinationLatitude != null &&
+              trip.destinationLongitude != null
+                ? {
+                    address: trip.destination,
+                    lat: Number(trip.destinationLatitude),
+                    lng: Number(trip.destinationLongitude),
+                  }
+                : { address: trip.destination, lat: NaN, lng: NaN }
+            }
+          />
+          <TripOverviewCard
+            trip={trip}
+            readonly={readonly}
+            startPending={startPending}
+            completePending={completePending}
+            cancelPending={cancelPending}
+            onStart={() => submitHidden(startAction, { id: trip.id })}
+            onComplete={() => setConfirm("complete")}
+            onCancel={() => setConfirm("cancel")}
+          />
+        </div>
+
+        <TripFutureModules />
       </TripFuelEstimateProvider>
 
       <TripConfirmDialog

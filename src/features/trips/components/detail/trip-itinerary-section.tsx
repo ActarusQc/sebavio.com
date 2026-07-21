@@ -466,7 +466,7 @@ export function TripItinerarySection({
 
   return (
     <section
-      className="trip-card relative overflow-hidden p-5 sm:p-6"
+      className="trip-card relative scroll-mt-28 overflow-hidden p-5 sm:scroll-mt-32 sm:p-6"
       id="trip-itinerary-section"
       data-testid="trip-itinerary-section"
       aria-labelledby="trip-itinerary-title"
@@ -500,9 +500,7 @@ export function TripItinerarySection({
               aria-pressed={mapEditMode}
               onClick={onToggleMapEdit}
             >
-              {mapEditMode
-                ? "Terminer l'édition sur la carte"
-                : "Modifier sur la carte"}
+              {mapEditMode ? "Terminer l'édition" : "Modifier le trajet"}
             </Button>
             <Button
               type="button"
@@ -511,7 +509,7 @@ export function TripItinerarySection({
               disabled={recalculating}
               onClick={onRecalculate}
             >
-              Recalculer l&apos;itinéraire
+              Recalculer
             </Button>
           </div>
         ) : null}
