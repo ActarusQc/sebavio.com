@@ -34,6 +34,12 @@ export async function getTripAssistantBootstrapAction(tripId: string): Promise<
     quickActions: typeof QUICK_ACTIONS;
     conversation: AiConversationDto | null;
     demoResponse: TripAssistantResponse;
+    voice: {
+      enabled: boolean;
+      canUseVoice: boolean;
+      provider: string;
+      unavailableMessage: string;
+    };
   }>
 > {
   try {
@@ -44,6 +50,11 @@ export async function getTripAssistantBootstrapAction(tripId: string): Promise<
       ? await loadTripAssistantHistory(user.id, tripId)
       : null;
 
+    const { getVoicePublicConfig } = await import("@/features/ai/voice/config");
+    const { resolveVoiceAccess } = await import("@/features/ai/voice/access");
+    const voicePublic = getVoicePublicConfig();
+    const voiceAccess = await resolveVoiceAccess(user.id);
+
     return {
       ok: true,
       data: {
@@ -53,6 +64,12 @@ export async function getTripAssistantBootstrapAction(tripId: string): Promise<
         quickActions: QUICK_ACTIONS,
         conversation,
         demoResponse: DEMO_STATIC_RESPONSE,
+        voice: {
+          enabled: voicePublic.enabled && voicePublic.webEnabled,
+          canUseVoice: voiceAccess.canUseVoice,
+          provider: voicePublic.provider,
+          unavailableMessage: voicePublic.unavailableMessage,
+        },
       },
     };
   } catch (error) {

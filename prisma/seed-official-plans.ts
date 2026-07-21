@@ -73,6 +73,7 @@ const DISCOVERY_ENTITLEMENTS: EntitlementSeed[] = [
     limit: null,
     value: null,
   },
+  { key: "ai.voice.enabled", enabled: false, limit: null, value: null },
   {
     key: "fuel.optimization.enabled",
     enabled: false,
@@ -111,6 +112,7 @@ const FULL_ENTITLEMENTS: EntitlementSeed[] = [
     limit: null,
     value: null,
   },
+  { key: "ai.voice.enabled", enabled: true, limit: null, value: null },
   { key: "fuel.optimization.enabled", enabled: true, limit: null, value: null },
   { key: "fuel.live_prices.enabled", enabled: true, limit: null, value: null },
   { key: "trip.sharing.enabled", enabled: true, limit: null, value: null },

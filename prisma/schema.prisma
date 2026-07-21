@@ -62,6 +62,8 @@ model User {
   planAccessGrantsExtended PlanAccessGrant[] @relation("PlanAccessGrantExtender")
   aiConversations         AiConversation[]
   aiUsages                AiUsage[]
+  aiVoiceSessions         AiVoiceSession[]
+  aiVoiceUsages           AiVoiceUsage[]
 
   @@index([status])
   @@index([role])
@@ -1027,6 +1029,7 @@ model Trip {
   locations        TripLocation[]
   aiConversations  AiConversation[]
   aiUsages         AiUsage[]
+  aiVoiceSessions  AiVoiceSession[]
 
   @@index([userId, status])
   @@index([vehicleId])
@@ -1980,4 +1983,64 @@ model AiUsage {
   @@index([intent, createdAt])
   @@index([createdAt])
   @@map("ai_usages")
+}
+
+/// Session vocale agent (Realtime ou pipeline STT/TTS) — pas de secret API stocké.
+model AiVoiceSession {
+  id                    String    @id @default(uuid(4)) @db.Uuid
+  userId                String    @map("user_id") @db.Uuid
+  tripId                String    @map("trip_id") @db.Uuid
+  conversationId        String?   @map("conversation_id") @db.Uuid
+  /// conversation | driving
+  usageMode             String    @default("conversation") @map("usage_mode") @db.VarChar(20)
+  /// web | mobile | android_auto | carplay
+  clientPlatform        String    @default("web") @map("client_platform") @db.VarChar(40)
+  /// openai_realtime | pipeline | mock
+  provider              String    @db.VarChar(40)
+  status                String    @default("active") @db.VarChar(20)
+  pseudonymId           String    @map("pseudonym_id") @db.VarChar(64)
+  startedAt             DateTime  @default(now()) @map("started_at") @db.Timestamptz(6)
+  endedAt               DateTime? @map("ended_at") @db.Timestamptz(6)
+  expiresAt             DateTime  @map("expires_at") @db.Timestamptz(6)
+  userAudioSeconds      Int       @default(0) @map("user_audio_seconds")
+  assistantAudioSeconds Int       @default(0) @map("assistant_audio_seconds")
+  durationSeconds       Int       @default(0) @map("duration_seconds")
+  interruptionCount     Int       @default(0) @map("interruption_count")
+  errorCount            Int       @default(0) @map("error_count")
+  endReason             String?   @map("end_reason") @db.VarChar(60)
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startedAt])
+  @@index([userId, status])
+  @@index([tripId, startedAt])
+  @@index([expiresAt])
+  @@map("ai_voice_sessions")
+}
+
+/// Événements de metering vocal (session_start | session_end | heartbeat | error).
+model AiVoiceUsage {
+  id             String   @id @default(uuid(4)) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  sessionId      String?  @map("session_id") @db.Uuid
+  tripId         String?  @map("trip_id") @db.Uuid
+  /// session_start | session_end | heartbeat | error
+  eventType      String   @map("event_type") @db.VarChar(40)
+  secondsDelta   Int      @default(0) @map("seconds_delta")
+  planSlug       String?  @map("plan_slug") @db.VarChar(100)
+  provider       String?  @db.VarChar(40)
+  clientPlatform String?  @map("client_platform") @db.VarChar(40)
+  usageMode      String?  @map("usage_mode") @db.VarChar(20)
+  errorCode      String?  @map("error_code") @db.VarChar(60)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([sessionId])
+  @@index([createdAt])
+  @@map("ai_voice_usages")
 }

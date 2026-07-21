@@ -23,6 +23,7 @@ describe("plan entitlements — registry", () => {
       "activities.max",
       "ai.planning.enabled",
       "ai.recommendations.enabled",
+      "ai.voice.enabled",
       "weather.forecast_days",
       "fuel.optimization.enabled",
       "fuel.live_prices.enabled",

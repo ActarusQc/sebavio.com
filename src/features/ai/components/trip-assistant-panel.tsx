@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/sheet";
 import { SebavioAssistantIcon } from "@/features/ai/components/sebavio-assistant-icon";
 import { useTripAssistant } from "@/features/ai/components/trip-assistant-context";
+import { VoiceMicButton } from "@/features/ai/voice/components/voice-mic-button";
 import { TripAssistantAnalysis } from "@/features/ai/components/analysis-sections";
 import {
   AssistantSourcesList,
@@ -77,6 +78,9 @@ export function TripAssistantSheet() {
     confirmApply,
     clearConversation,
     abortVisual,
+    voice,
+    startVoice,
+    voiceState,
   } = useTripAssistant();
 
   const lastStructured = [...messages]
@@ -371,6 +375,14 @@ export function TripAssistantSheet() {
               >
                 <SendHorizonal className="size-4" />
               </Button>
+              {voice?.enabled && voice.canUseVoice ? (
+                <VoiceMicButton
+                  state={voiceState.state}
+                  active={voiceState.active}
+                  disabled={inputDisabled}
+                  onClick={() => startVoice()}
+                />
+              ) : null}
             </div>
             <p className="text-muted-foreground text-center text-[10px] leading-snug">
               Sebavio peut faire des erreurs. Vérifiez les informations

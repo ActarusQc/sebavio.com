@@ -23,6 +23,10 @@ import {
 import { QUICK_ACTIONS } from "@/features/ai/constants";
 import type { TripAssistantResponse } from "@/features/ai/schemas/response";
 import type { ProposedTripAction } from "@/features/ai/schemas/actions";
+import type { VoiceBootstrapInfo } from "@/features/ai/voice/hooks/use-voice-conversation";
+import type { VoiceProviderName } from "@/features/ai/voice/types";
+import { useVoiceConversation } from "@/features/ai/voice/hooks/use-voice-conversation";
+import { VoiceSessionPanel } from "@/features/ai/voice/components/voice-session-panel";
 
 export type ChatItem =
   | { id: string; role: "user"; content: string; createdAt?: string }
@@ -73,6 +77,11 @@ type TripAssistantContextValue = {
   confirmApply: (action: ProposedTripAction) => void;
   clearConversation: () => void;
   abortVisual: () => void;
+  voice: VoiceBootstrapInfo | null;
+  voiceOpen: boolean;
+  setVoiceOpen: (open: boolean) => void;
+  startVoice: () => void;
+  voiceState: ReturnType<typeof useVoiceConversation>;
 };
 
 const TripAssistantContext = createContext<TripAssistantContextValue | null>(
@@ -102,6 +111,8 @@ export function TripAssistantProvider({
   const [canUsePersonalizedAi, setCanUsePersonalizedAi] = useState(false);
   const [canUseRecommendations, setCanUseRecommendations] = useState(false);
   const [aiEnabled, setAiEnabled] = useState(false);
+  const [voice, setVoice] = useState<VoiceBootstrapInfo | null>(null);
+  const [voiceOpen, setVoiceOpen] = useState(false);
   const [messages, setMessages] = useState<ChatItem[]>([]);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -121,6 +132,12 @@ export function TripAssistantProvider({
       canUsePersonalizedAi: boolean;
       canUseRecommendations: boolean;
       aiEnabled: boolean;
+      voice?: {
+        enabled: boolean;
+        canUseVoice: boolean;
+        provider: string;
+        unavailableMessage: string;
+      };
       conversation: {
         messages: Array<{
           id: string;
@@ -134,6 +151,14 @@ export function TripAssistantProvider({
       setCanUsePersonalizedAi(data.canUsePersonalizedAi);
       setCanUseRecommendations(data.canUseRecommendations);
       setAiEnabled(data.aiEnabled);
+      if (data.voice) {
+        setVoice({
+          enabled: data.voice.enabled,
+          canUseVoice: data.voice.canUseVoice,
+          provider: data.voice.provider as VoiceProviderName,
+          unavailableMessage: data.voice.unavailableMessage,
+        });
+      }
       const history = data.conversation?.messages ?? [];
       setMessages(
         history.map((m) =>
@@ -208,6 +233,49 @@ export function TripAssistantProvider({
       behavior: "smooth",
     });
   }, [messages, pending]);
+
+  const appendVoiceTranscript = useCallback(
+    (item: {
+      role: "user" | "assistant";
+      content: string;
+      structured?: unknown;
+    }) => {
+      setMessages((prev) => [
+        ...prev,
+        item.role === "user"
+          ? {
+              id: `v-u-${Date.now()}-${prev.length}`,
+              role: "user" as const,
+              content: item.content,
+              createdAt: new Date().toISOString(),
+            }
+          : {
+              id: `v-a-${Date.now()}-${prev.length}`,
+              role: "assistant" as const,
+              content: item.content,
+              structured:
+                (item.structured as TripAssistantResponse | null) ?? null,
+              createdAt: new Date().toISOString(),
+            },
+      ]);
+    },
+    [],
+  );
+
+  const voiceState = useVoiceConversation({
+    tripId,
+    usageMode: tripActive ? "driving" : "conversation",
+    liveLatitude: tripActive ? liveLatitude : null,
+    liveLongitude: tripActive ? liveLongitude : null,
+    voiceInfo: voice,
+    onTranscript: appendVoiceTranscript,
+  });
+
+  const startVoice = useCallback(() => {
+    setVoiceOpen(true);
+    setOpen(true);
+    void voiceState.start();
+  }, [voiceState]);
 
   function sendMessageInternal(
     message: string,
@@ -443,11 +511,29 @@ export function TripAssistantProvider({
     abortVisual: () => {
       abortVisualRef.current = true;
     },
+    voice,
+    voiceOpen,
+    setVoiceOpen,
+    startVoice,
+    voiceState,
   };
 
   return (
     <TripAssistantContext.Provider value={value}>
       {children}
+      <VoiceSessionPanel
+        open={voiceOpen}
+        state={voiceState.state}
+        muted={voiceState.muted}
+        error={voiceState.error}
+        transcripts={voiceState.transcripts}
+        onClose={() => {
+          setVoiceOpen(false);
+          void voiceState.stop();
+        }}
+        onInterrupt={() => void voiceState.interrupt()}
+        onToggleMute={() => voiceState.setMuted(!voiceState.muted)}
+      />
     </TripAssistantContext.Provider>
   );
 }

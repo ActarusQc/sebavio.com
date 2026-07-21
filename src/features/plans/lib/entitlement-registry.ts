@@ -9,6 +9,7 @@ export const PLAN_ENTITLEMENT_KEYS = [
   "activities.max",
   "ai.planning.enabled",
   "ai.recommendations.enabled",
+  "ai.voice.enabled",
   "weather.forecast_days",
   "fuel.optimization.enabled",
   "fuel.live_prices.enabled",
@@ -129,6 +130,14 @@ export const ENTITLEMENT_DEFINITIONS: readonly EntitlementDefinition[] = [
     key: "ai.recommendations.enabled",
     label: "Recommandations IA",
     description: "Active les recommandations personnalisées par IA.",
+    category: "ai",
+    valueType: "boolean",
+  },
+  {
+    key: "ai.voice.enabled",
+    label: "Agent vocal",
+    description:
+      "Active la conversation vocale avec l’assistant Sebavio (micro et synthèse).",
     category: "ai",
     valueType: "boolean",
   },

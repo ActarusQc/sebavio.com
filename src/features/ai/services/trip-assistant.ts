@@ -809,6 +809,8 @@ export async function runTripAssistant(params: {
     const systemPrompt = buildTripAssistantSystemPrompt({
       knowledgeMode,
       webSearchEnabled: enableWebSearch,
+      channel: input.channel,
+      usageMode: input.usageMode,
     });
     const userPayload = wrapUserPayload({
       requestType: input.requestType,

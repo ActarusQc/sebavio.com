@@ -4,6 +4,8 @@ import {
   getAiProviderDisplayName,
 } from "@/services/ai/config";
 import { getAiAdminMetrics } from "@/features/ai/services/usage";
+import { getVoiceAdminMetrics } from "@/features/ai/voice/services/usage";
+import { getVoicePublicConfig } from "@/features/ai/voice/config";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TRIP_ASSISTANT_PROMPT_VERSION } from "@/features/ai/constants";
@@ -13,6 +15,8 @@ export default async function AdminAiPage() {
   const config = getAiRuntimeConfig();
   const metrics = await getAiAdminMetrics(30);
   const providerLabel = getAiProviderDisplayName(config.provider);
+  const voiceConfig = getVoicePublicConfig();
+  const voiceMetrics = await getVoiceAdminMetrics(30);
 
   return (
     <div className="space-y-6">
@@ -343,6 +347,110 @@ export default async function AdminAiPage() {
             )}
           </CardContent>
         </Card>
+      </div>
+
+      <div className="space-y-4" data-testid="admin-voice-section">
+        <div>
+          <h2 className="text-sebavio-navy text-xl font-semibold">
+            Agent vocal
+          </h2>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Configuration et métriques vocales. Aucune clé API n’est affichée.
+          </p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">
+                Fonctionnalité
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Badge variant={voiceConfig.enabled ? "default" : "secondary"}>
+                {voiceConfig.enabled ? "Activée" : "Désactivée"}
+              </Badge>
+              <p className="text-muted-foreground mt-2 text-xs">
+                VOICE_AGENT_ENABLED
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Fournisseur</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="font-mono text-sm">{voiceConfig.provider}</p>
+              <p className="text-muted-foreground mt-2 text-xs">
+                Clé OpenAI présente :{" "}
+                {voiceConfig.apiKeyPresent ? "oui" : "non"}
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Plateformes</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1 text-xs">
+              <p>Web : {voiceConfig.webEnabled ? "oui" : "non"}</p>
+              <p>Mobile : {voiceConfig.mobileEnabled ? "oui" : "non"}</p>
+              <p>
+                Android Auto : {voiceConfig.androidAutoEnabled ? "oui" : "non"}
+              </p>
+              <p>CarPlay : {voiceConfig.carplayEnabled ? "oui" : "non"}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">
+                Sessions (30 j)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-semibold">
+                {voiceMetrics.totals.sessions}
+              </p>
+              <p className="text-muted-foreground mt-1 text-xs">
+                {voiceMetrics.totals.totalSeconds} s ·{" "}
+                {voiceMetrics.totals.activeSessions} active(s) ·{" "}
+                {voiceMetrics.totals.errors} erreurs
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Limites</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm">
+              <p>Session max : {voiceConfig.maxSessionSeconds} s</p>
+              <p>Mensuel max : {voiceConfig.maxMonthlySeconds} s</p>
+              <p>Langue : {voiceConfig.defaultLanguage}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Par plateforme</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {voiceMetrics.byPlatform.length === 0 ? (
+                <p className="text-muted-foreground text-sm">Aucune donnée.</p>
+              ) : (
+                <ul className="space-y-1 text-sm">
+                  {voiceMetrics.byPlatform.map((d) => (
+                    <li
+                      key={d.platform}
+                      className="border-border/60 flex justify-between border-b py-1"
+                    >
+                      <span className="font-mono text-xs">{d.platform}</span>
+                      <span>{d.count}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

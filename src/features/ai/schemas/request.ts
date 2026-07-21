@@ -22,6 +22,9 @@ export const tripAssistantMessageInputSchema = z.object({
   liveLatitude: z.number().min(-90).max(90).nullable().optional(),
   liveLongitude: z.number().min(-180).max(180).nullable().optional(),
   clientRequestId: z.string().uuid().nullable().optional(),
+  /** Canal d’interaction — défaut texte (comportement inchangé). */
+  channel: z.enum(["text", "voice"]).optional().default("text"),
+  usageMode: z.enum(["conversation", "driving"]).optional(),
 });
 
 export type TripAssistantMessageInput = z.infer<
