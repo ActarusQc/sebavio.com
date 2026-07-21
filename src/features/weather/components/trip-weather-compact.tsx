@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CloudOff, CloudSun } from "lucide-react";
+import { CloudOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { WeatherConditionIcon } from "@/features/weather/components/weather-condition-icon";
 import type {
   TripWeatherLocation,
   TripWeatherResponse,
@@ -19,10 +20,6 @@ type LoadState =
   | { kind: "loading" }
   | { kind: "ready"; data: TripWeatherResponse }
   | { kind: "error"; message: string };
-
-function iconUrl(iconId: string): string {
-  return `https://openweathermap.org/img/wn/${iconId}@2x.png`;
-}
 
 function pickPrimaryLocation(
   locations: TripWeatherLocation[],
@@ -209,7 +206,7 @@ function CompactBody({ data }: { data: TripWeatherResponse }) {
   return (
     <div className="flex flex-col">
       <ul
-        className="flex min-h-[118px] snap-x snap-mandatory gap-0 overflow-x-auto scroll-smooth sm:min-h-[125px] sm:overflow-visible"
+        className="flex min-h-[118px] snap-x snap-mandatory gap-0 overflow-x-auto scroll-smooth sm:min-h-[132px] sm:overflow-visible"
         role="list"
         aria-label="Prévisions sur plusieurs jours"
       >
@@ -217,20 +214,20 @@ function CompactBody({ data }: { data: TripWeatherResponse }) {
           <li
             key={day.date}
             className={cn(
-              "flex min-w-[8.5rem] shrink-0 snap-start flex-col items-center px-[18px] py-4 text-center sm:min-w-0 sm:flex-1 sm:px-5 sm:py-[18px]",
+              "flex min-w-[8.5rem] shrink-0 snap-start flex-col items-center px-[18px] py-4 text-center sm:min-w-0 sm:flex-1 sm:px-5 sm:py-5",
               index < days.length - 1 && "border-r border-[rgb(14_45_70/0.08)]",
             )}
           >
             <span className="text-sebavio-navy text-[12px] font-semibold tracking-wide sm:text-[13px]">
               {formatDayHeading(day.date, index)}
             </span>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={iconUrl(day.condition.iconId)}
-              alt=""
-              width={40}
-              height={40}
-              className="my-1 size-[36px] sm:size-[40px]"
+            <WeatherConditionIcon
+              iconId={day.condition.iconId}
+              code={day.condition.code}
+              description={day.condition.description}
+              size={42}
+              preferDay
+              className="my-2.5 size-[36px] sm:my-3 sm:size-[42px] [&_svg]:size-full"
             />
             <span className="text-sebavio-navy text-[20px] font-bold tabular-nums sm:text-[22px]">
               {Math.round(day.tempMaxC)}°
@@ -238,25 +235,20 @@ function CompactBody({ data }: { data: TripWeatherResponse }) {
                 {Math.round(day.tempMinC)}°
               </span>
             </span>
-            <span className="text-muted-foreground mt-0.5 line-clamp-1 max-w-[9rem] text-[12px] leading-snug sm:text-[13px]">
+            <span className="text-muted-foreground mt-1 line-clamp-1 max-w-[9rem] text-[12px] leading-snug sm:text-[13px]">
               {day.condition.description}
             </span>
           </li>
         ))}
         {days.length === 0 && primary.current ? (
           <li className="flex w-full items-center gap-3 px-5 py-4">
-            {primary.current.condition.iconId ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={iconUrl(primary.current.condition.iconId)}
-                alt=""
-                width={40}
-                height={40}
-                className="size-10"
-              />
-            ) : (
-              <CloudSun className="text-sebavio-teal size-10" aria-hidden />
-            )}
+            <WeatherConditionIcon
+              iconId={primary.current.condition.iconId}
+              code={primary.current.condition.code}
+              description={primary.current.condition.description}
+              size={40}
+              className="size-10 [&_svg]:size-full"
+            />
             <div>
               <p className="text-sebavio-navy text-lg font-bold">
                 {Math.round(primary.current.temperatureC)}°

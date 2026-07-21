@@ -1948,6 +1948,8 @@ model AiUsage {
   tripId       String?  @map("trip_id") @db.Uuid
   /// chat | analyze | suggest_activities | weather | schedule | fuel | apply_action
   requestType  String   @map("request_type") @db.VarChar(40)
+  /// xai | openai | mock | demo-static
+  provider     String?  @db.VarChar(40)
   model        String?  @db.VarChar(100)
   promptVersion String? @map("prompt_version") @db.VarChar(60)
   inputTokens  Int?     @map("input_tokens")
@@ -1967,6 +1969,7 @@ model AiUsage {
   @@index([tripId, createdAt])
   @@index([requestType, createdAt])
   @@index([success, createdAt])
+  @@index([provider, createdAt])
   @@index([createdAt])
   @@map("ai_usages")
 }

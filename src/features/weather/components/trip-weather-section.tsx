@@ -10,6 +10,7 @@ import {
   Wind,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { WeatherConditionIcon } from "@/features/weather/components/weather-condition-icon";
 import type {
   TripWeatherLocation,
   TripWeatherResponse,
@@ -25,10 +26,6 @@ type LoadState =
   | { kind: "loading" }
   | { kind: "ready"; data: TripWeatherResponse }
   | { kind: "error"; message: string };
-
-function iconUrl(iconId: string): string {
-  return `https://openweathermap.org/img/wn/${iconId}@2x.png`;
-}
 
 function formatWind(kmh: number | null | undefined): string | null {
   if (kmh == null) return null;
@@ -67,18 +64,18 @@ function LocationCard({
             <p className="text-muted-foreground text-xs">{location.date}</p>
           ) : null}
         </div>
-        {iconId ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={iconUrl(iconId)}
-            alt={day?.condition.description ?? "Icône météo"}
-            width={56}
-            height={56}
-            className="size-14 shrink-0"
-          />
-        ) : (
-          <CloudSun className="text-sebavio-teal size-8 shrink-0" aria-hidden />
-        )}
+        <WeatherConditionIcon
+          iconId={iconId}
+          code={day?.condition.code ?? location.current?.condition.code}
+          description={
+            day?.condition.description ??
+            location.current?.condition.description ??
+            "Icône météo"
+          }
+          size={48}
+          preferDay={Boolean(day)}
+          className="size-12 shrink-0 sm:size-14 [&_svg]:size-full"
+        />
       </header>
 
       {day ? (
@@ -199,12 +196,12 @@ function LocationCard({
                       minute: "2-digit",
                     })}
                   </span>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={iconUrl(h.condition.iconId)}
-                    alt={h.condition.description}
-                    width={36}
-                    height={36}
+                  <WeatherConditionIcon
+                    iconId={h.condition.iconId}
+                    code={h.condition.code}
+                    description={h.condition.description}
+                    size={32}
+                    className="my-1 size-8 [&_svg]:size-full"
                   />
                   <span className="font-semibold">
                     {Math.round(h.temperatureC)}°

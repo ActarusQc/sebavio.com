@@ -6,6 +6,7 @@ export type RecordAiUsageInput = {
   userId: string;
   tripId?: string | null;
   requestType: string;
+  provider?: string | null;
   model?: string | null;
   promptVersion?: string | null;
   inputTokens?: number | null;
@@ -24,6 +25,7 @@ export async function recordAiUsage(input: RecordAiUsageInput): Promise<void> {
         userId: input.userId,
         tripId: input.tripId ?? null,
         requestType: input.requestType,
+        provider: input.provider ?? null,
         model: input.model ?? null,
         promptVersion: input.promptVersion ?? null,
         inputTokens: input.inputTokens ?? null,
@@ -40,12 +42,14 @@ export async function recordAiUsage(input: RecordAiUsageInput): Promise<void> {
       requestType: input.requestType,
       success: input.success,
       errorCode: input.errorCode,
+      provider: input.provider,
     });
   }
 }
 
 export type AiAdminMetrics = {
   enabled: boolean;
+  provider: string;
   modelConfigured: string;
   apiKeyPresent: boolean;
   totals: {
@@ -53,6 +57,9 @@ export type AiAdminMetrics = {
     successes: number;
     errors: number;
     avgDurationMs: number | null;
+    inputTokens: number;
+    outputTokens: number;
+    totalTokens: number;
   };
   byDay: Array<{ day: string; count: number; successes: number }>;
   byRequestType: Array<{ requestType: string; count: number }>;
@@ -63,7 +70,10 @@ export type AiAdminMetrics = {
 export async function getAiAdminMetrics(
   days = 30,
 ): Promise<
-  Omit<AiAdminMetrics, "enabled" | "modelConfigured" | "apiKeyPresent">
+  Omit<
+    AiAdminMetrics,
+    "enabled" | "provider" | "modelConfigured" | "apiKeyPresent"
+  >
 > {
   const since = new Date();
   since.setUTCDate(since.getUTCDate() - days);
@@ -77,6 +87,9 @@ export async function getAiAdminMetrics(
       planSlug: true,
       promptVersion: true,
       createdAt: true,
+      inputTokens: true,
+      outputTokens: true,
+      totalTokens: true,
     },
     orderBy: { createdAt: "asc" },
   });
@@ -91,6 +104,9 @@ export async function getAiAdminMetrics(
         : Math.round(
             rows.reduce((sum, r) => sum + r.durationMs, 0) / rows.length,
           ),
+    inputTokens: rows.reduce((sum, r) => sum + (r.inputTokens ?? 0), 0),
+    outputTokens: rows.reduce((sum, r) => sum + (r.outputTokens ?? 0), 0),
+    totalTokens: rows.reduce((sum, r) => sum + (r.totalTokens ?? 0), 0),
   };
 
   const dayMap = new Map<string, { count: number; successes: number }>();
