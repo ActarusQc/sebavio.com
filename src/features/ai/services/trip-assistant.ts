@@ -21,6 +21,7 @@ import {
   acquireAiRequestLock,
   assertAiRateLimit,
   assertAiWebSearchLimits,
+  recordAiWebSearchConversationUse,
 } from "@/features/ai/services/rate-limit";
 import {
   appendConversationMessages,
@@ -535,15 +536,11 @@ export async function runTripAssistant(params: {
       intent: routing.intent,
       sourceCount: response.sources.length,
     });
-    if (routing.intent === "restaurant_recommendation") {
-      console.info("[ai] restaurant_search_metrics", {
-        style: restaurantStyle,
-        placesCandidateCount,
-        restaurantCount,
-        sourceCount: response.sources.length,
-        webSearchUsed: response.webSearchUsed,
-        placesFailed,
-      });
+    if (response.webSearchUsed) {
+      await recordAiWebSearchConversationUse(
+        conversationEarly.id,
+        input.tripId,
+      );
     }
 
     return {

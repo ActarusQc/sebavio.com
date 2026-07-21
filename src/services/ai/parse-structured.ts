@@ -30,6 +30,12 @@ export function parseStructuredTripAssistantResponse(
   const parsed = normalizeModelJson(extractJsonObject(rawText));
   const result = tripAssistantResponseSchema.safeParse(parsed);
   if (!result.success) {
+    console.error("[ai] zod_invalid_response", {
+      issues: result.error.issues.slice(0, 12).map((i) => ({
+        path: i.path.join("."),
+        code: i.code,
+      })),
+    });
     throw new AppError(
       "AI_INVALID_RESPONSE",
       "L’Assistant Sebavio ne peut pas répondre pour le moment. Veuillez réessayer dans quelques instants.",

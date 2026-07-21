@@ -248,7 +248,7 @@ describe("XaiAiProvider", () => {
     const create = vi.fn(async (params) => {
       expect(params.store).toBe(false);
       expect(params.tools).toEqual([{ type: "web_search" }]);
-      expect(params.tool_choice).toBe("required");
+      expect(params.tool_choice).toBe("auto");
       return {
         output_text: JSON.stringify(VALID_RESPONSE),
         citations: ["https://guide.michelin.com/ca/fr/restaurant/test"],

@@ -83,11 +83,8 @@ export async function assertAiWebSearchLimits(input: {
       await redis.connect();
     }
     const key = `ai:web:conv:${input.conversationId ?? input.tripId}`;
-    const count = await redis.incr(key);
-    if (count === 1) {
-      await redis.expire(key, 60 * 60 * 24 * 7);
-    }
-    if (count > config.webSearchMaxPerConversation) {
+    const current = Number((await redis.get(key)) ?? "0");
+    if (current >= config.webSearchMaxPerConversation) {
       throw new AppError(
         "AI_RATE_LIMIT",
         "Limite de recherches en ligne pour cette conversation atteinte.",
@@ -97,6 +94,26 @@ export async function assertAiWebSearchLimits(input: {
   } catch (error) {
     if (error instanceof AppError) throw error;
     // Redis indisponible : limite quotidienne Prisma seulement
+  }
+}
+
+/** Incrémente le compteur conversation après une recherche Web réussie. */
+export async function recordAiWebSearchConversationUse(
+  conversationId: string | null,
+  tripId: string,
+): Promise<void> {
+  try {
+    const redis = getRedis();
+    if (redis.status !== "ready") {
+      await redis.connect();
+    }
+    const key = `ai:web:conv:${conversationId ?? tripId}`;
+    const count = await redis.incr(key);
+    if (count === 1) {
+      await redis.expire(key, 60 * 60 * 24 * 7);
+    }
+  } catch {
+    /* best-effort */
   }
 }
 

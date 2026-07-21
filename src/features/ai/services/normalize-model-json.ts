@@ -6,7 +6,7 @@ import {
 } from "@/features/ai/lib/safe-urls";
 
 /**
- * Corrige les champs sources souvent mal typés par le modèle avant Zod.
+ * Corrige les champs sources / restaurants souvent mal typés avant Zod.
  */
 export function normalizeModelJson(raw: unknown): unknown {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return raw;
@@ -28,8 +28,21 @@ export function normalizeModelJson(raw: unknown): unknown {
   }
   if (!Array.isArray(obj.restaurantRecommendations)) {
     obj.restaurantRecommendations = [];
+  } else {
+    obj.restaurantRecommendations = normalizeRestaurantRecommendations(
+      obj.restaurantRecommendations,
+    );
   }
-  if (obj.clarification === undefined) {
+  if (
+    obj.clarification != null &&
+    typeof obj.clarification === "object" &&
+    !Array.isArray(obj.clarification)
+  ) {
+    const c = obj.clarification as Record<string, unknown>;
+    if (c.required !== true) {
+      obj.clarification = null;
+    }
+  } else if (obj.clarification === undefined) {
     obj.clarification = null;
   }
   if (!Array.isArray(obj.warnings)) obj.warnings = [];
@@ -37,6 +50,173 @@ export function normalizeModelJson(raw: unknown): unknown {
   if (!Array.isArray(obj.missingInformation)) obj.missingInformation = [];
 
   return obj;
+}
+
+function asNullableString(v: unknown, max: number): string | null {
+  if (v == null) return null;
+  const s = String(v).trim();
+  if (!s) return null;
+  return s.slice(0, max);
+}
+
+function asString(v: unknown, fallback: string, max: number): string {
+  const s = asNullableString(v, max);
+  return s ?? fallback;
+}
+
+function asNullableNumber(v: unknown): number | null {
+  if (v == null || v === "") return null;
+  const n = typeof v === "number" ? v : Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function asNullableInt(v: unknown): number | null {
+  const n = asNullableNumber(v);
+  return n == null ? null : Math.round(n);
+}
+
+function normalizeRestaurantRecommendations(items: unknown[]): unknown[] {
+  const out: unknown[] = [];
+  for (const item of items.slice(0, 10)) {
+    if (!item || typeof item !== "object") continue;
+    const r = item as Record<string, unknown>;
+    const name = asString(r.name, "", 200);
+    const city = asString(r.city, "", 150);
+    if (!name || !city) continue;
+
+    const locRaw =
+      r.location && typeof r.location === "object" && !Array.isArray(r.location)
+        ? (r.location as Record<string, unknown>)
+        : {};
+    const routeRaw =
+      r.routeImpact &&
+      typeof r.routeImpact === "object" &&
+      !Array.isArray(r.routeImpact)
+        ? (r.routeImpact as Record<string, unknown>)
+        : {};
+    const openRaw =
+      r.openingStatus &&
+      typeof r.openingStatus === "object" &&
+      !Array.isArray(r.openingStatus)
+        ? (r.openingStatus as Record<string, unknown>)
+        : {};
+
+    const priceRaw = String(r.priceLevel ?? "unknown");
+    const priceLevel = (
+      [
+        "budget",
+        "moderate",
+        "premium",
+        "upscale",
+        "fine_dining",
+        "unknown",
+      ] as const
+    ).includes(priceRaw as "unknown")
+      ? priceRaw
+      : "unknown";
+
+    const openValueRaw = String(openRaw.value ?? "unknown");
+    const openMap: Record<string, string> = {
+      open: "likely_open",
+      opened: "likely_open",
+      closed: "closed",
+      unknown: "unknown",
+      verified_open: "verified_open",
+      likely_open: "likely_open",
+      likely_closed: "likely_closed",
+    };
+    const openValue = openMap[openValueRaw] ?? "unknown";
+
+    const locSourceRaw = String(locRaw.source ?? "unverified");
+    const locSource = (
+      ["official", "maps", "web", "unverified"] as const
+    ).includes(locSourceRaw as "unverified")
+      ? locSourceRaw
+      : "unverified";
+
+    const beforeAfterRaw = String(
+      routeRaw.locatedBeforeOrAfterMidpoint ?? "unknown",
+    );
+    const beforeAfter = (
+      ["before", "near", "after", "unknown"] as const
+    ).includes(beforeAfterRaw as "unknown")
+      ? beforeAfterRaw
+      : "unknown";
+
+    let distinction = null;
+    if (
+      r.distinction &&
+      typeof r.distinction === "object" &&
+      !Array.isArray(r.distinction)
+    ) {
+      const d = r.distinction as Record<string, unknown>;
+      const label = asNullableString(d.label, 200);
+      if (label) {
+        distinction = {
+          label,
+          verified: Boolean(d.verified),
+          sourceId: asNullableString(d.sourceId, 80),
+        };
+      }
+    }
+
+    out.push({
+      id: asNullableString(r.id, 80) ?? undefined,
+      name,
+      city,
+      category: asNullableString(r.category, 120),
+      shortDescription: asString(
+        r.shortDescription,
+        asString(r.recommendationReason, "Suggestion près du trajet.", 1000),
+        1000,
+      ),
+      recommendationReason: asString(
+        r.recommendationReason,
+        asString(r.shortDescription, "Suggestion près du trajet.", 1000),
+        1000,
+      ),
+      cuisineType: asNullableString(r.cuisineType, 120),
+      priceLevel,
+      distinction,
+      location: {
+        address: asNullableString(locRaw.address, 500),
+        latitude: asNullableNumber(locRaw.latitude),
+        longitude: asNullableNumber(locRaw.longitude),
+        source: locSource,
+      },
+      routeImpact: {
+        distanceFromMidpointKm: asNullableNumber(
+          routeRaw.distanceFromMidpointKm,
+        ),
+        estimatedDetourKm: asNullableNumber(routeRaw.estimatedDetourKm),
+        estimatedDetourMinutes: asNullableInt(routeRaw.estimatedDetourMinutes),
+        locatedBeforeOrAfterMidpoint: beforeAfter,
+      },
+      estimatedArrivalTime: asNullableString(r.estimatedArrivalTime, 40),
+      estimatedMealDurationMinutes: asNullableInt(
+        r.estimatedMealDurationMinutes,
+      ),
+      openingStatus: {
+        value: openValue,
+        label: asString(openRaw.label, "Horaire à confirmer", 300),
+        verifiedAt: asNullableString(openRaw.verifiedAt, 40),
+      },
+      openingHoursText: asNullableString(r.openingHoursText, 500),
+      rating: asNullableNumber(r.rating),
+      ratingCount: asNullableInt(r.ratingCount),
+      reservationRecommended: Boolean(r.reservationRecommended),
+      verificationRequired:
+        r.verificationRequired == null ? true : Boolean(r.verificationRequired),
+      verificationNote: asNullableString(r.verificationNote, 500),
+      sourceIds: Array.isArray(r.sourceIds)
+        ? r.sourceIds
+            .filter((x): x is string => typeof x === "string")
+            .map((x) => x.slice(0, 80))
+            .slice(0, 20)
+        : [],
+    });
+  }
+  return out;
 }
 
 function normalizeSourcesArray(items: unknown[]): AiSource[] {

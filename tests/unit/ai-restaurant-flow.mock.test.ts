@@ -16,6 +16,7 @@ vi.mock("@/features/ai/services/rate-limit", () => ({
   assertAiRateLimit: vi.fn(async () => undefined),
   acquireAiRequestLock: vi.fn(async () => async () => undefined),
   assertAiWebSearchLimits: vi.fn(async () => undefined),
+  recordAiWebSearchConversationUse: vi.fn(async () => undefined),
 }));
 
 vi.mock("@/features/trips/services/trips", () => ({
