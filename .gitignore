@@ -20,6 +20,7 @@
 /.next/
 /.next-preview/
 /.next-visual/
+/.next-deploy/
 /out/
 
 # e2e screenshots / local diagnostics
