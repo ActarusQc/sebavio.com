@@ -14,32 +14,39 @@ const FOOTER_COLUMNS = [
         href: "/login?callbackUrl=/dashboard/vehicles",
         label: "Gestion du véhicule",
       },
-      { href: "/#fonctionnalites", label: "Météo et activités" },
       { href: "/pricing", label: "Tarifs" },
     ],
   },
   {
     title: "Ressources",
     links: [
-      { href: "/#a-propos", label: "À propos" },
+      { href: "/faq", label: "FAQ" },
       { href: "/#comment-ca-fonctionne", label: "Comment ça fonctionne" },
+      { href: "/#a-propos", label: "À propos" },
       { href: "/register", label: "Créer un compte" },
-      { href: "/login", label: "Connexion" },
     ],
   },
   {
     title: "Espace membre",
     links: [
+      { href: "/login", label: "Connexion" },
       { href: "/login?callbackUrl=/dashboard/trips", label: "Voyages" },
       { href: "/login?callbackUrl=/dashboard/vehicles", label: "Véhicules" },
       {
         href: "/login?callbackUrl=/dashboard/maintenance",
         label: "Entretien",
       },
+    ],
+  },
+  {
+    title: "Compte",
+    links: [
+      { href: "/forgot-password", label: "Mot de passe oublié" },
       {
         href: "/login?callbackUrl=/dashboard/settings",
         label: "Paramètres",
       },
+      { href: "/pricing", label: "Forfaits" },
     ],
   },
 ] as const;
@@ -48,9 +55,9 @@ export function SiteFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-[#050b1c] text-white">
-      <div className="mx-auto max-w-[100rem] px-4 py-12 sm:px-6 lg:px-10 lg:py-14">
-        <div className="grid gap-10 md:grid-cols-[1.5fr_repeat(3,1fr)]">
+    <footer className="border-t border-white/10 bg-[#050b1c] text-white">
+      <div className="mx-auto max-w-[96rem] px-[clamp(1.5rem,4vw,4.5rem)] py-12 lg:py-14">
+        <div className="grid gap-10 lg:grid-cols-[1.4fr_repeat(4,1fr)]">
           <div>
             <Link
               href="/"
@@ -79,7 +86,7 @@ export function SiteFooter() {
               </span>
             </Link>
             <p className="max-w-sm text-sm leading-relaxed text-white/65">
-              {LANDING.footer.description}
+              {LANDING.definition}
             </p>
           </div>
 
@@ -93,7 +100,7 @@ export function SiteFooter() {
                   <li key={link.href + link.label}>
                     <Link
                       href={link.href}
-                      className="hover:text-sebavio-gold text-sm text-white/60 transition-colors"
+                      className="text-sm text-white/60 transition-colors hover:text-white"
                     >
                       {link.label}
                     </Link>

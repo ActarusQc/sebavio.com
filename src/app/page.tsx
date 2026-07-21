@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import {
   FeatureGrid,
   FinalCta,
-  GeoDefinitionSection,
+  AboutStrip,
   HeroSection,
   HowItWorksSection,
   JourneyLifecycleSection,
@@ -137,7 +137,7 @@ export default async function Home() {
         />
         <JourneyLifecycleSection />
         <UseCasesSection />
-        <GeoDefinitionSection />
+        <AboutStrip />
         <FinalCta />
       </main>
       <SiteFooter />

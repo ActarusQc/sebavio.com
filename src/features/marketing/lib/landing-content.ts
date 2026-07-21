@@ -77,11 +77,11 @@ export const LANDING = {
       {
         id: "fuel",
         title: "Prévoyez vos ravitaillements",
-        body: "Sebavio calcule les arrêts de carburant selon votre véhicule, sa consommation réelle, son réservoir et votre niveau d’essence au départ.",
+        body: "Sebavio calcule vos arrêts de carburant selon votre véhicule, sa consommation réelle, son réservoir et votre niveau d’essence au départ.",
       },
       {
         id: "adapt",
-        title: "Adaptez votre trajet",
+        title: "Adaptez votre trajet à mesure que vous roulez",
         body: "Ajoutez une activité, une étape ou un détour. Sebavio recalcule la distance, l’horaire, les arrêts et les estimations.",
       },
       {
@@ -92,6 +92,7 @@ export const LANDING = {
     ],
   },
   howItWorks: {
+    eyebrow: "Trois étapes simples",
     title: "Planifiez votre voyage en quelques minutes",
     steps: [
       {
@@ -123,22 +124,21 @@ export const LANDING = {
         title: "Avant le départ",
         items: [
           "Itinéraire personnalisé",
-          "Météo prévue sur le trajet",
-          "Plan de carburant",
+          "Météo prévue tout au long du trajet",
+          "Plan de carburant détaillé",
           "Activités et hébergements",
-          "Préparation du véhicule",
+          "Entretien du véhicule",
         ],
       },
       {
         id: "during",
         title: "Sur la route",
         items: [
-          "Progression du voyage",
-          "Position et suivi en direct",
+          "Position et suivi du voyage",
           "Recommandations contextuelles",
           "Détours et changements",
-          "Recalcul de l’itinéraire",
-          "Agent conversationnel",
+          "Recalcul automatique",
+          "Assistant conversationnel",
         ],
       },
       {
@@ -146,10 +146,10 @@ export const LANDING = {
         title: "Après le voyage",
         items: [
           "Historique de vos voyages",
-          "Dépenses et pleins réels",
-          "Écart par rapport au budget",
+          "Dépenses réelles",
+          "Bilan du carburant",
           "Rappels d’entretien",
-          "Préparation d’un prochain voyage",
+          "Préparation du prochain voyage",
         ],
       },
     ],

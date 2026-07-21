@@ -15,4 +15,11 @@ export { JourneyLifecycleSection } from "./journey-lifecycle-section";
 export { UseCasesSection } from "./use-cases-section";
 export { FinalCta } from "./final-cta";
 export { GeoDefinitionSection } from "./geo-definition-section";
+export { AboutStrip } from "./about-strip";
 export { MarketingCtaButton } from "./marketing-cta-button";
+export {
+  MarketingConversationMini,
+  MarketingFuelPlanMini,
+  MarketingRouteAdaptMini,
+  MarketingVehicleMini,
+} from "./marketing-feature-minis";
