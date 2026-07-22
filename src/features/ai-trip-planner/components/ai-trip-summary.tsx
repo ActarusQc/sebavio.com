@@ -22,7 +22,11 @@ import {
   formatTravelers,
   MISSING_FIELD_LABELS,
 } from "@/features/ai-trip-planner/lib/format";
-import type { TripDraft } from "@/features/ai-trip-planner/types";
+import { AIItineraryProposal } from "@/features/ai-trip-planner/components/ai-itinerary-proposal";
+import type {
+  ItineraryProposalDto,
+  TripDraft,
+} from "@/features/ai-trip-planner/types";
 import { cn } from "@/lib/utils";
 
 type RowProps = {
@@ -70,6 +74,7 @@ type Props = {
   missingFields: string[];
   canCreate: boolean;
   creating?: boolean;
+  proposal?: ItineraryProposalDto | null;
   onCreate: () => void;
   onContinue: () => void;
   className?: string;
@@ -80,6 +85,7 @@ export function AITripSummary({
   missingFields,
   canCreate,
   creating,
+  proposal,
   onCreate,
   onContinue,
   className,
@@ -148,6 +154,8 @@ export function AITripSummary({
       </div>
 
       <AITripStats draft={draft} />
+
+      {proposal ? <AIItineraryProposal proposal={proposal} /> : null}
 
       <AISuggestions
         suggestions={

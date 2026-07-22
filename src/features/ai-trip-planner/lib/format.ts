@@ -113,6 +113,7 @@ export const MISSING_FIELD_LABELS: Record<string, string> = {
   travelers: "voyageurs",
   vehicleId: "véhicule",
   title: "titre",
+  itineraryProposal: "proposition d’itinéraire",
 };
 
 export function formatPlaceSummary(place: {

@@ -68,6 +68,32 @@ export type TripDraft = {
   estimatedDurationMinutes: number | null;
   estimatedFuelStops: number | null;
   softWarnings: string[];
+  destinationMode: "known" | "suggest" | null;
+  maxDriveMinutes: number | null;
+  maxDistanceKm: number | null;
+  proposalConfirmed: boolean;
+};
+
+export type ItineraryProposalDto = {
+  title: string;
+  summary: string;
+  originLabel: string;
+  destinationLabel: string;
+  dateLabel: string | null;
+  estimatedDistanceKm: number | null;
+  estimatedDurationMinutes: number | null;
+  estimatedFuelStops: number | null;
+  days: Array<{
+    day: number;
+    label: string;
+    items: Array<{
+      name: string;
+      category: string;
+      justification: string | null;
+      durationMinutes: number | null;
+    }>;
+  }>;
+  highlights: string[];
 };
 
 export type RequestedInputDto = {
@@ -106,10 +132,15 @@ export type OriginSuggestionDto = {
 export type TripPlannerSessionDto = {
   id: string;
   status: TripPlannerSessionStatus;
+  sessionVersion: number;
+  currentStep: string;
   messages: PlannerMessage[];
   draft: TripDraft;
   missingFields: string[];
+  /** Quick replies de l’étape active (autorité serveur). */
+  quickReplies: string[];
   requestedInput: RequestedInputDto;
+  proposal: ItineraryProposalDto | null;
   originSuggestions: OriginSuggestionDto[];
   homeCity: string | null;
   createdTripId: string | null;

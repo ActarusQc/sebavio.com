@@ -130,6 +130,8 @@ export function AITripPlannerPage() {
             disabled={session.status === "created" || creating}
             error={error}
             requestedInput={session.requestedInput}
+            activeQuickReplies={session.quickReplies}
+            proposal={session.proposal}
             homeCity={session.homeCity}
             originSuggestions={session.originSuggestions}
             onSend={(content) => void sendMessage(content)}
@@ -160,6 +162,7 @@ export function AITripPlannerPage() {
               missingFields={session.missingFields}
               canCreate={session.canCreate && session.status !== "created"}
               creating={creating}
+              proposal={session.proposal}
               onCreate={() => setCreateOpen(true)}
               onContinue={focusComposer}
             />

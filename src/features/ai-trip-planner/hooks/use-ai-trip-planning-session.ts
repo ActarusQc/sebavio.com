@@ -120,18 +120,29 @@ export function useAITripPlanningSession() {
       );
 
       try {
+        const expectedVersion = session.sessionVersion;
         const res = await fetch(
           `/api/ai-trip-planner/session/${session.id}/message`,
           {
             method: "POST",
             credentials: "same-origin",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ content: text }),
+            body: JSON.stringify({
+              content: text,
+              expectedVersion,
+            }),
             signal: controller.signal,
           },
         );
         const data = await parseJson<{ session: TripPlannerSessionDto }>(res);
-        startTransition(() => setSession(data.session));
+        startTransition(() =>
+          setSession((prev) => {
+            if (!prev) return data.session;
+            // Ignorer une réponse plus ancienne qu’un état déjà plus récent
+            if (data.session.sessionVersion < prev.sessionVersion) return prev;
+            return data.session;
+          }),
+        );
       } catch (e) {
         if ((e as Error).name === "AbortError") return;
         setSession((prev) =>
@@ -202,6 +213,7 @@ export function useAITripPlanningSession() {
             body: JSON.stringify({
               field,
               useHome: Boolean(options.useHome),
+              expectedVersion: session.sessionVersion,
               address: options.address
                 ? {
                     formattedAddress: options.address.formattedAddress,
@@ -218,7 +230,13 @@ export function useAITripPlanningSession() {
           },
         );
         const data = await parseJson<{ session: TripPlannerSessionDto }>(res);
-        startTransition(() => setSession(data.session));
+        startTransition(() =>
+          setSession((prev) => {
+            if (!prev) return data.session;
+            if (data.session.sessionVersion < prev.sessionVersion) return prev;
+            return data.session;
+          }),
+        );
       } catch (e) {
         setError(
           e instanceof Error

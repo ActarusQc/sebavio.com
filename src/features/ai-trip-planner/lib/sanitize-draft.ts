@@ -222,6 +222,30 @@ export function sanitizeAndMergeDraft(input: {
     softWarnings: Array.isArray(raw.softWarnings)
       ? (raw.softWarnings as string[])
       : prev.softWarnings,
+    destinationMode: pickScalar(
+      raw.destinationMode === "known" ||
+        raw.destinationMode === "suggest" ||
+        raw.destinationMode === null
+        ? (raw.destinationMode as TripDraftParsed["destinationMode"])
+        : undefined,
+      prev.destinationMode,
+    ),
+    maxDriveMinutes: pickScalar(
+      typeof raw.maxDriveMinutes === "number" || raw.maxDriveMinutes === null
+        ? (raw.maxDriveMinutes as number | null)
+        : undefined,
+      prev.maxDriveMinutes,
+    ),
+    maxDistanceKm: pickScalar(
+      typeof raw.maxDistanceKm === "number" || raw.maxDistanceKm === null
+        ? (raw.maxDistanceKm as number | null)
+        : undefined,
+      prev.maxDistanceKm,
+    ),
+    proposalConfirmed:
+      typeof raw.proposalConfirmed === "boolean"
+        ? raw.proposalConfirmed
+        : prev.proposalConfirmed,
   };
 
   const parsed = tripDraftSchema.safeParse({

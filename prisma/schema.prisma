@@ -2062,6 +2062,8 @@ model AiTripPlanningSession {
   userId          String    @map("user_id") @db.Uuid
   /// collecting | proposing | ready_for_confirmation | created | abandoned
   status          String    @default("collecting") @db.VarChar(40)
+  /// Version monotone pour éviter les courses asynchrones client/serveur.
+  sessionVersion  Int       @default(0) @map("session_version")
   messages        Json      @db.JsonB
   structuredDraft Json      @map("structured_draft") @db.JsonB
   createdTripId   String?   @map("created_trip_id") @db.Uuid

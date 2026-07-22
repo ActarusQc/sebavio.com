@@ -16,7 +16,8 @@ import {
   parseStoredDraft,
   toSessionDto,
 } from "@/features/ai-trip-planner/services/dto";
-import { detectMissingFields } from "@/features/ai-trip-planner/lib/missing-fields";
+import { isDraftReadyForCreation } from "@/features/ai-trip-planner/lib/missing-fields";
+import { hasItineraryProposal } from "@/features/ai-trip-planner/lib/planning-step";
 import {
   toDateOnlyIso,
   validatePlanningDates,
@@ -71,11 +72,12 @@ export async function createTripFromPlanningSession(
   }
 
   let draft = parseStoredDraft(session.structuredDraft);
-  const missing = detectMissingFields(draft);
-  if (missing.length > 0) {
+  if (!isDraftReadyForCreation(draft)) {
     throw new AppError(
       "VALIDATION_ERROR",
-      `Informations manquantes : ${missing.join(", ")}.`,
+      !hasItineraryProposal(draft)
+        ? "Une proposition d’itinéraire concrète est requise avant de créer le voyage."
+        : "Des informations obligatoires manquent encore pour créer le voyage.",
       400,
     );
   }

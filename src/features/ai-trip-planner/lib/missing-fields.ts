@@ -1,4 +1,5 @@
 import type { TripDraftParsed } from "@/features/ai-trip-planner/schemas/draft";
+import { hasItineraryProposal } from "@/features/ai-trip-planner/lib/planning-step";
 
 export function detectMissingFields(draft: TripDraftParsed): string[] {
   const missing: string[] = [];
@@ -18,9 +19,37 @@ export function detectMissingFields(draft: TripDraftParsed): string[] {
 
   if (!draft.vehicleId) missing.push("vehicleId");
 
+  if (
+    detectMissingFieldsBasicsComplete(draft) &&
+    !hasItineraryProposal(draft)
+  ) {
+    missing.push("itineraryProposal");
+  }
+
   return missing;
 }
 
+function detectMissingFieldsBasicsComplete(draft: TripDraftParsed): boolean {
+  if (!draft.origin.name?.trim()) return false;
+  if (!draft.destination.name?.trim()) return false;
+  if (!draft.departureDate?.trim()) return false;
+  if (!draft.returnDate?.trim() && draft.durationDays == null) return false;
+  const hasTravelers =
+    (draft.travelerCount != null && draft.travelerCount > 0) ||
+    (draft.adults != null && draft.adults > 0) ||
+    (draft.adults ?? 0) + (draft.children ?? 0) > 0;
+  if (!hasTravelers) return false;
+  if (!draft.vehicleId) return false;
+  return true;
+}
+
+/** Champs scalaires seuls (sans exiger la proposition). */
+export function detectMissingScalarFields(draft: TripDraftParsed): string[] {
+  return detectMissingFields(draft).filter((f) => f !== "itineraryProposal");
+}
+
 export function isDraftReadyForCreation(draft: TripDraftParsed): boolean {
-  return detectMissingFields(draft).length === 0;
+  return (
+    detectMissingScalarFields(draft).length === 0 && hasItineraryProposal(draft)
+  );
 }

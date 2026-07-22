@@ -193,6 +193,30 @@ export const tripDraftSchema = z
     estimatedDurationMinutes: nullableNumber,
     estimatedFuelStops: nullableNumber,
     softWarnings: z.array(z.string().max(300)).max(10).default([]),
+    /** known = destination choisie ; suggest = idées dans un rayon. */
+    destinationMode: z
+      .enum(["known", "suggest"])
+      .nullable()
+      .optional()
+      .catch(null)
+      .transform((v) => v ?? null),
+    maxDriveMinutes: z
+      .number()
+      .int()
+      .min(15)
+      .max(24 * 60)
+      .nullable()
+      .optional()
+      .transform((v) => v ?? null),
+    maxDistanceKm: z
+      .number()
+      .int()
+      .min(10)
+      .max(5000)
+      .nullable()
+      .optional()
+      .transform((v) => v ?? null),
+    proposalConfirmed: z.boolean().optional().default(false),
   })
   .transform((d) => ({
     title: d.title ?? null,
@@ -220,6 +244,10 @@ export const tripDraftSchema = z
     estimatedDurationMinutes: d.estimatedDurationMinutes ?? null,
     estimatedFuelStops: d.estimatedFuelStops ?? null,
     softWarnings: d.softWarnings ?? [],
+    destinationMode: d.destinationMode ?? null,
+    maxDriveMinutes: d.maxDriveMinutes ?? null,
+    maxDistanceKm: d.maxDistanceKm ?? null,
+    proposalConfirmed: Boolean(d.proposalConfirmed),
   }));
 
 export type TripDraftParsed = z.infer<typeof tripDraftSchema>;
@@ -231,13 +259,17 @@ export function emptyTripDraft(): TripDraftParsed {
 export const plannerStepSchema = z.enum([
   "trip_type",
   "origin",
+  "destination_mode",
+  "destination_radius",
   "destination",
   "dates",
   "travelers",
   "vehicle",
   "preferences",
+  "itinerary_proposal",
   "proposal",
   "confirmation",
+  "created",
 ]);
 
 export const requestedInputSchema = z

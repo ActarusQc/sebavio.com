@@ -17,6 +17,7 @@ import {
   inferRequestedInput,
   parseStoredDraft,
   parseStoredMessages,
+  stripHistoricalQuickReplies,
   toSessionDto,
 } from "@/features/ai-trip-planner/services/dto";
 import {
@@ -24,7 +25,6 @@ import {
   parseTripPlanningAiResponseSoft,
 } from "@/features/ai-trip-planner/services/parse-ai-response";
 import { sanitizeAndMergeDraft } from "@/features/ai-trip-planner/lib/sanitize-draft";
-import { detectMissingFields } from "@/features/ai-trip-planner/lib/missing-fields";
 import {
   buildTripPlannerSystemPrompt,
   TRIP_PLANNER_PROMPT_VERSION,
@@ -37,14 +37,103 @@ import {
   isHomeQuickReply,
   isOtherAddressQuickReply,
 } from "@/features/ai-trip-planner/services/apply-place";
+import { DEFAULT_QUEBEC_ORIGIN_SUGGESTIONS } from "@/features/ai-trip-planner/constants";
 import {
-  DEFAULT_QUEBEC_ORIGIN_SUGGESTIONS,
-  HOME_QUICK_OTHER,
-  HOME_QUICK_RECENT,
-  HOME_QUICK_YES,
-} from "@/features/ai-trip-planner/constants";
+  buildControlsForStep,
+  CONFIRM_EDIT,
+  CONFIRM_YES,
+  filterAiQuickRepliesForStep,
+  GENERATE_ITINERARY,
+} from "@/features/ai-trip-planner/lib/controls-for-step";
+import {
+  hasItineraryProposal,
+  parseDriveLimitFromText,
+  resolveCurrentStep,
+  resolveSessionStatus,
+} from "@/features/ai-trip-planner/lib/planning-step";
+import { ensureMinimalItineraryContent } from "@/features/ai-trip-planner/lib/ensure-minimal-proposal";
+import type { TripDraftParsed } from "@/features/ai-trip-planner/schemas/draft";
 import type { TripPlannerSessionDto } from "@/features/ai-trip-planner/types";
 import type { Prisma } from "@prisma/client";
+
+function applyDeterministicDraftPatches(
+  draft: TripDraftParsed,
+  userText: string,
+  step: ReturnType<typeof resolveCurrentStep>,
+): TripDraftParsed {
+  const t = userText.trim();
+  const lower = t.toLowerCase();
+  let next = draft;
+
+  if (
+    step === "destination_mode" ||
+    (!draft.destination.name && draft.origin.name)
+  ) {
+    if (
+      /j[’']ai déjà une destination|deja une destination|destination précise/i.test(
+        lower,
+      )
+    ) {
+      next = { ...next, destinationMode: "known" };
+    } else if (
+      /cherche des idées|cherche des idees|des idées|des idees/i.test(lower)
+    ) {
+      next = { ...next, destinationMode: "suggest" };
+    }
+  }
+
+  if (
+    step === "destination_radius" ||
+    (next.destinationMode === "suggest" &&
+      next.maxDriveMinutes == null &&
+      next.maxDistanceKm == null)
+  ) {
+    const limit = parseDriveLimitFromText(t);
+    if (limit.maxDriveMinutes != null || limit.maxDistanceKm != null) {
+      next = {
+        ...next,
+        maxDriveMinutes: limit.maxDriveMinutes ?? next.maxDriveMinutes,
+        maxDistanceKm: limit.maxDistanceKm ?? next.maxDistanceKm,
+        destinationMode: next.destinationMode ?? "suggest",
+      };
+    }
+    if (/moins d[’']?1\s*h|moins d'une heure/i.test(lower)) {
+      next = { ...next, maxDriveMinutes: 60, destinationMode: "suggest" };
+    }
+    if (/moins de 200\s*km/i.test(lower)) {
+      next = { ...next, maxDistanceKm: 200, destinationMode: "suggest" };
+    }
+    if (/moins de 400\s*km/i.test(lower)) {
+      next = { ...next, maxDistanceKm: 400, destinationMode: "suggest" };
+    }
+  }
+
+  if (/passer à l[’']itinéraire|passer a l'itineraire/i.test(lower)) {
+    next = {
+      ...next,
+      preferences:
+        next.preferences.length > 0 ? next.preferences : ["itineraire"],
+    };
+  }
+
+  if (t === CONFIRM_YES && hasItineraryProposal(next)) {
+    next = { ...next, proposalConfirmed: true };
+  }
+  if (t === CONFIRM_EDIT) {
+    next = { ...next, proposalConfirmed: false };
+  }
+
+  // Voyageurs rapides
+  const travelersMatch = lower.match(/^(\d+)\s*personnes?$/);
+  if (travelersMatch && step === "travelers") {
+    const n = Number(travelersMatch[1]);
+    if (n >= 1 && n <= 50) {
+      next = { ...next, travelerCount: n, adults: n, children: 0 };
+    }
+  }
+
+  return next;
+}
 
 function summarizeHistory(
   messages: Array<{ role: string; content: string }>,
@@ -90,6 +179,7 @@ export async function sendPlanningMessage(
   userId: string,
   sessionId: string,
   content: string,
+  expectedVersion?: number,
 ): Promise<TripPlannerSessionDto> {
   await assertTripPlannerAccess(userId);
   await assertAiRateLimit(userId);
@@ -108,6 +198,7 @@ export async function sendPlanningMessage(
     return applyPlanningPlace(userId, sessionId, {
       field: "origin",
       useHome: true,
+      expectedVersion,
     });
   }
   if (isOtherAddressQuickReply(trimmed)) {
@@ -131,7 +222,8 @@ export async function sendPlanningMessage(
     const updated = await prisma.aiTripPlanningSession.update({
       where: { id: session.id },
       data: {
-        messages: [
+        sessionVersion: { increment: 1 },
+        messages: stripHistoricalQuickReplies([
           ...messages,
           {
             id: randomUUID(),
@@ -140,10 +232,12 @@ export async function sendPlanningMessage(
             createdAt: new Date().toISOString(),
           },
           assistantMessage,
-        ] as unknown as Prisma.InputJsonValue,
+        ]) as unknown as Prisma.InputJsonValue,
       },
     });
     return toSessionDto(updated, {
+      currentStep: "origin",
+      quickReplies: assistantMessage.quickReplies ?? [],
       requestedInput: {
         type: "address",
         field: "origin",
@@ -178,6 +272,15 @@ export async function sendPlanningMessage(
       "Cette session a été abandonnée. Démarrez une nouvelle planification.",
       400,
     );
+  }
+
+  if (expectedVersion != null && session.sessionVersion !== expectedVersion) {
+    // Course asynchrone : renvoyer l’état actuel sans appliquer le message
+    const userCtx = await loadPlannerUserContext(userId);
+    return toSessionDto(session, {
+      originSuggestions: userCtx.originSuggestions,
+      homeCity: userCtx.homeCity,
+    });
   }
 
   const release = await acquireAiRequestLock(userId, sessionId);
@@ -217,18 +320,65 @@ export async function sendPlanningMessage(
       ownedGroups = [];
     }
 
-    // Pré-remplir nom de ville QC sans coords (demande ensuite validation adresse si besoin)
-    let draftSeed = previousDraft;
-    if (quebecCity && !previousDraft.origin.name) {
+    const hasTripTypeHint =
+      previousDraft.travelStyle.length > 0 ||
+      previousDraft.preferences.length > 0 ||
+      withUser.some(
+        (m) =>
+          m.role === "user" &&
+          /road trip|escapade|famille|couple|destination|idées|idees/i.test(
+            m.content,
+          ),
+      );
+
+    const stepBefore = resolveCurrentStep(previousDraft, {
+      sessionStatus: session.status,
+      hasTripTypeHint,
+    });
+
+    // Pré-remplir ville QC selon l’étape (jamais écraser une autre étape)
+    let draftSeed = applyDeterministicDraftPatches(
+      previousDraft,
+      trimmed,
+      stepBefore,
+    );
+    if (quebecCity) {
+      if (stepBefore === "origin" && !draftSeed.origin.name) {
+        draftSeed = {
+          ...draftSeed,
+          origin: {
+            ...draftSeed.origin,
+            name: quebecCity,
+            city: quebecCity,
+            province: "Québec",
+            country: "CA",
+          },
+        };
+      } else if (
+        (stepBefore === "destination" || stepBefore === "destination_mode") &&
+        !draftSeed.destination.name
+      ) {
+        draftSeed = {
+          ...draftSeed,
+          destinationMode: draftSeed.destinationMode ?? "known",
+          destination: {
+            ...draftSeed.destination,
+            name: quebecCity,
+            city: quebecCity,
+            province: "Québec",
+            country: "CA",
+          },
+        };
+      }
+    }
+
+    // Style de voyage depuis les réponses rapides initiales
+    if (stepBefore === "trip_type") {
+      const style = trimmed.slice(0, 80);
       draftSeed = {
-        ...previousDraft,
-        origin: {
-          ...previousDraft.origin,
-          name: quebecCity,
-          city: quebecCity,
-          province: "Québec",
-          country: "CA",
-        },
+        ...draftSeed,
+        travelStyle:
+          draftSeed.travelStyle.length > 0 ? draftSeed.travelStyle : [style],
       };
     }
 
@@ -237,6 +387,7 @@ export async function sendPlanningMessage(
       groups: ownedGroups,
       currentDraftJson: JSON.stringify({
         ...draftSeed,
+        currentStepHint: stepBefore,
         // Ne jamais envoyer l’adresse civique du domicile au modèle
         origin: draftSeed.origin.isHome
           ? {
@@ -327,44 +478,55 @@ export async function sendPlanningMessage(
         });
 
         // Niveau 4 — fallback conversationnel, conserve le brouillon
+        const fallbackStep = resolveCurrentStep(draftSeed, {
+          sessionStatus: session.status,
+          hasTripTypeHint: true,
+        });
+        const fallbackControls = buildControlsForStep({
+          step: fallbackStep,
+          draft: draftSeed,
+          ownedVehicles,
+          homeCity: userCtx.homeCity,
+          hasHome: Boolean(userCtx.home),
+          originSuggestions: userCtx.originSuggestions,
+          hasProposal: hasItineraryProposal(draftSeed),
+        });
         const fallbackText =
           parsedSoft.conversationalFallback ??
-          "J’ai bien reçu votre réponse. Pour continuer sans ambiguïté, pouvez-vous préciser ou sélectionner le lieu demandé?";
-        const missing = detectMissingFields(draftSeed);
+          fallbackControls.forceAssistantMessage ??
+          "J’ai bien reçu votre réponse. Pour continuer, utilisez les choix ci-dessous ou précisez votre réponse.";
         const fallbackAssistant = {
           id: randomUUID(),
           role: "assistant" as const,
           content: fallbackText,
           createdAt: new Date().toISOString(),
-          quickReplies: missing.includes("origin")
-            ? userCtx.home
-              ? [HOME_QUICK_YES, HOME_QUICK_OTHER, HOME_QUICK_RECENT]
-              : [...DEFAULT_QUEBEC_ORIGIN_SUGGESTIONS.slice(0, 5)]
-            : undefined,
+          quickReplies: fallbackControls.quickReplies,
         };
         const updated = await prisma.aiTripPlanningSession.update({
           where: { id: session.id },
           data: {
-            messages: [
+            sessionVersion: { increment: 1 },
+            messages: stripHistoricalQuickReplies([
               ...withUser,
               fallbackAssistant,
-            ] as unknown as Prisma.InputJsonValue,
+            ]) as unknown as Prisma.InputJsonValue,
             structuredDraft: draftSeed as unknown as Prisma.InputJsonValue,
           },
         });
         success = true;
         return toSessionDto(updated, {
-          requestedInput: inferRequestedInput(draftSeed, null),
+          currentStep: fallbackStep,
+          quickReplies: fallbackControls.quickReplies,
+          requestedInput: fallbackControls.requestedInput,
           originSuggestions: userCtx.originSuggestions,
           homeCity: userCtx.homeCity,
+          ownedVehicles,
         });
       }
     }
 
     const parsed = parsedSoft.data;
     let assistantText = parsed.assistantMessage;
-    let quickReplies = [...parsed.quickReplies];
-    let aiRequestedInput = parsed.requestedInput;
 
     const patchSource = parsed.tripDraftPatch ?? parsed.tripDraft ?? {};
     let draft = sanitizeAndMergeDraft({
@@ -380,6 +542,9 @@ export async function sendPlanningMessage(
       ownedGroups,
     });
 
+    // Réappliquer patches déterministes après merge IA (limites, mode, etc.)
+    draft = applyDeterministicDraftPatches(draft, trimmed, stepBefore);
+
     if (!draft.vehicleId) {
       const lower = trimmed.toLowerCase();
       const match = ownedVehicles.find(
@@ -392,77 +557,114 @@ export async function sendPlanningMessage(
       }
     }
 
-    // Après type de voyage : pousser la question départ domicile / adresse
-    const looksLikeTripType =
-      /road trip|escapade|famille|couple|destination|idées|idees/i.test(
-        trimmed,
-      );
-    if (looksLikeTripType && !draft.origin.name) {
-      if (userCtx.home && userCtx.homeCity) {
-        assistantText = `Souhaitez-vous partir de votre domicile à ${userCtx.homeCity}?`;
-        quickReplies = [HOME_QUICK_YES, HOME_QUICK_OTHER, HOME_QUICK_RECENT];
-        aiRequestedInput = {
-          type: "choice",
-          field: "origin",
-          placeholder: null,
-          countryBias: "CA",
-          regionBias: "QC",
-        };
-      } else {
-        assistantText =
-          "D’où souhaitez-vous partir? Vous pouvez saisir une adresse complète ou choisir une ville.";
-        quickReplies = [
-          ...DEFAULT_QUEBEC_ORIGIN_SUGGESTIONS.slice(0, 6),
-          "Saisir une adresse",
-        ];
-        aiRequestedInput = {
-          type: "address",
-          field: "origin",
-          placeholder: "Entrez une adresse ou une ville",
-          countryBias: "CA",
-          regionBias: "QC",
-        };
+    draft = await recalculateDraftEstimates(userId, draft, { strict: false });
+
+    // Génération / secours de proposition concrète
+    const stepMid = resolveCurrentStep(draft, {
+      sessionStatus: session.status,
+      hasTripTypeHint: true,
+    });
+    if (
+      stepMid === "itinerary_proposal" ||
+      trimmed === GENERATE_ITINERARY ||
+      /proposer un itin[eé]raire|génère|genere/i.test(trimmed)
+    ) {
+      draft = ensureMinimalItineraryContent(draft);
+    }
+
+    // Si l’IA affirme une proposition sans contenu → forcer génération minimale
+    if (
+      /voici une proposition|confirmer cet itin[eé]raire/i.test(
+        assistantText,
+      ) &&
+      !hasItineraryProposal(draft)
+    ) {
+      draft = ensureMinimalItineraryContent(draft);
+    }
+
+    const currentStep = resolveCurrentStep(draft, {
+      sessionStatus: session.status,
+      hasTripTypeHint: true,
+    });
+    const hasProposal = hasItineraryProposal(draft);
+    const status = resolveSessionStatus(draft, currentStep);
+
+    const controls = buildControlsForStep({
+      step: currentStep,
+      draft,
+      ownedVehicles,
+      homeCity: userCtx.homeCity,
+      hasHome: Boolean(userCtx.home),
+      originSuggestions: userCtx.originSuggestions,
+      hasProposal,
+    });
+
+    // Quick replies : autorité serveur (filtre IA puis remplacement par étape)
+    const filteredAi = filterAiQuickRepliesForStep(
+      currentStep,
+      parsed.quickReplies,
+      ownedVehicles.map((v) => v.label),
+    );
+    let quickReplies =
+      currentStep === "vehicle" && filteredAi && filteredAi.length > 0
+        ? filteredAi
+        : controls.quickReplies;
+
+    // Ne jamais afficher confirmation sans proposition
+    if (
+      !hasProposal &&
+      quickReplies.some((r) => /confirmer cet itin[eé]raire/i.test(r))
+    ) {
+      quickReplies = controls.quickReplies;
+    }
+
+    if (controls.forceAssistantMessage) {
+      // Remplacer le message IA s’il est désynchronisé (ex. confirmation vide)
+      if (
+        currentStep !== "confirmation" ||
+        !hasProposal ||
+        /confirmer cet itin[eé]raire|voici une proposition/i.test(assistantText)
+      ) {
+        if (
+          currentStep === "origin" ||
+          currentStep === "destination_mode" ||
+          currentStep === "destination_radius" ||
+          currentStep === "itinerary_proposal" ||
+          (currentStep === "confirmation" && !hasProposal)
+        ) {
+          assistantText = controls.forceAssistantMessage;
+        }
       }
     }
 
-    if (trimmed === "Saisir une adresse") {
-      aiRequestedInput = {
-        type: "address",
-        field: "origin",
-        placeholder: "Entrez une adresse ou une ville",
-        countryBias: "CA",
-        regionBias: "QC",
-      };
-    }
-
-    draft = await recalculateDraftEstimates(userId, draft, { strict: false });
-
-    const missingFields = detectMissingFields(draft);
-    let status: "collecting" | "proposing" | "ready_for_confirmation" =
-      "collecting";
-    if (missingFields.length === 0) {
-      status = "ready_for_confirmation";
-    } else if (
-      draft.destination.name ||
-      draft.stops.length > 0 ||
-      draft.activities.length > 0 ||
-      parsed.sessionStatus === "proposing"
+    // Si message IA parle de dates mais étape = vehicle (ou inverse) : message serveur
+    if (
+      currentStep === "dates" &&
+      /v[ée]hicule|elantra|acura/i.test(assistantText)
     ) {
-      status = "proposing";
+      assistantText =
+        "Quelle date précise souhaitez-vous pour ce départ? Vous pouvez indiquer un jour ou une plage.";
     }
-
-    const requestedInput = inferRequestedInput(draft, aiRequestedInput);
+    if (
+      currentStep === "vehicle" &&
+      /date|samedi|dimanche|juillet|août|aout/i.test(assistantText) &&
+      !/v[ée]hicule/i.test(assistantText)
+    ) {
+      assistantText = "Quel véhicule souhaitez-vous utiliser pour ce voyage?";
+    }
 
     if (
-      quickReplies.length === 0 &&
-      ownedVehicles.length > 1 &&
-      missingFields.includes("vehicleId")
+      hasProposal &&
+      currentStep === "confirmation" &&
+      !/voici|proposition|itinéraire|itineraire/i.test(assistantText)
     ) {
-      quickReplies = [
-        ...ownedVehicles.slice(0, 3).map((v) => v.label),
-        "Je déciderai plus tard",
-      ];
+      assistantText =
+        "Voici une proposition d’itinéraire concrète (voir le détail ci-dessous). Souhaitez-vous la confirmer ou modifier des détails?";
     }
+
+    const requestedInput =
+      controls.requestedInput ??
+      inferRequestedInput(draft, parsed.requestedInput, currentStep);
 
     const assistantMessage = {
       id: randomUUID(),
@@ -476,19 +678,23 @@ export async function sendPlanningMessage(
       where: { id: session.id },
       data: {
         status,
-        messages: [
+        sessionVersion: { increment: 1 },
+        messages: stripHistoricalQuickReplies([
           ...withUser,
           assistantMessage,
-        ] as unknown as Prisma.InputJsonValue,
+        ]) as unknown as Prisma.InputJsonValue,
         structuredDraft: draft as unknown as Prisma.InputJsonValue,
       },
     });
 
     success = true;
     return toSessionDto(updated, {
+      currentStep,
+      quickReplies,
       requestedInput,
       originSuggestions: userCtx.originSuggestions,
       homeCity: userCtx.homeCity,
+      ownedVehicles,
     });
   } catch (error) {
     errorCode =

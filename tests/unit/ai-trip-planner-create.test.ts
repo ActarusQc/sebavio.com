@@ -29,7 +29,7 @@ describe("ai-trip-planner create readiness", () => {
     expect(detectMissingFields(draft)).toContain("vehicleId");
   });
 
-  it("autorise la création quand les champs obligatoires sont présents", () => {
+  it("autorise la création quand les champs et la proposition sont présents", () => {
     const draft = tripDraftSchema.parse({
       origin: { name: "Bromont", placeId: null, latitude: 1, longitude: 2 },
       destination: {
@@ -43,7 +43,36 @@ describe("ai-trip-planner create readiness", () => {
       adults: 2,
       children: 2,
       vehicleId: "33333333-3333-4333-8333-333333333333",
+      estimatedDistanceKm: 700,
+      estimatedDurationMinutes: 480,
+      activities: [
+        {
+          name: "Percé Rock",
+          category: "activity",
+          justification: "Incontournable",
+          durationMinutes: 90,
+        },
+      ],
     });
     expect(isDraftReadyForCreation(draft)).toBe(true);
+  });
+
+  it("refuse la création sans proposition d’itinéraire", () => {
+    const draft = tripDraftSchema.parse({
+      origin: { name: "Bromont", placeId: null, latitude: 1, longitude: 2 },
+      destination: {
+        name: "Gaspésie",
+        placeId: null,
+        latitude: 3,
+        longitude: 4,
+      },
+      departureDate: "2026-08-12",
+      returnDate: "2026-08-16",
+      adults: 2,
+      vehicleId: "33333333-3333-4333-8333-333333333333",
+      estimatedDistanceKm: 700,
+    });
+    expect(isDraftReadyForCreation(draft)).toBe(false);
+    expect(detectMissingFields(draft)).toContain("itineraryProposal");
   });
 });

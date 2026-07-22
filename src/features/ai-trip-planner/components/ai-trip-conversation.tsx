@@ -5,7 +5,9 @@ import { Loader2, Sparkles } from "lucide-react";
 import { AITripComposer } from "@/features/ai-trip-planner/components/ai-trip-composer";
 import { AITripMessage } from "@/features/ai-trip-planner/components/ai-trip-message";
 import { AIAddressInput } from "@/features/ai-trip-planner/components/ai-address-input";
+import { AIItineraryProposal } from "@/features/ai-trip-planner/components/ai-itinerary-proposal";
 import type {
+  ItineraryProposalDto,
   OriginSuggestionDto,
   PlannerMessage,
   RequestedInputDto,
@@ -18,6 +20,9 @@ type Props = {
   disabled?: boolean;
   error?: string | null;
   requestedInput?: RequestedInputDto;
+  /** Autorité serveur — remplace les QR du dernier message. */
+  activeQuickReplies?: string[];
+  proposal?: ItineraryProposalDto | null;
   homeCity?: string | null;
   originSuggestions?: OriginSuggestionDto[];
   onSend: (content: string) => void;
@@ -35,6 +40,8 @@ export function AITripConversation({
   disabled,
   error,
   requestedInput,
+  activeQuickReplies,
+  proposal,
   homeCity,
   originSuggestions,
   onSend,
@@ -89,17 +96,26 @@ export function AITripConversation({
         aria-live="polite"
         aria-relevant="additions"
       >
-        {messages.map((message, index) => (
-          <AITripMessage
-            key={message.id}
-            message={message}
-            showQuickReplies={
-              index === lastAssistantIdx && !sending && !disabled
-            }
-            onQuickReply={onSend}
-            quickRepliesDisabled={disabled || sending}
-          />
-        ))}
+        {messages.map((message, index) => {
+          const isLastAssistant = index === lastAssistantIdx;
+          const overrides =
+            isLastAssistant && activeQuickReplies
+              ? { ...message, quickReplies: activeQuickReplies }
+              : message;
+          return (
+            <AITripMessage
+              key={message.id}
+              message={overrides}
+              showQuickReplies={isLastAssistant && !sending && !disabled}
+              onQuickReply={onSend}
+              quickRepliesDisabled={disabled || sending}
+            />
+          );
+        })}
+
+        {proposal && !sending ? (
+          <AIItineraryProposal proposal={proposal} />
+        ) : null}
 
         {showAddress && onSelectAddress ? (
           <AIAddressInput

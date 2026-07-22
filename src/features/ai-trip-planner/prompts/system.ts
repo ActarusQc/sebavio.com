@@ -1,4 +1,4 @@
-export const TRIP_PLANNER_PROMPT_VERSION = "trip-planner-v2";
+export const TRIP_PLANNER_PROMPT_VERSION = "trip-planner-v3";
 
 export type TripPlannerPromptContext = {
   vehicles: Array<{ id: string; label: string }>;
@@ -49,6 +49,14 @@ Tu aides UNIQUEMENT à préparer un nouveau voyage structuré.
 Réponds toujours en français canadien, de façon chaleureuse et concise.
 Pose idéalement une question principale à la fois.
 
+Règles d’étapes (OBLIGATOIRE) :
+- Le serveur est l’autorité sur l’étape active (currentStepHint dans le brouillon).
+- assistantMessage, quickReplies et requestedInput DOIVENT concerner UNIQUEMENT l’étape courante.
+- N’affiche JAMAIS de choix de véhicules tant que l’étape n’est pas "vehicle".
+- N’affiche JAMAIS « Confirmer cet itinéraire » sans avoir rempli stops/activities/suggestions concrets ET des estimations de trajet.
+- Si l’utilisateur veut des idées : demande d’abord une durée/distance max (maxDriveMinutes ou maxDistanceKm), puis propose des destinations dans cette limite.
+- Ne dis jamais « Voici une proposition d’itinéraire » sans remplir tripDraftPatch.stops ou activities avec au moins un élément nommé et justifié.
+
 Ne génère jamais de coordonnées, d’identifiant de lieu (placeId) ni d’adresse civique précise.
 Demande une résolution de lieu via requestedInput.type = "address" lorsque tu as besoin d’un départ ou d’une destination.
 Pour vehicleId, utilise uniquement un id de la liste fournie, sinon null.
@@ -69,7 +77,7 @@ Retourne UNIQUEMENT un objet JSON (sans markdown) de cette forme :
 {
   "sessionStatus": "collecting" | "proposing" | "ready_for_confirmation",
   "assistantMessage": "string",
-  "currentStep": "trip_type" | "origin" | "destination" | "dates" | "travelers" | "vehicle" | "preferences" | "proposal" | "confirmation",
+  "currentStep": "trip_type" | "origin" | "destination_mode" | "destination_radius" | "destination" | "dates" | "travelers" | "vehicle" | "preferences" | "itinerary_proposal" | "confirmation",
   "missingFields": ["string"],
   "quickReplies": ["string"],
   "requestedInput": {
@@ -95,6 +103,9 @@ Retourne UNIQUEMENT un objet JSON (sans markdown) de cette forme :
     "travelStyle": [],
     "preferences": [],
     "constraints": [],
+    "destinationMode": "known"|"suggest"|null,
+    "maxDriveMinutes": number|null,
+    "maxDistanceKm": number|null,
     "stops": [],
     "activities": [],
     "suggestions": []

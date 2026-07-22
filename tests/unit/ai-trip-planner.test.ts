@@ -10,6 +10,15 @@ import {
   tripPlanningAiResponseSchema,
   validatePlanningDates,
 } from "@/features/ai-trip-planner";
+import { detectMissingScalarFields } from "@/features/ai-trip-planner/lib/missing-fields";
+import {
+  buildControlsForStep,
+  filterAiQuickRepliesForStep,
+} from "@/features/ai-trip-planner/lib/controls-for-step";
+import {
+  hasItineraryProposal,
+  resolveCurrentStep,
+} from "@/features/ai-trip-planner/lib/planning-step";
 import { AppError } from "@/lib/errors";
 import { MockAiProvider } from "@/services/ai/mock-provider";
 
@@ -48,7 +57,79 @@ describe("detectMissingFields", () => {
       adults: 2,
       vehicleId: "11111111-1111-4111-8111-111111111111",
     });
-    expect(detectMissingFields(draft)).toEqual([]);
+    expect(detectMissingScalarFields(draft)).toEqual([]);
+    expect(detectMissingFields(draft)).toContain("itineraryProposal");
+  });
+});
+
+describe("machine d’états planification", () => {
+  it("ne propose pas de véhicules à l’étape dates", () => {
+    const draft = tripDraftSchema.parse({
+      ...emptyTripDraft(),
+      origin: { name: "Bromont", city: "Bromont" },
+      destination: { name: "Percé", city: "Percé" },
+      destinationMode: "known",
+      departureDate: null,
+      adults: 2,
+    });
+    const step = resolveCurrentStep(draft, { hasTripTypeHint: true });
+    expect(step).toBe("dates");
+    const controls = buildControlsForStep({
+      step,
+      draft,
+      ownedVehicles: [
+        {
+          id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+          label: "Hyundai Elantra GT (2017)",
+        },
+        {
+          id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+          label: "Acura ILX (2017)",
+        },
+      ],
+      homeCity: null,
+      hasHome: false,
+      originSuggestions: [],
+      hasProposal: false,
+    });
+    expect(controls.quickReplies.join(" ")).not.toMatch(
+      /Hyundai|Acura|Bouboule/i,
+    );
+    expect(controls.quickReplies.join(" ")).toMatch(/week-end|jours|journée/i);
+  });
+
+  it("filtre les quick replies véhicules hors étape vehicle", () => {
+    const filtered = filterAiQuickRepliesForStep(
+      "dates",
+      ["Hyundai Elantra GT (2017)", "Ce week-end", "Je déciderai plus tard"],
+      ["Hyundai Elantra GT (2017)", "Acura ILX (2017)"],
+    );
+    expect(filtered).toEqual(["Ce week-end"]);
+  });
+
+  it("refuse la confirmation sans proposition concrète", () => {
+    const draft = tripDraftSchema.parse({
+      ...emptyTripDraft(),
+      origin: { name: "Bromont", city: "Bromont" },
+      destination: { name: "Percé", city: "Percé" },
+      departureDate: "2026-08-12",
+      durationDays: 1,
+      adults: 2,
+      vehicleId: "11111111-1111-4111-8111-111111111111",
+      estimatedDistanceKm: 700,
+      estimatedDurationMinutes: 480,
+    });
+    expect(hasItineraryProposal(draft)).toBe(false);
+    const controls = buildControlsForStep({
+      step: "confirmation",
+      draft,
+      ownedVehicles: [],
+      homeCity: null,
+      hasHome: false,
+      originSuggestions: [],
+      hasProposal: false,
+    });
+    expect(controls.quickReplies).not.toContain("Confirmer cet itinéraire");
   });
 });
 

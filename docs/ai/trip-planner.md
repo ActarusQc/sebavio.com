@@ -23,6 +23,14 @@ Réutilise `AddressAutocomplete`. L’assistant propose « partir du domicile à
 - Adresses : `AddressAutocomplete` + `POST …/place` (pas d’invention de placeId par l’IA)
 - Création : réutilise `createTrip`, `addStop`, `rebuildTripRouteFromCanonicalData`, `estimateTripFuel`
 
+## Machine d’états (serveur = autorité)
+
+Étapes : `trip_type` → `origin` → `destination_mode` → `destination_radius` → `destination` → `dates` → `travelers` → `vehicle` → `preferences` → `itinerary_proposal` → `confirmation`.
+
+Chaque réponse expose `sessionVersion`, `currentStep`, `quickReplies`, `requestedInput`, `proposal`.
+Les quick replies sont dérivées de l’étape active (plus de véhicules pendant les dates).
+Confirmation / `canCreate` impossibles sans proposition concrète (estimations + arrêts/activités).
+
 ## Résilience des réponses IA
 
 1. Validation Zod (champs inconnus encore optionnels / null)

@@ -22,9 +22,22 @@ async function withUserExtras(
   session: Parameters<typeof toSessionDto>[0],
 ): Promise<TripPlannerSessionDto> {
   const ctx = await loadPlannerUserContext(userId);
+  const { listVehicles } =
+    await import("@/features/vehicles/services/vehicles");
+  let ownedVehicles: Array<{ id: string; label: string }> = [];
+  try {
+    const page = await listVehicles(userId, { pageSize: "20" });
+    ownedVehicles = page.items.map((v) => ({
+      id: v.id,
+      label: v.displayName?.trim() || v.nickname?.trim() || "Véhicule",
+    }));
+  } catch {
+    ownedVehicles = [];
+  }
   return toSessionDto(session, {
     originSuggestions: ctx.originSuggestions,
     homeCity: ctx.homeCity,
+    ownedVehicles,
   });
 }
 

@@ -7,9 +7,9 @@ import { AppError } from "@/lib/errors";
 import { assertTripPlannerAccess } from "@/features/ai-trip-planner/services/access";
 import { getOwnedSessionOrThrow } from "@/features/ai-trip-planner/services/sessions";
 import {
-  inferRequestedInput,
   parseStoredDraft,
   parseStoredMessages,
+  stripHistoricalQuickReplies,
   toSessionDto,
 } from "@/features/ai-trip-planner/services/dto";
 import { placeFromAddressSelection } from "@/features/ai-trip-planner/lib/sanitize-draft";
@@ -20,12 +20,19 @@ import {
   HOME_QUICK_RECENT,
   HOME_QUICK_YES,
 } from "@/features/ai-trip-planner/constants";
+import { buildControlsForStep } from "@/features/ai-trip-planner/lib/controls-for-step";
+import {
+  hasItineraryProposal,
+  resolveCurrentStep,
+} from "@/features/ai-trip-planner/lib/planning-step";
+import { listVehicles } from "@/features/vehicles/services/vehicles";
 import type { TripPlannerSessionDto } from "@/features/ai-trip-planner/types";
 import type { Prisma } from "@prisma/client";
 
 const placeBodySchema = z.object({
   field: z.enum(["origin", "destination"]),
   useHome: z.boolean().optional().default(false),
+  expectedVersion: z.number().int().nonnegative().optional(),
   address: z
     .object({
       formattedAddress: z.string().trim().min(1).max(2000),
@@ -55,6 +62,17 @@ export async function applyPlanningPlace(
       "Cette session ne peut plus être modifiée.",
       400,
     );
+  }
+
+  if (
+    input.expectedVersion != null &&
+    session.sessionVersion !== input.expectedVersion
+  ) {
+    const ctx = await loadPlannerUserContext(userId);
+    return toSessionDto(session, {
+      originSuggestions: ctx.originSuggestions,
+      homeCity: ctx.homeCity,
+    });
   }
 
   const draft = parseStoredDraft(session.structuredDraft);
@@ -111,24 +129,39 @@ export async function applyPlanningPlace(
   const nextDraft = {
     ...draft,
     [input.field]: place,
+    ...(input.field === "destination"
+      ? { destinationMode: draft.destinationMode ?? ("known" as const) }
+      : {}),
   };
 
+  const currentStep = resolveCurrentStep(nextDraft, {
+    sessionStatus: "collecting",
+    hasTripTypeHint: true,
+  });
+
+  const vehiclesPage = await listVehicles(userId, { pageSize: "20" });
+  const ownedVehicles = vehiclesPage.items.map((v) => ({
+    id: v.id,
+    label: v.displayName?.trim() || v.nickname?.trim() || "Véhicule",
+  }));
+
+  const controls = buildControlsForStep({
+    step: currentStep,
+    draft: nextDraft,
+    ownedVehicles,
+    homeCity: ctx.homeCity,
+    hasHome: Boolean(ctx.home),
+    originSuggestions: ctx.originSuggestions,
+    hasProposal: hasItineraryProposal(nextDraft),
+  });
+
   const assistantFollowUp =
-    input.field === "origin"
-      ? "Parfait. Quelle est votre destination, ou préférez-vous que je vous propose des idées au Québec ?"
-      : "Merci. Précisons maintenant les dates du voyage.";
+    controls.forceAssistantMessage ??
+    (input.field === "origin"
+      ? "Avez-vous déjà une destination, ou souhaitez-vous des idées selon une distance ou durée de trajet maximale?"
+      : "Merci. Précisons maintenant les dates du voyage.");
 
-  const quickReplies =
-    input.field === "origin"
-      ? [
-          "Je cherche des idées",
-          "Gaspésie",
-          "Charlevoix",
-          "J’ai déjà une destination",
-        ]
-      : ["Ce week-end", "5 jours", "Du 12 au 16 août"];
-
-  const withMessages = [
+  const withMessages = stripHistoricalQuickReplies([
     ...messages,
     {
       id: randomUUID(),
@@ -141,24 +174,14 @@ export async function applyPlanningPlace(
       role: "assistant" as const,
       content: assistantFollowUp,
       createdAt: new Date().toISOString(),
-      quickReplies,
+      quickReplies: controls.quickReplies,
     },
-  ];
-
-  const requestedInput = inferRequestedInput(nextDraft, {
-    type: input.field === "origin" ? "address" : "date",
-    field: input.field === "origin" ? "destination" : "departureDate",
-    placeholder:
-      input.field === "origin"
-        ? "Entrez une destination"
-        : "Précisez les dates",
-    countryBias: "CA",
-    regionBias: "QC",
-  });
+  ]);
 
   const updated = await prisma.aiTripPlanningSession.update({
     where: { id: session.id },
     data: {
+      sessionVersion: { increment: 1 },
       messages: withMessages as unknown as Prisma.InputJsonValue,
       structuredDraft: nextDraft as unknown as Prisma.InputJsonValue,
       status: "collecting",
@@ -166,9 +189,12 @@ export async function applyPlanningPlace(
   });
 
   return toSessionDto(updated, {
-    requestedInput,
+    currentStep,
+    quickReplies: controls.quickReplies,
+    requestedInput: controls.requestedInput,
     originSuggestions: ctx.originSuggestions,
     homeCity: ctx.homeCity,
+    ownedVehicles,
   });
 }
 

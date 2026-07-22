@@ -9,6 +9,7 @@ const bodySchema = z
   .object({
     content: z.string().optional(),
     quickReply: z.string().optional(),
+    expectedVersion: z.number().int().nonnegative().optional(),
   })
   .refine((v) => Boolean(v.content?.trim() || v.quickReply?.trim()), {
     message: "Message requis",
@@ -20,7 +21,12 @@ export async function POST(request: Request, { params }: Params) {
     const { id } = await params;
     const body = bodySchema.parse(await request.json());
     const content = (body.content ?? body.quickReply ?? "").trim();
-    const session = await sendPlanningMessage(user.id, id, content);
+    const session = await sendPlanningMessage(
+      user.id,
+      id,
+      content,
+      body.expectedVersion,
+    );
     return jsonOk({ session });
   } catch (error) {
     return handleRouteError(error);
