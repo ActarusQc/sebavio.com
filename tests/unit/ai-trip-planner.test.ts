@@ -133,6 +133,22 @@ describe("machine d’états planification", () => {
   });
 });
 
+describe("hasItineraryProposal anti-placeholders", () => {
+  it("rejette Arrivée et balade / Point d’intérêt", () => {
+    const draft = tripDraftSchema.parse({
+      ...emptyTripDraft(),
+      origin: { name: "A", city: "A" },
+      destination: { name: "Estrie", city: "Estrie" },
+      estimatedDistanceKm: 10,
+      activities: [
+        { name: "Arrivée et balade à Estrie", category: "activity" },
+        { name: "Découverte de Estrie", category: "activity" },
+      ],
+    });
+    expect(hasItineraryProposal(draft)).toBe(false);
+  });
+});
+
 describe("validatePlanningDates / formatDateRangeFr", () => {
   it("refuse un retour avant le départ", () => {
     expect(() =>

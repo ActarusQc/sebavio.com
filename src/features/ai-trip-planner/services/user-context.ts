@@ -3,17 +3,26 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { getHomeAddress } from "@/features/users/services/home-address";
 import { DEFAULT_QUEBEC_ORIGIN_SUGGESTIONS } from "@/features/ai-trip-planner/constants";
+import { DEFAULT_TIMEZONE } from "@/features/users/services/defaults";
 import type { OriginSuggestionDto } from "@/features/ai-trip-planner/types";
 import type { HomeAddressDto } from "@/features/users/types";
 
 export async function loadPlannerUserContext(userId: string): Promise<{
   home: HomeAddressDto | null;
   homeCity: string | null;
+  timezone: string;
   recentOriginCities: string[];
   originSuggestions: OriginSuggestionDto[];
 }> {
-  const home = await getHomeAddress(userId);
+  const [home, profile] = await Promise.all([
+    getHomeAddress(userId),
+    prisma.userProfile.findUnique({
+      where: { userId },
+      select: { timezone: true },
+    }),
+  ]);
   const homeCity = home?.city?.trim() || null;
+  const timezone = profile?.timezone?.trim() || DEFAULT_TIMEZONE;
 
   const recentTrips = await prisma.trip.findMany({
     where: { userId, deletedAt: null },
@@ -62,5 +71,5 @@ export async function loadPlannerUserContext(userId: string): Promise<{
     originSuggestions.push({ kind: "city", label: city, city });
   }
 
-  return { home, homeCity, recentOriginCities, originSuggestions };
+  return { home, homeCity, timezone, recentOriginCities, originSuggestions };
 }

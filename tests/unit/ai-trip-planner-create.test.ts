@@ -47,9 +47,15 @@ describe("ai-trip-planner create readiness", () => {
       estimatedDurationMinutes: 480,
       activities: [
         {
-          name: "Percé Rock",
+          name: "Rocher Percé et promenade du quai",
           category: "activity",
           justification: "Incontournable",
+          durationMinutes: 90,
+        },
+        {
+          name: "Restaurant La Maison du Pêcheur (Percé)",
+          category: "meal",
+          justification: "Fruits de mer",
           durationMinutes: 90,
         },
       ],

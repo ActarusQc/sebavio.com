@@ -62,18 +62,22 @@ function hasDates(draft: TripDraftParsed): boolean {
   );
 }
 
-/** Contenu concret affichable avant confirmation. */
+/** Contenu concret affichable avant confirmation (placeholders génériques exclus). */
 export function hasItineraryProposal(draft: TripDraftParsed): boolean {
   if (!draft.origin.name?.trim() || !draft.destination.name?.trim()) {
     return false;
   }
   const hasEstimate =
     draft.estimatedDistanceKm != null || draft.estimatedDurationMinutes != null;
-  const items =
-    draft.stops.filter((s) => s.accepted).length +
-    draft.activities.filter((a) => a.accepted).length +
-    draft.suggestions.filter((s) => s.accepted).length;
-  return hasEstimate && items >= 1;
+  // Import dynamique évité : logique inline pour ne pas créer de cycle
+  const generic =
+    /^arriv[ée]e et balade|^point d[’']int[ée]r[êe]t pr[èe]s|^d[ée]couverte de |^pause route entre /i;
+  const concrete = [
+    ...draft.stops.filter((s) => s.accepted),
+    ...draft.activities.filter((a) => a.accepted),
+    ...draft.suggestions.filter((s) => s.accepted),
+  ].filter((i) => i.name.trim() && !generic.test(i.name.trim()));
+  return hasEstimate && concrete.length >= 2;
 }
 
 export function buildItineraryProposal(

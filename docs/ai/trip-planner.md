@@ -23,6 +23,12 @@ Réutilise `AddressAutocomplete`. L’assistant propose « partir du domicile à
 - Adresses : `AddressAutocomplete` + `POST …/place` (pas d’invention de placeId par l’IA)
 - Création : réutilise `createTrip`, `addStop`, `rebuildTripRouteFromCanonicalData`, `estimateTripFuel`
 
+## Dates relatives
+
+Résolues côté serveur (`lib/resolve-relative-dates.ts`) selon le fuseau du profil.
+« Ce week-end » → samedi/dimanche pertinents en année courante (jamais l’IA).
+Placeholders génériques (« Arrivée et balade… ») non confirmables ; gastronomie → arrêts concrets.
+
 ## Machine d’états (serveur = autorité)
 
 Étapes : `trip_type` → `origin` → `destination_mode` → `destination_radius` → `destination` → `dates` → `travelers` → `vehicle` → `preferences` → `itinerary_proposal` → `confirmation`.

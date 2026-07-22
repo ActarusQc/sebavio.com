@@ -52,18 +52,33 @@ import {
   resolveSessionStatus,
 } from "@/features/ai-trip-planner/lib/planning-step";
 import { ensureMinimalItineraryContent } from "@/features/ai-trip-planner/lib/ensure-minimal-proposal";
+import { applyInterestFromUserText } from "@/features/ai-trip-planner/lib/interest-itinerary";
+import {
+  resolveRelativeDates,
+  sanitizePlanningDateAgainstToday,
+  type RelativeDateResolution,
+} from "@/features/ai-trip-planner/lib/resolve-relative-dates";
 import type { TripDraftParsed } from "@/features/ai-trip-planner/schemas/draft";
 import type { TripPlannerSessionDto } from "@/features/ai-trip-planner/types";
 import type { Prisma } from "@prisma/client";
+
+type DeterministicPatchResult = {
+  draft: TripDraftParsed;
+  dateResolution: RelativeDateResolution;
+  dateConfirmationMessage: string | null;
+};
 
 function applyDeterministicDraftPatches(
   draft: TripDraftParsed,
   userText: string,
   step: ReturnType<typeof resolveCurrentStep>,
-): TripDraftParsed {
+  timeZone: string,
+): DeterministicPatchResult {
   const t = userText.trim();
   const lower = t.toLowerCase();
   let next = draft;
+  let dateResolution: RelativeDateResolution = { kind: "none" };
+  let dateConfirmationMessage: string | null = null;
 
   if (
     step === "destination_mode" ||
@@ -108,6 +123,44 @@ function applyDeterministicDraftPatches(
     }
   }
 
+  // Dates relatives — toujours côté serveur (jamais l’année inventée par l’IA)
+  const shouldResolveDates =
+    step === "dates" ||
+    !next.departureDate ||
+    /week-?end|fin de semaine|aujourd|demain|samedi|dimanche|vendredi|\d+\s*jours?/i.test(
+      t,
+    );
+  if (shouldResolveDates) {
+    const preferredWeekendDay = /\bsamedi\b/i.test(t)
+      ? ("saturday" as const)
+      : /\bdimanche\b/i.test(t)
+        ? ("sunday" as const)
+        : null;
+    dateResolution = resolveRelativeDates({
+      text: t,
+      timeZone,
+      knownDurationDays: next.durationDays,
+      preferredWeekendDay,
+    });
+    if (dateResolution.kind === "resolved") {
+      next = {
+        ...next,
+        departureDate: dateResolution.departureDate,
+        returnDate: dateResolution.returnDate,
+        durationDays: dateResolution.durationDays,
+      };
+      dateConfirmationMessage = dateResolution.confirmationLabel;
+    } else if (dateResolution.kind === "duration_only") {
+      next = { ...next, durationDays: dateResolution.durationDays };
+    } else if (dateResolution.kind === "need_start_date") {
+      next = { ...next, durationDays: dateResolution.durationDays };
+    }
+  }
+
+  if (step === "preferences" || /gastro|nature|culture|budget/i.test(t)) {
+    next = applyInterestFromUserText(next, t);
+  }
+
   if (/passer à l[’']itinéraire|passer a l'itineraire/i.test(lower)) {
     next = {
       ...next,
@@ -123,7 +176,6 @@ function applyDeterministicDraftPatches(
     next = { ...next, proposalConfirmed: false };
   }
 
-  // Voyageurs rapides
   const travelersMatch = lower.match(/^(\d+)\s*personnes?$/);
   if (travelersMatch && step === "travelers") {
     const n = Number(travelersMatch[1]);
@@ -132,7 +184,40 @@ function applyDeterministicDraftPatches(
     }
   }
 
-  return next;
+  return { draft: next, dateResolution, dateConfirmationMessage };
+}
+
+function lockServerResolvedDates(
+  draft: TripDraftParsed,
+  serverResolved: TripDraftParsed,
+  timeZone: string,
+): TripDraftParsed {
+  // Si le serveur a résolu les dates, l’IA ne peut pas les écraser (surtout l’année)
+  if (serverResolved.departureDate) {
+    const dep =
+      sanitizePlanningDateAgainstToday(
+        serverResolved.departureDate,
+        timeZone,
+      ) ?? serverResolved.departureDate;
+    const ret =
+      sanitizePlanningDateAgainstToday(serverResolved.returnDate, timeZone) ??
+      serverResolved.returnDate ??
+      dep;
+    return {
+      ...draft,
+      departureDate: dep,
+      returnDate: ret,
+      durationDays: serverResolved.durationDays ?? draft.durationDays,
+    };
+  }
+  // Sinon, corriger les dates inventées par l’IA (année passée, etc.)
+  const dep = sanitizePlanningDateAgainstToday(draft.departureDate, timeZone);
+  const ret = sanitizePlanningDateAgainstToday(draft.returnDate, timeZone);
+  return {
+    ...draft,
+    departureDate: dep ?? draft.departureDate,
+    returnDate: ret ?? draft.returnDate,
+  };
 }
 
 function summarizeHistory(
@@ -337,11 +422,16 @@ export async function sendPlanningMessage(
     });
 
     // Pré-remplir ville QC selon l’étape (jamais écraser une autre étape)
-    let draftSeed = applyDeterministicDraftPatches(
+    const prePatch = applyDeterministicDraftPatches(
       previousDraft,
       trimmed,
       stepBefore,
+      userCtx.timezone,
     );
+    let draftSeed = prePatch.draft;
+    let dateResolution = prePatch.dateResolution;
+    let dateConfirmationMessage = prePatch.dateConfirmationMessage;
+
     if (quebecCity) {
       if (stepBefore === "origin" && !draftSeed.origin.name) {
         draftSeed = {
@@ -380,6 +470,85 @@ export async function sendPlanningMessage(
         travelStyle:
           draftSeed.travelStyle.length > 0 ? draftSeed.travelStyle : [style],
       };
+    }
+
+    // Clarification samedi/dimanche — sans appel modèle
+    if (dateResolution.kind === "clarify_weekend_day") {
+      const assistantMessage = {
+        id: randomUUID(),
+        role: "assistant" as const,
+        content: dateResolution.message,
+        createdAt: new Date().toISOString(),
+        quickReplies: dateResolution.options.map((o) => o.label),
+      };
+      const updated = await prisma.aiTripPlanningSession.update({
+        where: { id: session.id },
+        data: {
+          sessionVersion: { increment: 1 },
+          messages: stripHistoricalQuickReplies([
+            ...withUser,
+            assistantMessage,
+          ]) as unknown as Prisma.InputJsonValue,
+          structuredDraft: draftSeed as unknown as Prisma.InputJsonValue,
+        },
+      });
+      success = true;
+      return toSessionDto(updated, {
+        currentStep: "dates",
+        quickReplies: assistantMessage.quickReplies ?? [],
+        requestedInput: {
+          type: "choice",
+          field: "departureDate",
+          placeholder: null,
+          countryBias: "CA",
+          regionBias: "QC",
+        },
+        originSuggestions: userCtx.originSuggestions,
+        homeCity: userCtx.homeCity,
+        ownedVehicles,
+      });
+    }
+
+    // Durée connue sans date de début — question ciblée
+    if (dateResolution.kind === "need_start_date" && !draftSeed.departureDate) {
+      const assistantMessage = {
+        id: randomUUID(),
+        role: "assistant" as const,
+        content: dateResolution.message,
+        createdAt: new Date().toISOString(),
+        quickReplies: [
+          "Ce week-end",
+          "La fin de semaine prochaine",
+          "Demain",
+          "Après-demain",
+        ],
+      };
+      const updated = await prisma.aiTripPlanningSession.update({
+        where: { id: session.id },
+        data: {
+          sessionVersion: { increment: 1 },
+          messages: stripHistoricalQuickReplies([
+            ...withUser,
+            assistantMessage,
+          ]) as unknown as Prisma.InputJsonValue,
+          structuredDraft: draftSeed as unknown as Prisma.InputJsonValue,
+        },
+      });
+      success = true;
+      return toSessionDto(updated, {
+        currentStep: "dates",
+        quickReplies: assistantMessage.quickReplies ?? [],
+        requestedInput: {
+          type: "date",
+          field: "departureDate",
+          placeholder: "Date de départ",
+          countryBias: "CA",
+          regionBias: "QC",
+        },
+        originSuggestions: userCtx.originSuggestions,
+        homeCity: userCtx.homeCity,
+        ownedVehicles,
+      });
     }
 
     const systemPrompt = buildTripPlannerSystemPrompt({
@@ -542,8 +711,23 @@ export async function sendPlanningMessage(
       ownedGroups,
     });
 
-    // Réappliquer patches déterministes après merge IA (limites, mode, etc.)
-    draft = applyDeterministicDraftPatches(draft, trimmed, stepBefore);
+    // Réappliquer patches déterministes après merge IA (limites, intérêts, etc.)
+    const postPatch = applyDeterministicDraftPatches(
+      draft,
+      trimmed,
+      stepBefore,
+      userCtx.timezone,
+    );
+    draft = postPatch.draft;
+    if (postPatch.dateResolution.kind !== "none") {
+      dateResolution = postPatch.dateResolution;
+    }
+    if (postPatch.dateConfirmationMessage) {
+      dateConfirmationMessage = postPatch.dateConfirmationMessage;
+    }
+
+    // Verrouiller les dates résolues serveur (interdire année IA 2025, etc.)
+    draft = lockServerResolvedDates(draft, draftSeed, userCtx.timezone);
 
     if (!draft.vehicleId) {
       const lower = trimmed.toLowerCase();
@@ -559,20 +743,20 @@ export async function sendPlanningMessage(
 
     draft = await recalculateDraftEstimates(userId, draft, { strict: false });
 
-    // Génération / secours de proposition concrète
+    // Génération / secours de proposition concrète (intérêts = gastronomie, etc.)
     const stepMid = resolveCurrentStep(draft, {
       sessionStatus: session.status,
       hasTripTypeHint: true,
     });
     if (
       stepMid === "itinerary_proposal" ||
+      stepMid === "confirmation" ||
       trimmed === GENERATE_ITINERARY ||
-      /proposer un itin[eé]raire|génère|genere/i.test(trimmed)
+      /proposer un itin[eé]raire|génère|genere|gastronom/i.test(trimmed)
     ) {
       draft = ensureMinimalItineraryContent(draft);
     }
 
-    // Si l’IA affirme une proposition sans contenu → forcer génération minimale
     if (
       /voici une proposition|confirmer cet itin[eé]raire/i.test(
         assistantText,
@@ -582,12 +766,12 @@ export async function sendPlanningMessage(
       draft = ensureMinimalItineraryContent(draft);
     }
 
-    const currentStep = resolveCurrentStep(draft, {
+    let currentStep = resolveCurrentStep(draft, {
       sessionStatus: session.status,
       hasTripTypeHint: true,
     });
     const hasProposal = hasItineraryProposal(draft);
-    const status = resolveSessionStatus(draft, currentStep);
+    let status = resolveSessionStatus(draft, currentStep);
 
     const controls = buildControlsForStep({
       step: currentStep,
@@ -599,7 +783,6 @@ export async function sendPlanningMessage(
       hasProposal,
     });
 
-    // Quick replies : autorité serveur (filtre IA puis remplacement par étape)
     const filteredAi = filterAiQuickRepliesForStep(
       currentStep,
       parsed.quickReplies,
@@ -610,7 +793,6 @@ export async function sendPlanningMessage(
         ? filteredAi
         : controls.quickReplies;
 
-    // Ne jamais afficher confirmation sans proposition
     if (
       !hasProposal &&
       quickReplies.some((r) => /confirmer cet itin[eé]raire/i.test(r))
@@ -618,19 +800,62 @@ export async function sendPlanningMessage(
       quickReplies = controls.quickReplies;
     }
 
+    // Confirmation non bloquante des dates résolues — ne pas redemander
+    if (dateConfirmationMessage && draft.departureDate && draft.returnDate) {
+      currentStep = resolveCurrentStep(draft, {
+        sessionStatus: session.status,
+        hasTripTypeHint: true,
+      });
+      status = resolveSessionStatus(draft, currentStep);
+      const nextControls = buildControlsForStep({
+        step: currentStep,
+        draft,
+        ownedVehicles,
+        homeCity: userCtx.homeCity,
+        hasHome: Boolean(userCtx.home),
+        originSuggestions: userCtx.originSuggestions,
+        hasProposal,
+      });
+      quickReplies = nextControls.quickReplies;
+      const nextHint =
+        currentStep === "travelers"
+          ? " Combien de voyageurs serez-vous?"
+          : currentStep === "vehicle"
+            ? " Quel véhicule souhaitez-vous utiliser?"
+            : "";
+      assistantText = `${dateConfirmationMessage}${nextHint}`.trim();
+    }
+
+    // Ne jamais redemander des dates déjà résolues ni proposer « Ce week-end »
+    if (draft.departureDate && draft.returnDate) {
+      quickReplies = quickReplies.filter(
+        (r) =>
+          !/week-?end|fin de semaine|jours? seulement|3 jours|5 jours/i.test(r),
+      );
+      if (
+        /dates? pr[ée]cises|quelles dates|pouvez-vous me donner les dates/i.test(
+          assistantText,
+        )
+      ) {
+        assistantText =
+          dateConfirmationMessage ??
+          `Les dates sont notées (${draft.departureDate} → ${draft.returnDate}). Continuons.`;
+      }
+    }
+
     if (controls.forceAssistantMessage) {
-      // Remplacer le message IA s’il est désynchronisé (ex. confirmation vide)
       if (
         currentStep !== "confirmation" ||
         !hasProposal ||
         /confirmer cet itin[eé]raire|voici une proposition/i.test(assistantText)
       ) {
         if (
-          currentStep === "origin" ||
-          currentStep === "destination_mode" ||
-          currentStep === "destination_radius" ||
-          currentStep === "itinerary_proposal" ||
-          (currentStep === "confirmation" && !hasProposal)
+          !dateConfirmationMessage &&
+          (currentStep === "origin" ||
+            currentStep === "destination_mode" ||
+            currentStep === "destination_radius" ||
+            currentStep === "itinerary_proposal" ||
+            (currentStep === "confirmation" && !hasProposal))
         ) {
           assistantText = controls.forceAssistantMessage;
         }
