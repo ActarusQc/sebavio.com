@@ -24,7 +24,7 @@ for (const vp of viewports) {
     deviceScaleFactor: 1,
   });
   const page = await context.newPage();
-  await page.goto("https://sebavio.com/", {
+  await page.goto("https://sebavia.com/", {
     waitUntil: "networkidle",
     timeout: 90000,
   });

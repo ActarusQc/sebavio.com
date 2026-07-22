@@ -26,7 +26,7 @@ import { BRAND_ASSETS } from "@/features/marketing/lib/brand-assets";
 import { auth } from "@/lib/auth";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://sebavio.com";
+  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://sebavia.com";
 
 export const metadata: Metadata = {
   title: PRICING_PAGE.meta.title,
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "fr_CA",
     url: `${SITE_URL}/pricing`,
-    siteName: "Sebavio",
+    siteName: "Sebavia",
     title: PRICING_PAGE.meta.title,
     description: PRICING_PAGE.meta.description,
     images: [
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
         url: BRAND_ASSETS.heroNightRoad,
         width: 1200,
         height: 630,
-        alt: "Tarifs Sebavio — forfaits pour planifier vos voyages",
+        alt: "Tarifs Sebavia — forfaits pour planifier vos voyages",
       },
     ],
   },
@@ -94,11 +94,11 @@ function PricingJsonLd({
   const data = {
     "@context": "https://schema.org",
     "@type": "Product",
-    name: "Sebavio",
+    name: "Sebavia",
     description: PRICING_PAGE.meta.description,
     brand: {
       "@type": "Brand",
-      name: "Sebavio",
+      name: "Sebavia",
     },
     offers,
   };
@@ -259,7 +259,7 @@ export default async function PricingPage() {
     planNames[OFFICIAL_PLAN_SLUGS.PASS_30_JOURS] = "Pass 30 jours";
   }
   if (!planNames[OFFICIAL_PLAN_SLUGS.SEBAVIO_PLUS]) {
-    planNames[OFFICIAL_PLAN_SLUGS.SEBAVIO_PLUS] = "Sebavio Plus";
+    planNames[OFFICIAL_PLAN_SLUGS.SEBAVIO_PLUS] = "Sebavia Plus";
   }
 
   const paidEntitlements =
@@ -301,7 +301,7 @@ export default async function PricingPage() {
           aria-labelledby="pricing-plans-heading"
         >
           <h2 id="pricing-plans-heading" className="sr-only">
-            Forfaits Sebavio
+            Forfaits Sebavia
           </h2>
           <PricingPlansGrid
             plans={cards}

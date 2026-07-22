@@ -17,12 +17,12 @@ import { LANDING } from "@/features/marketing/lib/landing-content";
 import { BRAND_ASSETS } from "@/features/marketing/lib/brand-assets";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://sebavio.com";
+  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://sebavia.com";
 
 export const metadata: Metadata = {
-  title: "Sebavio | Copilote intelligent pour planifier vos voyages",
+  title: "Sebavia | Copilote intelligent pour planifier vos voyages",
   description:
-    "Planifiez votre itinéraire, vos arrêts de carburant, vos activités et votre météo avec Sebavio, le copilote intelligent conçu au Québec.",
+    "Planifiez votre itinéraire, vos arrêts de carburant, vos activités et votre météo avec Sebavia, le copilote intelligent conçu au Québec.",
   alternates: {
     canonical: SITE_URL,
   },
@@ -30,24 +30,24 @@ export const metadata: Metadata = {
     type: "website",
     locale: "fr_CA",
     url: SITE_URL,
-    siteName: "Sebavio",
-    title: "Sebavio | Copilote intelligent pour planifier vos voyages",
+    siteName: "Sebavia",
+    title: "Sebavia | Copilote intelligent pour planifier vos voyages",
     description:
-      "Planifiez votre itinéraire, vos arrêts de carburant, vos activités et votre météo avec Sebavio, le copilote intelligent conçu au Québec.",
+      "Planifiez votre itinéraire, vos arrêts de carburant, vos activités et votre météo avec Sebavia, le copilote intelligent conçu au Québec.",
     images: [
       {
         url: BRAND_ASSETS.heroLandscape,
         width: 1200,
         height: 630,
-        alt: "Sebavio — copilote intelligent de voyage",
+        alt: "Sebavia — copilote intelligent de voyage",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sebavio | Copilote intelligent pour planifier vos voyages",
+    title: "Sebavia | Copilote intelligent pour planifier vos voyages",
     description:
-      "Planifiez votre itinéraire, vos arrêts de carburant, vos activités et votre météo avec Sebavio.",
+      "Planifiez votre itinéraire, vos arrêts de carburant, vos activités et votre météo avec Sebavia.",
     images: [BRAND_ASSETS.heroLandscape],
   },
   robots: {
@@ -63,7 +63,7 @@ function HomeJsonLd() {
       {
         "@type": "Organization",
         "@id": `${SITE_URL}/#organization`,
-        name: "Sebavio",
+        name: "Sebavia",
         url: SITE_URL,
         logo: `${SITE_URL}${BRAND_ASSETS.logo}`,
         description: LANDING.definition,
@@ -76,7 +76,7 @@ function HomeJsonLd() {
         "@type": "WebSite",
         "@id": `${SITE_URL}/#website`,
         url: SITE_URL,
-        name: "Sebavio",
+        name: "Sebavia",
         description: LANDING.definition,
         publisher: { "@id": `${SITE_URL}/#organization` },
         inLanguage: "fr-CA",
@@ -84,7 +84,7 @@ function HomeJsonLd() {
       {
         "@type": "WebApplication",
         "@id": `${SITE_URL}/#app`,
-        name: "Sebavio",
+        name: "Sebavia",
         url: SITE_URL,
         applicationCategory: "TravelApplication",
         operatingSystem: "Web",

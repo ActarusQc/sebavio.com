@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://sebavio.com";
+  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://sebavia.com";
 
 export default function robots(): MetadataRoute.Robots {
   return {

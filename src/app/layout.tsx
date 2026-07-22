@@ -20,14 +20,14 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
-      "https://sebavio.com",
+      "https://sebavia.com",
   ),
   title: {
-    default: "Sebavio | Copilote intelligent pour planifier vos voyages",
-    template: "%s | Sebavio",
+    default: "Sebavia | Copilote intelligent pour planifier vos voyages",
+    template: "%s | Sebavia",
   },
   description:
-    "Planifiez votre itinéraire, vos arrêts de carburant, vos activités et votre météo avec Sebavio, le copilote intelligent conçu au Québec.",
+    "Planifiez votre itinéraire, vos arrêts de carburant, vos activités et votre météo avec Sebavia, le copilote intelligent conçu au Québec.",
 };
 
 export default function RootLayout({

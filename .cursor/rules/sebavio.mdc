@@ -86,11 +86,11 @@ alwaysApply: true
 ## Travail direct sur le serveur et consultation officielle
 - Le développement et la validation se font **directement sur le serveur Contabo** (`/var/www/sebavio.com`), pas en local.
 - **Ne jamais** proposer d'URL `localhost`, de port preview (ex. 4050), de serveur `next dev` parallèle, ni d'instructions de transfert de port — **sauf demande explicite** de l'utilisateur.
-- Après une modification validée techniquement (typecheck, tests, build), **implanter sur le site officiel** : https://sebavio.com
+- Après une modification validée techniquement (typecheck, tests, build), **implanter sur le site officiel** : https://sebavia.com
   - build de production (`npm run build` ou `SEBAVIO_DIST_DIR` isolé puis sync `.next`);
   - redémarrer **uniquement** le processus PM2 `sebavio` (pas les autres apps);
-  - tests de fumée sur https://sebavio.com.
-- L'URL à communiquer à l'utilisateur pour consulter le résultat est **https://sebavio.com** (et les chemins applicatifs pertinents), jamais une URL locale sauf demande contraire.
+  - tests de fumée sur https://sebavia.com.
+- L'URL à communiquer à l'utilisateur pour consulter le résultat est **https://sebavia.com** (et les chemins applicatifs pertinents), jamais une URL locale sauf demande contraire.
 
   - Statuts de voyage : planned, in_progress, completed, cancelled. Le statut cancelled est un ajout délibéré au Document 4 (transitions depuis planned et in_progress, irréversible).
 

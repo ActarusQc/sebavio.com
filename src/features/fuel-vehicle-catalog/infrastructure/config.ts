@@ -90,4 +90,4 @@ export function getVehicleCatalogEnv(): VehicleCatalogEnv {
 
 export const SOURCE_NAME = "Ressources naturelles Canada";
 export const USER_AGENT =
-  "SebavioVehicleCatalog/1.0 (+https://sebavio.com; fuel-catalog-sync)";
+  "SebaviaVehicleCatalog/1.0 (+https://sebavia.com; fuel-catalog-sync)";

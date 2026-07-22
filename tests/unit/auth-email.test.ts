@@ -94,7 +94,7 @@ describe("services/email", () => {
     expect(result.ok).toBe(true);
     expect(provider.send).toHaveBeenCalledOnce();
     const arg = provider.send.mock.calls[0]?.[0];
-    expect(arg?.subject).toContain("Sebavio");
+    expect(arg?.subject).toContain("Sebavia");
     expect(arg?.html).toContain("Corps");
   });
 
@@ -105,7 +105,7 @@ describe("services/email", () => {
     vi.stubEnv("SMTP_SECURE", "false");
     vi.stubEnv("SMTP_USER", "user");
     vi.stubEnv("SMTP_PASSWORD", "pass");
-    vi.stubEnv("EMAIL_FROM", "Sebavio <no-reply@sebavio.com>");
+    vi.stubEnv("EMAIL_FROM", "Sebavia <no-reply@sebavio.com>");
     const { createEmailProviderFromEnv } = await import("@/services/email");
     expect(createEmailProviderFromEnv().name).toBe("smtp");
   });
