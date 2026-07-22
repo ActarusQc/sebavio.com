@@ -13,6 +13,7 @@ import {
   INTEREST_CHOICES,
   NONE_INTEREST_LABEL,
 } from "@/features/ai-trip-planner/lib/travel-interests";
+import { destinationQuickReplies } from "@/features/ai-trip-planner/lib/destination-suggestions";
 import type {
   OriginSuggestionDto,
   RequestedInputDto,
@@ -124,29 +125,34 @@ export function buildControlsForStep(input: {
     case "destination_radius":
       return {
         quickReplies: [
-          "Moins d’1 h",
-          "Environ 2 h",
-          "Environ 3 h",
-          "Environ 4 h",
-          "Moins de 200 km",
-          "Moins de 400 km",
+          "Moins d’1 h à l’aller",
+          "Environ 2 h à l’aller",
+          "Environ 3 h à l’aller",
+          "Environ 4 h à l’aller",
+          "Moins de 200 km à l’aller",
+          "Moins de 400 km à l’aller",
         ],
         requestedInput: {
           type: "number",
           field: "other",
-          placeholder: "Ex. 2 heures ou 300 km",
+          placeholder: "Ex. 2 heures à l’aller ou 300 km",
           countryBias: "CA",
           regionBias: "QC",
         },
         forceAssistantMessage:
-          "Quelle distance ou durée maximale de trajet souhaitez-vous pour ce départ?",
+          "Quelle durée ou distance maximale souhaitez-vous pour le trajet d’aller (sens unique, pas l’aller-retour)? Par exemple, « Environ 2 h à l’aller » signifie environ 2 heures de route pour rejoindre la destination.",
       };
 
     case "destination":
       return {
         quickReplies:
           draft.destinationMode === "suggest"
-            ? ["Percé", "Québec", "Tremblant", "Autre destination"]
+            ? destinationQuickReplies({
+                originLatitude: draft.origin.latitude,
+                originLongitude: draft.origin.longitude,
+                maxDriveMinutes: draft.maxDriveMinutes,
+                maxDistanceKm: draft.maxDistanceKm,
+              })
             : ["Saisir une adresse", "Gaspésie", "Charlevoix"],
         requestedInput: {
           type: "address",
@@ -155,6 +161,15 @@ export function buildControlsForStep(input: {
           countryBias: "CA",
           regionBias: "QC",
         },
+        forceAssistantMessage:
+          draft.destinationMode === "suggest" &&
+          (draft.maxDriveMinutes != null || draft.maxDistanceKm != null)
+            ? `Voici des idées situées à environ ${
+                draft.maxDriveMinutes != null
+                  ? `${Math.round(draft.maxDriveMinutes / 60)} h`
+                  : `${draft.maxDistanceKm} km`
+              } ou moins à l’aller depuis votre départ. Choisissez-en une ou saisissez une autre destination.`
+            : undefined,
       };
 
     case "dates":
@@ -307,7 +322,7 @@ export function buildControlsForStep(input: {
       if (
         (draft.lodgingRequested ||
           draft.accommodationMode === "sebavio_suggestion") &&
-        !(draft.lodgingSelection?.placeId && draft.lodgingSelection?.name)
+        !draft.lodgingSelection?.name
       ) {
         return {
           quickReplies: draft.lodgingOptions

@@ -132,17 +132,19 @@ export function AITripPlannerPage() {
             error={error}
             requestedInput={session.requestedInput}
             activeQuickReplies={
-              session.currentStep === "lodging" ||
               session.currentStep === "preferences" ||
               session.requestedInput?.type === "multi_choice"
                 ? []
-                : session.quickReplies
+                : session.currentStep === "lodging" &&
+                    !session.draft.lodgingSelection?.name
+                  ? []
+                  : session.quickReplies
             }
             proposal={session.proposal}
             showLodgingPicker={
-              session.currentStep === "lodging" ||
-              (session.draft.lodgingRequested &&
-                !session.draft.lodgingSelection?.placeId)
+              !session.draft.lodgingSelection?.name &&
+              (session.currentStep === "lodging" ||
+                Boolean(session.draft.lodgingRequested))
             }
             lodgingOptions={session.draft.lodgingOptions}
             lodgingTypeLabel={session.draft.lodgingType}

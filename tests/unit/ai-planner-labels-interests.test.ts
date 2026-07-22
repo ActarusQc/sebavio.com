@@ -227,6 +227,7 @@ describe("intérêts multi", () => {
           placeId: null,
           address: null,
           accepted: true,
+          themes: ["gastronomy"],
         },
       ],
       proposalConfirmed: true,

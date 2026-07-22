@@ -82,6 +82,7 @@ export const stopDraftSchema = z
     placeId: nullableString(255),
     address: nullableString(2000),
     accepted: z.boolean().optional().default(true),
+    themes: z.array(z.string().max(40)).max(6).optional().default([]),
   })
   .transform((s) => ({
     id: s.id ?? randomUUID(),
@@ -94,6 +95,7 @@ export const stopDraftSchema = z
     placeId: s.placeId ?? null,
     address: s.address ?? null,
     accepted: s.accepted ?? true,
+    themes: s.themes ?? [],
   }));
 
 export const suggestionSchema = z

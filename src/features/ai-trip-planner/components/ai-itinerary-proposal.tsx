@@ -97,10 +97,14 @@ export function AIItineraryProposal({ proposal }: Props) {
                   <div className="min-w-0">
                     <p className="text-sebavio-navy font-medium">{item.name}</p>
                     <p className="text-sebavio-slate text-xs">
-                      {getItineraryTypeLabel(item.category)}
-                      {item.themeLabels?.length
-                        ? ` · ${item.themeLabels.join(" · ")}`
-                        : ""}
+                      {[
+                        getItineraryTypeLabel(item.category),
+                        ...(item.themeLabels ?? []).filter(
+                          (t) =>
+                            t.toLowerCase() !==
+                            getItineraryTypeLabel(item.category).toLowerCase(),
+                        ),
+                      ].join(" · ")}
                       {item.justification ? ` — ${item.justification}` : ""}
                     </p>
                   </div>

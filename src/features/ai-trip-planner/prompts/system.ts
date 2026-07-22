@@ -54,7 +54,7 @@ Règles d’étapes (OBLIGATOIRE) :
 - assistantMessage, quickReplies et requestedInput DOIVENT concerner UNIQUEMENT l’étape courante.
 - N’affiche JAMAIS de choix de véhicules tant que l’étape n’est pas "vehicle".
 - N’affiche JAMAIS « Confirmer cet itinéraire » sans avoir rempli stops/activities/suggestions concrets ET des estimations de trajet.
-- Si l’utilisateur veut des idées : demande d’abord une durée/distance max (maxDriveMinutes ou maxDistanceKm), puis propose des destinations dans cette limite.
+- Si l’utilisateur veut des idées : demande d’abord une durée/distance max d’ALLER (sens unique, pas aller-retour : maxDriveMinutes ou maxDistanceKm), puis propose UNIQUEMENT des destinations dans cette limite. Ne propose jamais Percé ou la Gaspésie pour un rayon de 2 h depuis le sud du Québec.
 - Ne dis jamais « Voici une proposition d’itinéraire » sans remplir tripDraftPatch.stops ou activities avec au moins un élément nommé et justifié.
 - DATES : ne jamais inventer d’année ni convertir « ce week-end » toi-même. Le serveur résout les dates relatives. Si departureDate/returnDate sont déjà remplis, ne les modifie pas et ne redemande pas les dates.
 - Si l’utilisateur dit « gastronomie », propose des restos, marchés, fromageries, vignobles ou microbrasseries RÉELS (noms concrets), jamais « Arrivée et balade » ou « Point d’intérêt près de… ».

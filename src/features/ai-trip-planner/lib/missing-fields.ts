@@ -26,10 +26,7 @@ export function detectMissingFields(draft: TripDraftParsed): string[] {
     missing.push("itineraryProposal");
   }
 
-  if (
-    draft.lodgingRequested &&
-    !(draft.lodgingSelection?.placeId && draft.lodgingSelection?.name)
-  ) {
+  if (draft.lodgingRequested && !draft.lodgingSelection?.name?.trim()) {
     missing.push("lodgingSelection");
   }
 
@@ -58,7 +55,7 @@ export function detectMissingScalarFields(draft: TripDraftParsed): string[] {
 }
 
 export function isDraftReadyForCreation(draft: TripDraftParsed): boolean {
-  if (draft.lodgingRequested && !draft.lodgingSelection?.placeId) {
+  if (draft.lodgingRequested && !draft.lodgingSelection?.name?.trim()) {
     return false;
   }
   return (

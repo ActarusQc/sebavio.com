@@ -542,6 +542,32 @@ export async function sendPlanningMessage(
         travelStyle:
           draftSeed.travelStyle.length > 0 ? draftSeed.travelStyle : [style],
       };
+      // Couple / amoureux → toujours 2 voyageurs (pas de question suivante)
+      if (/couple|amoureux|en amoureux/i.test(trimmed)) {
+        draftSeed = {
+          ...draftSeed,
+          travelerCount: 2,
+          adults: 2,
+          children: 0,
+        };
+      }
+      if (/famille/i.test(trimmed) && !draftSeed.travelerCount) {
+        // laisser travelers à demander
+      }
+    }
+
+    // Rattrapage couple même hors étape trip_type
+    if (
+      /voyage en couple|en amoureux|en couple/i.test(trimmed) &&
+      !draftSeed.travelerCount &&
+      !(draftSeed.adults && draftSeed.adults > 0)
+    ) {
+      draftSeed = {
+        ...draftSeed,
+        travelerCount: 2,
+        adults: 2,
+        children: 0,
+      };
     }
 
     // Clarification samedi/dimanche — sans appel modèle
@@ -807,7 +833,7 @@ export async function sendPlanningMessage(
       Boolean(draftSeed.lodgingRequested) &&
       Boolean(draftSeed.accommodationType || draftSeed.lodgingType) &&
       draftSeed.lodgingOptions.length === 0 &&
-      !draftSeed.lodgingSelection?.placeId;
+      !draftSeed.lodgingSelection?.name;
 
     if (accommodation.requested) {
       draftSeed = {
@@ -1210,10 +1236,7 @@ export async function sendPlanningMessage(
     }
 
     // Hébergement en attente : jamais confirmer ni afficher les thèmes
-    if (
-      draft.lodgingRequested &&
-      !(draft.lodgingSelection?.placeId && draft.lodgingSelection?.name)
-    ) {
+    if (draft.lodgingRequested && !draft.lodgingSelection?.name) {
       currentStep = "lodging";
       status = "proposing";
       const lodgingControls = buildControlsForStep({

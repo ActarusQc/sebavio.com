@@ -123,6 +123,9 @@ export function buildItineraryProposal(
         category: s.category,
         justification: s.justification,
         durationMinutes: s.durationMinutes,
+        themeLabels: (s.themes ?? [])
+          .map((t) => getTravelInterestLabel(t))
+          .filter(Boolean),
       })),
     ...draft.activities
       .filter((a) => a.accepted)
@@ -131,12 +134,9 @@ export function buildItineraryProposal(
         category: a.category,
         justification: a.justification,
         durationMinutes: a.durationMinutes,
-        themeLabels: draft.interests.length
-          ? draft.interests
-              .slice(0, 2)
-              .map((i) => getTravelInterestLabel(i))
-              .filter(Boolean)
-          : undefined,
+        themeLabels: (a.themes ?? [])
+          .map((t) => getTravelInterestLabel(t))
+          .filter(Boolean),
       })),
     ...draft.suggestions
       .filter((s) => s.accepted)
@@ -145,6 +145,7 @@ export function buildItineraryProposal(
         category: s.category,
         justification: s.justification,
         durationMinutes: null as number | null,
+        themeLabels: [getTravelInterestLabel(s.category)].filter(Boolean),
       })),
   ];
 
@@ -165,8 +166,34 @@ export function buildItineraryProposal(
       items: [],
     });
   }
-  unique.forEach((item, index) => {
-    const dayIndex = index % days.length;
+
+  const lodging = unique.filter((i) =>
+    /lodging|hébergement|accommodation/i.test(i.category),
+  );
+  const meals = unique.filter((i) => /meal|repas/i.test(i.category));
+  const others = unique.filter(
+    (i) => !/lodging|hébergement|accommodation|meal|repas/i.test(i.category),
+  );
+
+  // Hébergement : nuit du jour 1 (séjour multi-jours)
+  if (lodging.length && days.length > 0) {
+    const nightDay = daysCount > 1 ? 0 : 0;
+    days[nightDay]!.items.push(...lodging);
+  }
+
+  // Repas : jour 1, puis jour 2, etc. — pas le jour du retour si multi-jours
+  const mealDayCount = daysCount > 1 ? Math.max(1, daysCount - 1) : 1;
+  meals.forEach((meal, index) => {
+    const dayIndex = Math.min(index, mealDayCount - 1);
+    days[dayIndex]!.items.push(meal);
+  });
+
+  // Autres activités : répartition en favorisant le début du séjour
+  others.forEach((item, index) => {
+    const dayIndex =
+      daysCount > 1
+        ? Math.min(index % Math.max(1, daysCount - 1), days.length - 1)
+        : index % days.length;
     days[dayIndex]!.items.push(item);
   });
 
@@ -356,6 +383,11 @@ export function parseDriveLimitFromText(text: string): {
   if (/\b2\s*h\b|\bdeux heures\b/.test(t)) return { maxDriveMinutes: 120 };
   if (/\b3\s*h\b|\btrois heures\b/.test(t)) return { maxDriveMinutes: 180 };
   if (/\b4\s*h\b|\bquatre heures\b/.test(t)) return { maxDriveMinutes: 240 };
+  if (/moins d[’']?1\s*h|moins d une heure/.test(t))
+    return { maxDriveMinutes: 60 };
+  if (/environ 2\s*h/.test(t)) return { maxDriveMinutes: 120 };
+  if (/environ 3\s*h/.test(t)) return { maxDriveMinutes: 180 };
+  if (/environ 4\s*h/.test(t)) return { maxDriveMinutes: 240 };
   if (/\bdemi[- ]?journee\b|\bmatin(ee)?\b/.test(t))
     return { maxDriveMinutes: 180 };
   return {};

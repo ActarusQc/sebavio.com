@@ -186,10 +186,8 @@ export function lodgingSelectionComplete(draft: {
   lodgingSelection?: { placeId: string | null; name: string | null } | null;
 }): boolean {
   if (!draft.lodgingRequested) return true;
-  return Boolean(
-    draft.lodgingSelection?.placeId?.trim() &&
-    draft.lodgingSelection?.name?.trim(),
-  );
+  // placeId peut être absent selon Places — le nom suffit pour considérer le choix fait
+  return Boolean(draft.lodgingSelection?.name?.trim());
 }
 
 export function parseAccommodationMode(

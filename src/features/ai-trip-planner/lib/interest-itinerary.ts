@@ -288,7 +288,10 @@ function pickCatalog(draft: TripDraftParsed): CatalogItem[] {
   }
 
   const days = Math.max(1, draft.durationDays ?? 1);
-  const limit = Math.min(2 + days, 6);
+  const limit = Math.min(
+    2 + days + (interests.includes("gastronomy") ? 1 : 0),
+    8,
+  );
   return selected.slice(0, limit);
 }
 
@@ -326,7 +329,26 @@ export function buildInterestBasedItinerary(
 
   const catalog = pickCatalog(draft);
   const interests = resolvedInterests(draft);
-  const activities = catalog.map((item) => ({
+  const days = Math.max(1, draft.durationDays ?? 1);
+  // Au moins un repas par jour de séjour (hors jour de retour seul)
+  const mealSlots = days > 1 ? days - 1 : 1;
+  const mealItems = catalog.filter((i) => i.category === "meal");
+  const otherItems = catalog.filter((i) => i.category !== "meal");
+  const ensuredMeals = [...mealItems];
+  while (ensuredMeals.length < mealSlots && DEFAULT_GASTRO.length > 0) {
+    const next = DEFAULT_GASTRO[ensuredMeals.length % DEFAULT_GASTRO.length]!;
+    if (!ensuredMeals.some((m) => m.name === next.name)) {
+      ensuredMeals.push(next);
+    } else {
+      break;
+    }
+  }
+  const orderedCatalog = [
+    ...ensuredMeals.slice(0, Math.max(mealSlots, mealItems.length)),
+    ...otherItems,
+  ];
+
+  const activities = orderedCatalog.map((item) => ({
     id: randomUUID(),
     name: item.name,
     category: item.category,
@@ -337,6 +359,7 @@ export function buildInterestBasedItinerary(
     placeId: null as string | null,
     address: null as string | null,
     accepted: true,
+    themes: item.tags as string[],
   }));
 
   const dest =
@@ -356,7 +379,7 @@ export function buildInterestBasedItinerary(
         !isGenericPlaceholderItem(s.name) &&
         (s.category === "lodging" || !options?.force),
     ),
-    suggestions: catalog.slice(0, 3).map((item) => ({
+    suggestions: orderedCatalog.slice(0, 3).map((item) => ({
       id: randomUUID(),
       name: item.name,
       category: item.tags[0] ?? item.category,
@@ -391,6 +414,7 @@ export function buildInterestBasedItinerary(
           placeId: null,
           address: null,
           accepted: true,
+          themes: [],
         },
       ],
     };

@@ -6,6 +6,7 @@ export const INITIAL_QUICK_REPLIES = [
   "Escapade",
   "Voyage en famille",
   "Voyage en couple",
+  "En amoureux",
   "J’ai déjà une destination",
   "Je cherche des idées",
 ] as const;

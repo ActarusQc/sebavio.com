@@ -31,6 +31,7 @@ export type StopDraft = {
   placeId: string | null;
   address: string | null;
   accepted: boolean;
+  themes?: string[];
 };
 
 export type AiSuggestion = {

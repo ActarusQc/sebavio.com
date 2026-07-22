@@ -18,7 +18,11 @@ import {
   hasItineraryProposal,
   resolveCurrentStep,
 } from "@/features/ai-trip-planner/lib/planning-step";
-import { buildControlsForStep } from "@/features/ai-trip-planner/lib/controls-for-step";
+import {
+  buildControlsForStep,
+  CONFIRM_EDIT,
+  CONFIRM_YES,
+} from "@/features/ai-trip-planner/lib/controls-for-step";
 import { recalculateDraftEstimates } from "@/features/ai-trip-planner/services/recalculate-estimates";
 import type { TripDraftParsed } from "@/features/ai-trip-planner/schemas/draft";
 import type { TripPlannerSessionDto } from "@/features/ai-trip-planner/types";
@@ -57,6 +61,7 @@ export function applyLodgingSelectionToDraft(
     placeId: option.placeId,
     address: option.address,
     accepted: true,
+    themes: [] as string[],
   };
 
   const stopsWithoutLodging = draft.stops.filter(
@@ -168,8 +173,8 @@ export async function applyPlanningLodging(
   });
 
   const assistantContent = input.skip
-    ? "D’accord, on continue sans hébergement réservé pour l’instant."
-    : `Parfait, j’ajoute « ${draft.lodgingSelection?.name} » à votre itinéraire.`;
+    ? "D’accord, on continue sans hébergement réservé pour l’instant. Souhaitez-vous confirmer cet itinéraire?"
+    : `Parfait, j’ajoute « ${draft.lodgingSelection?.name} » à votre itinéraire. Souhaitez-vous confirmer cette proposition ou modifier des détails?`;
 
   const withMessages = stripHistoricalQuickReplies([
     ...messages,
@@ -184,9 +189,15 @@ export async function applyPlanningLodging(
     {
       id: randomUUID(),
       role: "assistant" as const,
-      content: assistantContent,
+      content:
+        controls.forceAssistantMessage && currentStep !== "confirmation"
+          ? controls.forceAssistantMessage
+          : assistantContent,
       createdAt: new Date().toISOString(),
-      quickReplies: controls.quickReplies,
+      quickReplies:
+        controls.quickReplies.length > 0
+          ? controls.quickReplies
+          : [CONFIRM_YES, CONFIRM_EDIT],
     },
   ]);
 
@@ -201,9 +212,14 @@ export async function applyPlanningLodging(
     },
   });
 
+  const finalQuickReplies =
+    controls.quickReplies.length > 0
+      ? controls.quickReplies
+      : [CONFIRM_YES, CONFIRM_EDIT];
+
   return toSessionDto(updated, {
     currentStep,
-    quickReplies: controls.quickReplies,
+    quickReplies: finalQuickReplies,
     requestedInput: controls.requestedInput,
     originSuggestions: ctx.originSuggestions,
     homeCity: ctx.homeCity,
