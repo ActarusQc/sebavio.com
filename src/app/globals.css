@@ -75,6 +75,14 @@
   --color-client-star: var(--client-star);
   --color-client-green-soft: var(--client-green-soft);
   --color-client-beige: var(--client-beige);
+  --color-client-sidebar: var(--client-sidebar);
+  --color-client-sidebar-active: var(--client-sidebar-active);
+  --color-client-surface: var(--client-surface);
+  --color-client-surface-strong: var(--client-surface-strong);
+  --color-client-background: var(--client-background);
+  --color-sebavio-gold-hover: var(--sebavio-gold-hover);
+  --color-sebavio-orange-100: var(--sebavio-orange-100);
+  --color-sebavio-blue-100: var(--sebavio-blue-100);
   --color-sebavio-night: var(--sebavio-night);
   --color-sebavio-night-elevated: var(--sebavio-night-elevated);
   --color-sebavio-gradient-from: var(--sebavio-gradient-from);
@@ -180,90 +188,97 @@
   --sidebar-ring: var(--sebavio-gold);
 }
 
-/* Espace client authentifié — thème clair (maquette) */
+/* Espace client authentifié — thème clair dérivé du branding public */
 .workspace-shell {
-  --background: var(--client-bg);
+  --background: var(--client-background);
   --foreground: var(--client-text);
-  --card: var(--client-warm-white);
+  --card: var(--client-surface);
   --card-foreground: var(--client-text);
-  --popover: var(--client-warm-white);
+  --popover: var(--client-surface-strong);
   --popover-foreground: var(--client-text);
-  --primary: var(--client-petrol);
-  --primary-foreground: #ffffff;
+  --primary: var(--sebavio-gold);
+  --primary-foreground: var(--sebavio-navy);
   --secondary: var(--client-pale);
   --secondary-foreground: var(--client-text);
   --muted: var(--client-bg-secondary);
   --muted-foreground: var(--client-text-muted);
-  --accent: var(--client-turquoise);
-  --accent-foreground: var(--client-night);
+  --accent: #eef3f3;
+  --accent-foreground: var(--sebavio-navy);
   --border: var(--client-border);
   --input: var(--client-border);
-  --ring: var(--client-petrol);
-  --sidebar: var(--client-warm-white);
+  --ring: var(--sebavio-slate);
+  --sidebar: var(--client-sidebar);
   --sidebar-foreground: var(--client-text);
-  --sidebar-primary: var(--client-petrol);
+  --sidebar-primary: var(--sebavio-navy);
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: var(--client-pale);
-  --sidebar-accent-foreground: var(--client-night);
+  --sidebar-accent: #ebe7df;
+  --sidebar-accent-foreground: var(--sebavio-navy);
   --sidebar-border: var(--client-border);
-  --sidebar-ring: var(--client-petrol);
+  --sidebar-ring: var(--sebavio-gold);
   color: var(--foreground);
-  background-color: var(--client-bg);
+  background-color: var(--client-background);
   background-image:
     radial-gradient(
       ellipse 70% 45% at 0% 0%,
-      rgb(11 82 101 / 0.06),
+      rgb(14 45 70 / 0.05),
       transparent 55%
     ),
     radial-gradient(
       ellipse 55% 40% at 100% 0%,
-      rgb(247 198 77 / 0.07),
+      rgb(240 182 77 / 0.1),
       transparent 50%
     ),
     radial-gradient(
       ellipse 50% 30% at 50% 100%,
-      rgb(52 124 135 / 0.05),
+      rgb(78 127 133 / 0.06),
       transparent 55%
     );
 }
 
-/* Espace client — thème crépuscule (semi-sombre) */
+/* Espace client — thème crépuscule (semi-sombre, branding nuit) */
 .dark .workspace-shell {
-  --background: #0a2a36;
-  --foreground: #f5f8f7;
-  --card: #0f3542;
-  --card-foreground: #f5f8f7;
-  --popover: #0f3542;
-  --popover-foreground: #f5f8f7;
-  --primary: var(--client-star);
-  --primary-foreground: var(--client-night);
-  --secondary: #164555;
-  --secondary-foreground: #f5f8f7;
-  --muted: #143d4c;
-  --muted-foreground: #9db0b8;
-  --accent: #1a4f5e;
-  --accent-foreground: #f5f8f7;
-  --border: rgb(157 176 184 / 18%);
-  --input: rgb(157 176 184 / 22%);
-  --ring: var(--client-teal);
-  --sidebar: #08303c;
-  --sidebar-foreground: #f5f8f7;
-  --sidebar-primary: var(--client-petrol);
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #144555;
-  --sidebar-accent-foreground: #f5f8f7;
-  --sidebar-border: rgb(157 176 184 / 16%);
-  --sidebar-ring: var(--client-star);
-  background-color: #0a2a36;
+  --background: #0b2235;
+  --foreground: #faf9f6;
+  --card: #123048;
+  --card-foreground: #faf9f6;
+  --popover: #123048;
+  --popover-foreground: #faf9f6;
+  --primary: var(--sebavio-gold);
+  --primary-foreground: var(--sebavio-navy);
+  --secondary: #1a3a52;
+  --secondary-foreground: #faf9f6;
+  --muted: #1a3a52;
+  --muted-foreground: #a8b8b8;
+  --accent: #1e4558;
+  --accent-foreground: #faf9f6;
+  --border: rgb(255 255 255 / 12%);
+  --input: rgb(255 255 255 / 15%);
+  --ring: var(--sebavio-gold);
+  --sidebar: #0e2d46;
+  --sidebar-foreground: #faf9f6;
+  --sidebar-primary: var(--sebavio-gold);
+  --sidebar-primary-foreground: var(--sebavio-navy);
+  --sidebar-accent: #1a3a52;
+  --sidebar-accent-foreground: #faf9f6;
+  --sidebar-border: rgb(255 255 255 / 12%);
+  --sidebar-ring: var(--sebavio-gold);
+  --client-sidebar: #0e2d46;
+  --client-sidebar-active: #1a3a52;
+  --client-surface: #123048;
+  --client-text: #faf9f6;
+  --client-text-muted: #a8b8b8;
+  --client-border: rgb(255 255 255 / 12%);
+  --client-pale: #1a3a52;
+  background-color: #0b2235;
   background-image:
     radial-gradient(
       ellipse 70% 45% at 0% 0%,
-      rgb(52 124 135 / 0.16),
+      rgb(78 127 133 / 0.18),
       transparent 55%
     ),
     radial-gradient(
       ellipse 50% 35% at 100% 10%,
-      rgb(247 198 77 / 0.08),
+      rgb(240 182 77 / 0.1),
       transparent 50%
     );
 }

@@ -25,24 +25,36 @@
   --sebavio-orange-soft: #fff3e8;
   --sebavio-surface: #f0f4f8;
 
-  /* Espace client authentifié (maquette dashboard) */
-  --client-night: #052d3d;
-  --client-petrol: #0b5265;
-  --client-teal: #347c87;
-  --client-turquoise: #ddeeef;
-  --client-pale: #edf5f6;
-  --client-bg: #f8faf9;
-  --client-bg-secondary: #f3f6f5;
-  --client-warm-white: #fffdfc;
-  --client-text: #082d42;
-  --client-text-muted: #607684;
-  --client-border: #dce6e6;
-  --client-star: #f7c64d;
-  --client-green-soft: #bfd8cb;
-  --client-beige: #f4e9cf;
+  /* Espace client — dérivé de l’identité publique (pas une 2ᵉ palette) */
+  --client-background: var(--sebavio-background);
+  --client-surface: #fffefb;
+  --client-surface-strong: #ffffff;
+  --client-text: var(--sebavio-navy);
+  --client-text-muted: var(--sebavio-muted);
+  --client-primary: var(--sebavio-navy);
+  --client-primary-hover: #0a2438;
+  --client-accent: var(--sebavio-gold);
+  --client-accent-hover: var(--sebavio-gold-hover);
+  --client-border: var(--sebavio-gray-200);
+  --client-shadow: var(--shadow-md);
+  --client-shadow-hover: var(--shadow-lg);
+  --client-sidebar: #f7f5f0;
+  --client-sidebar-active: var(--sebavio-navy);
   --client-radius: 1.25rem;
-  --client-shadow: 0 2px 12px rgb(5 45 61 / 0.06);
-  --client-shadow-hover: 0 8px 24px rgb(5 45 61 / 0.1);
+  --client-content-max: 100rem; /* ~1600 px */
+
+  /* Alias compatibles (composants existants) → branding public */
+  --client-night: var(--sebavio-navy);
+  --client-petrol: var(--sebavio-navy);
+  --client-teal: var(--sebavio-slate);
+  --client-turquoise: #eef3f3;
+  --client-pale: #f3f1ec;
+  --client-bg: var(--client-background);
+  --client-bg-secondary: #f3f1ec;
+  --client-warm-white: var(--client-surface);
+  --client-star: var(--sebavio-gold);
+  --client-green-soft: #d4e5df;
+  --client-beige: #f4efe4;
 
   /* Landing marketing (hero nuit / CTA) — palette maquette */
   --sebavio-night: #050b1c;
@@ -117,7 +129,7 @@
   --shadow-md: 0 4px 16px rgb(14 45 70 / 0.08);
   --shadow-lg: 0 12px 32px rgb(14 45 70 / 0.12);
 
-  /* Contenu max */
+  /* Contenu max — espace client ~1600 px ; marketing conserve 1440 via usage */
   --content-max-width: 90rem; /* 1440 px */
 
   /* Transitions */

@@ -11,14 +11,14 @@ export function ProgressBar({ value, label, className }: ProgressBarProps) {
 
   return (
     <div className={cn("space-y-1.5", className)}>
-      <div className="flex items-center justify-between gap-2 text-xs">
+      <div className="flex items-center justify-between gap-2 text-sm">
         <span className="text-client-text-muted">{label}</span>
-        <span className="text-client-text font-medium tabular-nums">
+        <span className="text-client-text font-semibold tabular-nums">
           {clamped}&nbsp;%
         </span>
       </div>
       <div
-        className="bg-client-pale h-2 overflow-hidden rounded-full"
+        className="bg-client-pale h-2.5 overflow-hidden rounded-full"
         role="progressbar"
         aria-valuenow={clamped}
         aria-valuemin={0}
@@ -26,7 +26,7 @@ export function ProgressBar({ value, label, className }: ProgressBarProps) {
         aria-label={label}
       >
         <div
-          className="bg-client-petrol h-full rounded-full transition-[width] duration-500 ease-out motion-reduce:transition-none"
+          className="bg-sebavio-navy h-full rounded-full transition-[width] duration-500 ease-out motion-reduce:transition-none"
           style={{ width: `${clamped}%` }}
         />
       </div>

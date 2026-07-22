@@ -37,7 +37,7 @@ export function Sidebar({
       className={cn(
         "border-sidebar-border bg-sidebar text-sidebar-foreground hidden shrink-0 border-r md:flex md:flex-col",
         "transition-[width] duration-200 ease-out motion-reduce:transition-none",
-        collapsed ? "w-[4.5rem]" : "w-64",
+        collapsed ? "w-[4.75rem]" : "w-[16.5rem]",
         className,
       )}
     >

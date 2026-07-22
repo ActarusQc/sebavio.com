@@ -17,9 +17,15 @@ function formatDayLabel(isoDate: string): string {
 export function WeatherWidget({ weather }: WeatherWidgetProps) {
   if (weather == null) {
     return (
-      <DashboardCard title="Météo à 5 jours">
-        <div className="text-client-text-muted flex flex-1 flex-col items-center justify-center gap-2 py-6 text-center text-sm">
-          <MapPin className="text-client-teal size-8 opacity-70" aria-hidden />
+      <DashboardCard
+        title="Météo à 5 jours"
+        className="from-client-surface to-sebavio-blue-100/40 bg-gradient-to-br"
+      >
+        <div className="text-client-text-muted flex flex-1 flex-col items-center justify-center gap-2 py-6 text-center text-[0.9375rem]">
+          <MapPin
+            className="text-sebavio-slate size-9 opacity-70"
+            aria-hidden
+          />
           <p>
             Ajoutez une adresse de domicile ou une destination de voyage pour
             afficher la météo.
@@ -32,9 +38,9 @@ export function WeatherWidget({ weather }: WeatherWidgetProps) {
   if (!weather.available) {
     return (
       <DashboardCard title="Météo à 5 jours">
-        <div className="text-client-text-muted flex flex-1 flex-col items-center justify-center gap-2 py-6 text-center text-sm">
+        <div className="text-client-text-muted flex flex-1 flex-col items-center justify-center gap-2 py-6 text-center text-[0.9375rem]">
           <CloudOff
-            className="text-client-teal size-8 opacity-70"
+            className="text-sebavio-slate size-9 opacity-70"
             aria-hidden
           />
           <p>
@@ -42,9 +48,7 @@ export function WeatherWidget({ weather }: WeatherWidgetProps) {
               "Les prévisions ne sont pas disponibles pour le moment."}
           </p>
           {weather.locationLabel ? (
-            <p className="text-client-text-muted/80 text-xs">
-              {weather.locationLabel}
-            </p>
+            <p className="text-sm opacity-80">{weather.locationLabel}</p>
           ) : null}
         </div>
       </DashboardCard>
@@ -55,35 +59,39 @@ export function WeatherWidget({ weather }: WeatherWidgetProps) {
     weather.tripIdForLink != null ? (
       <Link
         href={`/dashboard/trips/${weather.tripIdForLink}`}
-        className="text-client-petrol hover:text-client-night text-sm font-medium transition-colors"
+        className="text-sebavio-navy hover:text-sebavio-slate text-[0.9375rem] font-semibold transition-colors"
       >
         Voir la météo complète →
       </Link>
     ) : undefined;
 
   return (
-    <DashboardCard title="Météo à 5 jours" footer={footer}>
-      <div className="space-y-4">
+    <DashboardCard
+      title="Météo à 5 jours"
+      footer={footer}
+      className="from-client-surface to-sebavio-blue-100/50 bg-gradient-to-br"
+    >
+      <div className="space-y-5">
         <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 space-y-1">
-            <p className="text-client-text-muted flex items-center gap-1.5 text-xs">
-              <MapPin className="size-3.5 shrink-0" aria-hidden />
+          <div className="min-w-0 space-y-1.5">
+            <p className="text-client-text-muted flex items-center gap-1.5 text-sm">
+              <MapPin className="size-4 shrink-0" aria-hidden />
               <span className="truncate">{weather.locationLabel}</span>
             </p>
             {weather.current ? (
               <>
-                <p className="font-heading text-client-night text-3xl font-bold tabular-nums">
+                <p className="font-heading text-client-text text-4xl font-bold tracking-tight tabular-nums">
                   {Math.round(weather.current.tempC)}°C
                 </p>
-                <p className="text-client-text text-sm capitalize">
+                <p className="text-client-text text-[0.9375rem] capitalize">
                   {weather.current.summary}
                 </p>
-                <p className="text-client-text-muted text-xs">
+                <p className="text-client-text-muted text-sm">
                   Ressenti {Math.round(weather.current.feelsLikeC)}°C
                 </p>
               </>
             ) : (
-              <p className="text-client-text-muted text-sm">
+              <p className="text-client-text-muted text-[0.9375rem]">
                 Conditions actuelles indisponibles
               </p>
             )}
@@ -93,28 +101,28 @@ export function WeatherWidget({ weather }: WeatherWidgetProps) {
               code={weather.current.weatherCode}
               description={weather.current.summary}
               preferDay
-              size={56}
+              size={64}
             />
           ) : null}
         </div>
 
         {weather.daily.length > 0 ? (
-          <ul className="grid grid-cols-5 gap-1.5">
+          <ul className="grid grid-cols-5 gap-2">
             {weather.daily.map((day) => (
               <li
                 key={day.date}
-                className="bg-client-pale/80 flex flex-col items-center gap-1 rounded-xl px-1 py-2 text-center"
+                className="bg-client-surface-strong/80 border-client-border flex flex-col items-center gap-1.5 rounded-xl border px-1 py-2.5 text-center"
               >
-                <span className="text-client-text-muted text-[0.65rem] font-medium uppercase">
+                <span className="text-client-text-muted text-[0.7rem] font-semibold uppercase">
                   {formatDayLabel(day.date)}
                 </span>
                 <WeatherConditionIcon
                   code={day.weatherCode}
                   description={day.summary}
                   preferDay
-                  size={28}
+                  size={32}
                 />
-                <span className="text-client-text text-[0.65rem] tabular-nums">
+                <span className="text-client-text text-xs font-medium tabular-nums">
                   {Math.round(day.tempMaxC)}°
                   <span className="text-client-text-muted">
                     {" "}

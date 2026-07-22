@@ -7,12 +7,13 @@ export type AppShellProps = {
   footer?: ReactNode;
   children: ReactNode;
   className?: string;
-  /** Contenu max-width (Document 7 : 1440 px). */
+  /** Limite la largeur du contenu dans la zone après la sidebar. */
   contained?: boolean;
 };
 
 /**
  * Coquille layout principale — fond espace client Sebavio.
+ * Le main occupe l’espace restant après la sidebar (pas centré sur le viewport).
  */
 export function AppShell({
   header,
@@ -32,14 +33,15 @@ export function AppShell({
       {header}
       <div className="flex min-h-0 flex-1">
         {sidebar}
-        <main
-          id="main-content"
-          className={cn(
-            "flex-1 overflow-auto px-3 py-5 sm:px-6 sm:py-6 lg:px-8",
-            contained && "mx-auto w-full max-w-[var(--content-max-width)]",
-          )}
-        >
-          {children}
+        <main id="main-content" className="min-w-0 flex-1 overflow-auto">
+          <div
+            className={cn(
+              "w-full px-5 py-6 sm:px-7 sm:py-7 lg:px-9 lg:py-8",
+              contained && "max-w-[var(--client-content-max,100rem)]",
+            )}
+          >
+            {children}
+          </div>
         </main>
       </div>
       {footer}

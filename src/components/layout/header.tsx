@@ -15,7 +15,7 @@ export function Header({ brand, search, actions, className }: HeaderProps) {
   return (
     <header
       className={cn(
-        "border-client-border bg-client-warm-white/90 sticky top-0 z-40 flex h-14 items-center gap-3 border-b px-3 backdrop-blur-md sm:h-16 sm:gap-4 sm:px-6 dark:border-white/10 dark:bg-[#0a2a36]/90",
+        "border-client-border bg-client-surface/90 sticky top-0 z-40 flex h-14 items-center gap-3 border-b px-3 backdrop-blur-md sm:h-16 sm:gap-4 sm:px-6 dark:border-white/10 dark:bg-[#0b2235]/90",
         className,
       )}
     >

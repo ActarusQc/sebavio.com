@@ -49,16 +49,16 @@ export function MobileNav({ role }: MobileNavProps) {
         <DialogHeader className="border-client-border border-b p-4">
           <DialogTitle className="sr-only">Navigation</DialogTitle>
           <div className="flex flex-col gap-1">
-            <div className="relative h-10 w-36">
+            <div className="relative h-12 w-40">
               <Image
                 src={BRAND_ASSETS.logo}
                 alt=""
                 fill
                 className="object-contain object-left"
-                sizes="144px"
+                sizes="160px"
               />
             </div>
-            <p className="text-client-text-muted text-[0.625rem] font-medium tracking-[0.08em] uppercase">
+            <p className="text-client-text-muted text-[0.6875rem] font-medium tracking-[0.06em] uppercase">
               Seba = étoile · Via = route
             </p>
           </div>
@@ -77,13 +77,13 @@ export function MobileNav({ role }: MobileNavProps) {
                   "focus-visible:ring-sidebar-ring flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none",
                   "text-client-text hover:bg-client-pale",
                   active &&
-                    "bg-client-petrol hover:bg-client-petrol font-medium text-white hover:text-white",
+                    "bg-sebavio-navy hover:bg-sebavio-navy font-semibold text-white hover:text-white",
                 )}
               >
                 <span
                   className={cn(
-                    "inline-flex size-5 shrink-0 items-center justify-center [&_svg]:size-4",
-                    active ? "text-white" : "text-client-teal",
+                    "inline-flex size-5 shrink-0 items-center justify-center [&_svg]:size-[1.125rem]",
+                    active ? "text-sebavio-gold" : "text-sebavio-slate",
                   )}
                   aria-hidden
                 >
@@ -92,7 +92,7 @@ export function MobileNav({ role }: MobileNavProps) {
                 <span className="flex min-w-0 flex-1 items-center gap-2">
                   <span className="truncate">{item.label}</span>
                   {showBadge ? (
-                    <span className="bg-client-turquoise text-client-night shrink-0 rounded-full px-1.5 py-0.5 text-[0.625rem] font-semibold">
+                    <span className="border-sebavio-gold/40 bg-sebavio-orange-100 text-sebavio-navy shrink-0 rounded-full border px-2 py-0.5 text-[0.6875rem] font-semibold">
                       Nouveau
                     </span>
                   ) : null}
@@ -106,10 +106,10 @@ export function MobileNav({ role }: MobileNavProps) {
             render={
               <Link href="/dashboard/ai" onClick={() => setOpen(false)} />
             }
-            className="bg-client-petrol hover:bg-client-night h-11 w-full gap-2 text-white"
+            className="text-sebavio-navy h-11 w-full gap-2 border-0 bg-gradient-to-r from-[#f0b64d] to-[#e8923a]"
           >
             <Sparkles className="size-4" aria-hidden />
-            Planifier avec l’IA
+            Planifier avec Sebavio
           </Button>
         </div>
       </DialogContent>
