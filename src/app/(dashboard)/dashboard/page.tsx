@@ -1,10 +1,9 @@
-import { ModulePlaceholder } from "@/components/layout";
+import { requireActiveUser } from "@/features/auth";
+import { DashboardView, getDashboardData } from "@/features/dashboard";
 
-export default function DashboardPage() {
-  return (
-    <ModulePlaceholder
-      title="Tableau de bord"
-      description="Vue d’ensemble — widgets métier à venir."
-    />
-  );
+export default async function DashboardPage() {
+  const user = await requireActiveUser();
+  const data = await getDashboardData(user.id);
+
+  return <DashboardView data={data} />;
 }

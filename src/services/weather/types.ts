@@ -159,6 +159,7 @@ export type WeatherCurrentConditions = {
   weatherCode: number;
   summary: string;
   temperatureC: number;
+  feelsLikeC: number;
 };
 
 /** @deprecated Utiliser WeatherForecast. */

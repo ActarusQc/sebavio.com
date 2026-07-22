@@ -13,6 +13,7 @@ import {
 import type { WeatherAlert, WeatherForecast } from "@/services/weather/types";
 import {
   isWithinHorizon,
+  resolveDestinationArrivalForecastDate,
   resolveStopForecastDate,
 } from "@/features/weather/lib/dates";
 import type {
@@ -24,7 +25,10 @@ import type {
   WeatherForecastApiDto,
 } from "@/features/weather/types";
 
-export { resolveStopForecastDate } from "@/features/weather/lib/dates";
+export {
+  resolveDestinationArrivalForecastDate,
+  resolveStopForecastDate,
+} from "@/features/weather/lib/dates";
 
 const TOO_EARLY_MESSAGE =
   "Les prévisions détaillées ne sont pas encore disponibles.";
@@ -155,18 +159,11 @@ export async function getTripWeather(
 
   if (trip.destinationLatitude != null && trip.destinationLongitude != null) {
     const destinationStop =
-      stops.find((s) => s.stopType === "destination") ??
-      [...stops].reverse().find((s) => s.stopType !== "origin") ??
-      null;
-    const arrivalAnchor = destinationStop
-      ? resolveStopForecastDate({
-          arrivalTime: destinationStop.arrivalTime,
-          departureDate: trip.departureDate,
-          sequence: destinationStop.sequence,
-        })
-      : trip.returnDate
-        ? trip.returnDate.toISOString().slice(0, 10)
-        : trip.departureDate.toISOString().slice(0, 10);
+      stops.find((s) => s.stopType === "destination") ?? null;
+    const arrivalAnchor = resolveDestinationArrivalForecastDate({
+      departureDate: trip.departureDate,
+      destinationStopArrivalTime: destinationStop?.arrivalTime ?? null,
+    });
 
     candidates.push({
       id: `destination:${trip.id}`,
@@ -586,7 +583,13 @@ export async function getCurrentForLocation(
     available: true,
     provider: result.provider,
     location: { lat, lng },
-    current: result.current,
+    current: {
+      observedAt: result.current.observedAt,
+      weatherCode: result.current.weatherCode,
+      summary: result.current.summary,
+      temperatureC: result.current.temperatureC,
+      feelsLikeC: result.current.feelsLikeC,
+    },
     message: null,
   };
 }

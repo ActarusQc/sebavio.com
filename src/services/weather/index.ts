@@ -362,6 +362,7 @@ export function createWeatherService(
           weatherCode: c.condition.code,
           summary: c.condition.description,
           temperatureC: c.temperatureC,
+          feelsLikeC: c.feelsLikeC,
         },
       };
     },

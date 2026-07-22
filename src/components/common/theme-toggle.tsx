@@ -10,7 +10,7 @@ function subscribe() {
 }
 
 /**
- * Bascule clair / sombre (Document 7 — support complet du mode sombre).
+ * Bascule clair / crépuscule (semi-sombre).
  */
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
@@ -41,7 +41,10 @@ export function ThemeToggle() {
       type="button"
       variant="ghost"
       size="icon-sm"
-      aria-label={isDark ? "Passer en thème clair" : "Passer en thème sombre"}
+      className="text-client-text min-h-11 min-w-11 sm:min-h-0 sm:min-w-0"
+      aria-label={
+        isDark ? "Passer en thème clair" : "Passer en thème crépuscule"
+      }
       onClick={() => setTheme(isDark ? "light" : "dark")}
     >
       {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}

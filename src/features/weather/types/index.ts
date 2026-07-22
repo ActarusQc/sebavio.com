@@ -94,6 +94,7 @@ export type WeatherCurrentApiDto = {
     weatherCode: number;
     summary: string;
     temperatureC: number;
+    feelsLikeC: number;
   } | null;
   message: string | null;
 };

@@ -1,0 +1,12 @@
+export { DashboardCard } from "./dashboard-card";
+export { ProgressBar } from "./progress-bar";
+export { MountainRoadIllustration } from "./mountain-road-illustration";
+export { DashboardHero } from "./dashboard-hero";
+export { WeatherWidget } from "./weather-widget";
+export { NextTripWidget } from "./next-trip-widget";
+export { QuickStatsWidget } from "./quick-stats-widget";
+export { RecentTripsWidget } from "./recent-trips-widget";
+export { SuggestionsWidget } from "./suggestions-widget";
+export { AiPlannerCard } from "./ai-planner-card";
+export { DashboardQuote } from "./dashboard-quote";
+export { DashboardView } from "./dashboard-view";

@@ -18,6 +18,7 @@ import { buildBreadcrumbs } from "./navigation";
 export type DashboardShellProps = {
   email: string;
   role: UserRole;
+  displayName?: string | null;
   unreadNotificationCount?: number;
   children: ReactNode;
 };
@@ -25,11 +26,13 @@ export type DashboardShellProps = {
 export function DashboardShell({
   email,
   role,
+  displayName = null,
   unreadNotificationCount = 0,
   children,
 }: DashboardShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+  const isDashboardHome = pathname === "/dashboard";
   const crumbs = buildBreadcrumbs(pathname);
 
   return (
@@ -39,7 +42,7 @@ export function DashboardShell({
           brand={
             <div className="flex items-center gap-2 md:hidden">
               <MobileNav role={role} />
-              <span className="font-heading text-sebavio-navy dark:text-foreground text-sm font-semibold tracking-tight">
+              <span className="font-heading text-client-night dark:text-foreground text-sm font-semibold tracking-tight">
                 Sebavio
               </span>
             </div>
@@ -49,7 +52,7 @@ export function DashboardShell({
             <>
               <NotificationBell unreadCount={unreadNotificationCount} />
               <ThemeToggle />
-              <UserMenu email={email} role={role} />
+              <UserMenu email={email} role={role} displayName={displayName} />
             </>
           }
         />
@@ -61,9 +64,13 @@ export function DashboardShell({
           onToggleCollapsed={() => setCollapsed((value) => !value)}
         />
       }
-      footer={<Footer />}
+      footer={
+        <Footer className="border-client-border text-client-text-muted bg-transparent" />
+      }
     >
-      <Breadcrumbs items={crumbs} className="mb-4" />
+      {!isDashboardHome ? (
+        <Breadcrumbs items={crumbs} className="mb-4" />
+      ) : null}
       {children}
     </AppShell>
   );

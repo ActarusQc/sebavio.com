@@ -204,6 +204,7 @@ export async function getCachedCurrent(
       weatherCode: c.condition.code,
       summary: c.condition.description,
       temperatureC: c.temperatureC,
+      feelsLikeC: c.feelsLikeC,
     },
   };
 }

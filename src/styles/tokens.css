@@ -25,6 +25,25 @@
   --sebavio-orange-soft: #fff3e8;
   --sebavio-surface: #f0f4f8;
 
+  /* Espace client authentifié (maquette dashboard) */
+  --client-night: #052d3d;
+  --client-petrol: #0b5265;
+  --client-teal: #347c87;
+  --client-turquoise: #ddeeef;
+  --client-pale: #edf5f6;
+  --client-bg: #f8faf9;
+  --client-bg-secondary: #f3f6f5;
+  --client-warm-white: #fffdfc;
+  --client-text: #082d42;
+  --client-text-muted: #607684;
+  --client-border: #dce6e6;
+  --client-star: #f7c64d;
+  --client-green-soft: #bfd8cb;
+  --client-beige: #f4e9cf;
+  --client-radius: 1.25rem;
+  --client-shadow: 0 2px 12px rgb(5 45 61 / 0.06);
+  --client-shadow-hover: 0 8px 24px rgb(5 45 61 / 0.1);
+
   /* Landing marketing (hero nuit / CTA) — palette maquette */
   --sebavio-night: #050b1c;
   --sebavio-night-elevated: #0c1e38;

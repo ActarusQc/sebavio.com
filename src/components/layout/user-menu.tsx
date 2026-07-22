@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { UserRound } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { logoutAction } from "@/features/auth/actions";
 import {
   Button,
@@ -17,10 +17,13 @@ import {
 export type UserMenuProps = {
   email: string;
   role: string;
+  displayName?: string | null;
 };
 
-export function UserMenu({ email, role }: UserMenuProps) {
-  const initial = email.trim().charAt(0).toUpperCase() || "?";
+export function UserMenu({ email, role, displayName }: UserMenuProps) {
+  const label = displayName?.trim() || email;
+  const initial =
+    (displayName?.trim() || email).trim().charAt(0).toUpperCase() || "?";
 
   return (
     <DropdownMenu>
@@ -29,21 +32,24 @@ export function UserMenu({ email, role }: UserMenuProps) {
           <Button
             variant="outline"
             size="sm"
-            className="border-sebavio-sand/70 h-9 gap-2 rounded-full px-2.5 dark:border-white/15"
+            className="border-client-border text-client-text hover:bg-client-pale h-10 gap-2 rounded-full px-2.5 dark:border-white/15"
             aria-label="Menu profil"
           />
         }
       >
         <span
-          className="bg-sebavio-navy text-sebavio-gold dark:bg-sebavio-gold dark:text-sebavio-navy inline-flex size-6 items-center justify-center rounded-full text-xs font-semibold"
+          className="bg-client-night text-client-star inline-flex size-7 items-center justify-center rounded-full text-xs font-semibold"
           aria-hidden
         >
           {initial}
         </span>
-        <span className="hidden max-w-[8rem] truncate text-xs font-medium sm:inline">
-          {email}
+        <span className="hidden max-w-[10rem] truncate text-xs font-medium sm:inline">
+          {label}
         </span>
-        <UserRound className="text-muted-foreground size-3.5 sm:hidden" />
+        <ChevronDown
+          className="text-client-text-muted size-3.5 shrink-0"
+          aria-hidden
+        />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-56">
         <DropdownMenuGroup>
@@ -58,7 +64,13 @@ export function UserMenu({ email, role }: UserMenuProps) {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem render={<Link href="/dashboard/settings" />}>
+          Profil
+        </DropdownMenuItem>
+        <DropdownMenuItem render={<Link href="/dashboard/settings" />}>
           Paramètres
+        </DropdownMenuItem>
+        <DropdownMenuItem render={<Link href="/dashboard/subscription" />}>
+          Abonnement
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
