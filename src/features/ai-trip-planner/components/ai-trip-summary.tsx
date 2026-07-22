@@ -22,6 +22,7 @@ import {
   formatTravelers,
   MISSING_FIELD_LABELS,
 } from "@/features/ai-trip-planner/lib/format";
+import { formatInterestsListFr } from "@/features/ai-trip-planner/lib/labels";
 import { AIItineraryProposal } from "@/features/ai-trip-planner/components/ai-itinerary-proposal";
 import type {
   ItineraryProposalDto,
@@ -93,10 +94,13 @@ export function AITripSummary({
   const dates = formatDateRangeFr(draft.departureDate, draft.returnDate);
   const travelers = formatTravelers(draft);
   const budget = formatBudgetLevel(draft.budgetLevel);
-  const style = [...draft.travelStyle, ...draft.preferences]
-    .filter(Boolean)
-    .slice(0, 6)
-    .join(", ");
+  const interests =
+    draft.interests?.length > 0
+      ? formatInterestsListFr(draft.interests)
+      : [...draft.travelStyle, ...draft.preferences]
+          .filter(Boolean)
+          .slice(0, 6)
+          .join(" · ");
 
   const missingLabels = missingFields
     .map((f) => MISSING_FIELD_LABELS[f] ?? f)
@@ -140,8 +144,14 @@ export function AITripSummary({
           value={budget}
           accent
         />
-        <SummaryRow icon={<Sparkles />} label="Style" value={style || null} />
-        {draft.lodgingSelection?.name || draft.lodgingType ? (
+        <SummaryRow
+          icon={<Sparkles />}
+          label="Intérêts"
+          value={interests || null}
+        />
+        {draft.lodgingSelection?.name ||
+        draft.lodgingType ||
+        draft.accommodationMode === "decide_later" ? (
           <SummaryRow
             icon={<MapPin />}
             label="Hébergement"
@@ -150,9 +160,11 @@ export function AITripSummary({
                 ? draft.lodgingType
                   ? `${draft.lodgingSelection.name} (${draft.lodgingType})`
                   : draft.lodgingSelection.name
-                : draft.lodgingRequested
-                  ? `${draft.lodgingType ?? "Hébergement"} — à choisir`
-                  : draft.lodgingType
+                : draft.accommodationMode === "decide_later"
+                  ? "Hébergement à déterminer"
+                  : draft.lodgingRequested
+                    ? `${draft.lodgingType ?? "Hébergement"} — à choisir`
+                    : draft.lodgingType
             }
           />
         ) : null}

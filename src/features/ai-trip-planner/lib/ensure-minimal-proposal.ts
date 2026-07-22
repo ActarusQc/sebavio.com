@@ -8,9 +8,16 @@ import { buildInterestBasedItinerary } from "@/features/ai-trip-planner/lib/inte
  */
 export function ensureMinimalItineraryContent(
   draft: TripDraftParsed,
+  options?: { force?: boolean },
 ): TripDraftParsed {
-  if (hasItineraryProposal(draft)) {
-    return buildInterestBasedItinerary(draft);
+  const force =
+    options?.force || (draft.interests.length > 0 && countNeedsRebuild(draft));
+  return buildInterestBasedItinerary(draft, { force });
+}
+
+function countNeedsRebuild(draft: TripDraftParsed): boolean {
+  if (hasItineraryProposal(draft) && draft.activities.length === 0) {
+    return true;
   }
-  return buildInterestBasedItinerary(draft);
+  return draft.activities.length === 0 && draft.suggestions.length === 0;
 }

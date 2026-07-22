@@ -83,6 +83,31 @@ export type TripDraft = {
   budgetLevel: BudgetLevel | null;
   travelStyle: string[];
   preferences: string[];
+  interests: Array<
+    | "gastronomy"
+    | "nature"
+    | "culture"
+    | "shopping"
+    | "wellness"
+    | "family"
+    | "sports"
+    | "entertainment"
+    | "nightlife"
+    | "local_discovery"
+  >;
+  primaryInterest:
+    | "gastronomy"
+    | "nature"
+    | "culture"
+    | "shopping"
+    | "wellness"
+    | "family"
+    | "sports"
+    | "entertainment"
+    | "nightlife"
+    | "local_discovery"
+    | null;
+  preferencesResolved: boolean;
   constraints: string[];
   lodgingType: string | null;
   accommodationType:
@@ -94,6 +119,12 @@ export type TripDraft = {
     | "campground"
     | "hostel"
     | "other"
+    | null;
+  accommodationMode:
+    | "sebavio_suggestion"
+    | "already_booked"
+    | "decide_later"
+    | "return_home_each_night"
     | null;
   lodgingRequested: boolean;
   lodgingOptions: LodgingOptionDto[];
@@ -121,6 +152,8 @@ export type ItineraryProposalDto = {
   estimatedDistanceKm: number | null;
   estimatedDurationMinutes: number | null;
   estimatedFuelStops: number | null;
+  interestsLabels: string[];
+  softWarnings: string[];
   days: Array<{
     day: number;
     label: string;
@@ -129,13 +162,21 @@ export type ItineraryProposalDto = {
       category: string;
       justification: string | null;
       durationMinutes: number | null;
+      themeLabels?: string[];
     }>;
   }>;
   highlights: string[];
 };
 
 export type RequestedInputDto = {
-  type: "text" | "address" | "date" | "choice" | "number" | "vehicle";
+  type:
+    | "text"
+    | "address"
+    | "date"
+    | "choice"
+    | "number"
+    | "vehicle"
+    | "multi_choice";
   field:
     | "origin"
     | "destination"
@@ -147,10 +188,14 @@ export type RequestedInputDto = {
     | "returnDate"
     | "travelers"
     | "vehicleId"
+    | "interests"
     | "other";
   placeholder: string | null;
   countryBias: string;
   regionBias: string;
+  minimumSelections?: number;
+  maximumSelections?: number | null;
+  choices?: Array<{ id: string; label: string }>;
 } | null;
 
 export type PlannerMessage = {

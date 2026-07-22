@@ -141,6 +141,26 @@ export const accommodationTypeSchema = z.enum([
   "other",
 ]);
 
+export const accommodationModeSchema = z.enum([
+  "sebavio_suggestion",
+  "already_booked",
+  "decide_later",
+  "return_home_each_night",
+]);
+
+export const travelInterestSchema = z.enum([
+  "gastronomy",
+  "nature",
+  "culture",
+  "shopping",
+  "wellness",
+  "family",
+  "sports",
+  "entertainment",
+  "nightlife",
+  "local_discovery",
+]);
+
 export const lodgingOptionSchema = z.object({
   id: z.string().min(1).max(80),
   name: z.string().trim().min(1).max(200),
@@ -223,9 +243,21 @@ export const tripDraftSchema = z
     budgetLevel: budgetLevelSchema.nullable().optional().catch(null),
     travelStyle: z.array(z.string().max(80)).max(20).default([]),
     preferences: z.array(z.string().max(120)).max(30).default([]),
+    interests: z.array(travelInterestSchema).max(12).default([]),
+    primaryInterest: travelInterestSchema
+      .nullable()
+      .optional()
+      .catch(null)
+      .transform((v) => v ?? null),
+    preferencesResolved: z.boolean().optional().default(false),
     constraints: z.array(z.string().max(200)).max(30).default([]),
     lodgingType: nullableString(120),
     accommodationType: accommodationTypeSchema
+      .nullable()
+      .optional()
+      .catch(null)
+      .transform((v) => v ?? null),
+    accommodationMode: accommodationModeSchema
       .nullable()
       .optional()
       .catch(null)
@@ -282,9 +314,13 @@ export const tripDraftSchema = z
     budgetLevel: d.budgetLevel ?? null,
     travelStyle: d.travelStyle ?? [],
     preferences: d.preferences ?? [],
+    interests: d.interests ?? [],
+    primaryInterest: d.primaryInterest ?? null,
+    preferencesResolved: Boolean(d.preferencesResolved),
     constraints: d.constraints ?? [],
     lodgingType: d.lodgingType ?? null,
     accommodationType: d.accommodationType ?? null,
+    accommodationMode: d.accommodationMode ?? null,
     lodgingRequested: Boolean(d.lodgingRequested),
     lodgingOptions: d.lodgingOptions ?? [],
     lodgingSelection: d.lodgingSelection ?? null,
@@ -318,6 +354,8 @@ export const plannerStepSchema = z.enum([
   "travelers",
   "vehicle",
   "preferences",
+  "accommodation_need",
+  "accommodation_type",
   "lodging",
   "itinerary_proposal",
   "proposal",
@@ -327,7 +365,15 @@ export const plannerStepSchema = z.enum([
 
 export const requestedInputSchema = z
   .object({
-    type: z.enum(["text", "address", "date", "choice", "number", "vehicle"]),
+    type: z.enum([
+      "text",
+      "address",
+      "date",
+      "choice",
+      "number",
+      "vehicle",
+      "multi_choice",
+    ]),
     field: z
       .enum([
         "origin",
@@ -340,6 +386,7 @@ export const requestedInputSchema = z
         "returnDate",
         "travelers",
         "vehicleId",
+        "interests",
         "other",
       ])
       .optional()
@@ -347,6 +394,17 @@ export const requestedInputSchema = z
     placeholder: nullableString(200),
     countryBias: z.string().trim().max(2).optional().default("CA"),
     regionBias: z.string().trim().max(10).optional().default("QC"),
+    minimumSelections: z.number().int().min(0).max(20).optional(),
+    maximumSelections: z.number().int().min(1).max(20).nullable().optional(),
+    choices: z
+      .array(
+        z.object({
+          id: z.string().min(1).max(80),
+          label: z.string().min(1).max(120),
+        }),
+      )
+      .max(20)
+      .optional(),
   })
   .optional()
   .nullable()

@@ -10,5 +10,6 @@ export { AISuggestions } from "./ai-suggestions";
 export { AIAddressInput } from "./ai-address-input";
 export { AIItineraryProposal } from "./ai-itinerary-proposal";
 export { AILodgingOptions } from "./ai-lodging-options";
+export { AIPlannerMultiSelect } from "./ai-planner-multi-select";
 export { CreateTripConfirmationDialog } from "./create-trip-confirmation-dialog";
 export { RestartPlanningDialog } from "./restart-planning-dialog";

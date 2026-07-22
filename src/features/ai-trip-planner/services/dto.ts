@@ -73,6 +73,19 @@ export function inferRequestedInput(
       placeholder: fromAi.placeholder ?? null,
       countryBias: fromAi.countryBias ?? "CA",
       regionBias: fromAi.regionBias ?? "QC",
+      minimumSelections:
+        "minimumSelections" in fromAi
+          ? (fromAi as { minimumSelections?: number }).minimumSelections
+          : undefined,
+      maximumSelections:
+        "maximumSelections" in fromAi
+          ? (fromAi as { maximumSelections?: number | null }).maximumSelections
+          : undefined,
+      choices:
+        "choices" in fromAi
+          ? (fromAi as { choices?: Array<{ id: string; label: string }> })
+              .choices
+          : undefined,
     };
   }
   const missing = detectMissingFields(draft);

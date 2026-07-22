@@ -1,4 +1,4 @@
-export const TRIP_PLANNER_PROMPT_VERSION = "trip-planner-v3";
+export const TRIP_PLANNER_PROMPT_VERSION = "trip-planner-v4";
 
 export type TripPlannerPromptContext = {
   vehicles: Array<{ id: string; label: string }>;
@@ -58,7 +58,9 @@ Règles d’étapes (OBLIGATOIRE) :
 - Ne dis jamais « Voici une proposition d’itinéraire » sans remplir tripDraftPatch.stops ou activities avec au moins un élément nommé et justifié.
 - DATES : ne jamais inventer d’année ni convertir « ce week-end » toi-même. Le serveur résout les dates relatives. Si departureDate/returnDate sont déjà remplis, ne les modifie pas et ne redemande pas les dates.
 - Si l’utilisateur dit « gastronomie », propose des restos, marchés, fromageries, vignobles ou microbrasseries RÉELS (noms concrets), jamais « Arrivée et balade » ou « Point d’intérêt près de… ».
-- HÉBERGEMENT : au Québec, « gîte » = couette et café / bed and breakfast / maison d’hôtes — JAMAIS un motel. Ne propose pas d’établissement inventé. Le serveur recherche les vrais lieux et demande un choix. N’affiche pas « Confirmer cet itinéraire » tant que lodgingRequested est vrai sans lodgingSelection. Ne renvoie pas les quick replies de thèmes (Nature, Gastronomie…) pendant le choix d’hébergement.
+- HÉBERGEMENT : pour tout voyage avec au moins une nuit, le serveur demande d’abord si l’utilisateur souhaite un hébergement (avant l’itinéraire). Au Québec, « gîte » = couette et café / bed and breakfast / maison d’hôtes — JAMAIS un motel. Ne remplace jamais un gîte par un motel. Ne propose pas d’établissement inventé. Le serveur recherche les vrais lieux et demande un choix. N’affiche pas « Confirmer cet itinéraire » tant que lodgingRequested est vrai sans lodgingSelection.
+- INTÉRÊTS : requestedInput.type = "multi_choice" permet plusieurs choix. N’avance PAS après le premier clic. Les intérêts (gastronomy, nature, shopping…) doivent tous influencer les activités et apparaître en libellés français dans le résumé — jamais les clés anglaises.
+- TEXTES UTILISATEUR : français canadien uniquement. Ne retourne JAMAIS une clé technique anglaise (meal, activity, accommodation, shopping, drive) dans assistantMessage ou quickReplies. Utilise Repas, Activité, Hébergement, Magasinage, Trajet.
 
 Ne génère jamais de coordonnées, d’identifiant de lieu (placeId) ni d’adresse civique précise.
 Demande une résolution de lieu via requestedInput.type = "address" lorsque tu as besoin d’un départ ou d’une destination.
@@ -80,15 +82,18 @@ Retourne UNIQUEMENT un objet JSON (sans markdown) de cette forme :
 {
   "sessionStatus": "collecting" | "proposing" | "ready_for_confirmation",
   "assistantMessage": "string",
-  "currentStep": "trip_type" | "origin" | "destination_mode" | "destination_radius" | "destination" | "dates" | "travelers" | "vehicle" | "preferences" | "itinerary_proposal" | "confirmation",
+  "currentStep": "trip_type" | "origin" | "destination_mode" | "destination_radius" | "destination" | "dates" | "travelers" | "vehicle" | "preferences" | "accommodation_need" | "accommodation_type" | "lodging" | "itinerary_proposal" | "confirmation",
   "missingFields": ["string"],
   "quickReplies": ["string"],
   "requestedInput": {
-    "type": "text" | "address" | "date" | "choice" | "number" | "vehicle",
-    "field": "origin" | "destination" | "other",
+    "type": "text" | "address" | "date" | "choice" | "number" | "vehicle" | "multi_choice",
+    "field": "origin" | "destination" | "interests" | "other",
     "placeholder": "Entrez une adresse ou une ville",
     "countryBias": "CA",
-    "regionBias": "QC"
+    "regionBias": "QC",
+    "minimumSelections": 1,
+    "maximumSelections": null,
+    "choices": [{ "id": "gastronomy", "label": "Gastronomie" }]
   } | null,
   "tripDraftPatch": {
     "title": null,
@@ -105,6 +110,10 @@ Retourne UNIQUEMENT un objet JSON (sans markdown) de cette forme :
     "budgetLevel": "low"|"moderate"|"comfortable"|"premium"|null,
     "travelStyle": [],
     "preferences": [],
+    "interests": ["gastronomy","nature","shopping"],
+    "primaryInterest": "gastronomy",
+    "preferencesResolved": true,
+    "accommodationMode": "sebavio_suggestion"|"already_booked"|"decide_later"|"return_home_each_night"|null,
     "constraints": [],
     "destinationMode": "known"|"suggest"|null,
     "maxDriveMinutes": number|null,

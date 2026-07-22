@@ -180,6 +180,19 @@ export function sanitizeAndMergeDraft(input: {
     preferences: Array.isArray(raw.preferences)
       ? (raw.preferences as string[])
       : prev.preferences,
+    interests: Array.isArray(raw.interests)
+      ? (raw.interests as TripDraftParsed["interests"])
+      : prev.interests,
+    primaryInterest: pickScalar(
+      typeof raw.primaryInterest === "string" || raw.primaryInterest === null
+        ? (raw.primaryInterest as TripDraftParsed["primaryInterest"])
+        : undefined,
+      prev.primaryInterest,
+    ),
+    preferencesResolved:
+      typeof raw.preferencesResolved === "boolean"
+        ? raw.preferencesResolved
+        : prev.preferencesResolved,
     constraints: Array.isArray(raw.constraints)
       ? (raw.constraints as string[])
       : prev.constraints,
@@ -195,6 +208,13 @@ export function sanitizeAndMergeDraft(input: {
         ? (raw.accommodationType as TripDraftParsed["accommodationType"])
         : undefined,
       prev.accommodationType,
+    ),
+    accommodationMode: pickScalar(
+      typeof raw.accommodationMode === "string" ||
+        raw.accommodationMode === null
+        ? (raw.accommodationMode as TripDraftParsed["accommodationMode"])
+        : undefined,
+      prev.accommodationMode,
     ),
     lodgingRequested:
       typeof raw.lodgingRequested === "boolean"

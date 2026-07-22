@@ -43,9 +43,17 @@ import {
 } from "@/features/ai-trip-planner/services/apply-lodging";
 import { searchLodgingOptions } from "@/features/ai-trip-planner/services/search-lodging";
 import { ensureDraftPlacesGeocoded } from "@/features/ai-trip-planner/services/geocode-places";
-import { parseAccommodationRequest } from "@/features/ai-trip-planner/lib/accommodation";
+import {
+  parseAccommodationMode,
+  parseAccommodationRequest,
+  parseAccommodationTypeChoice,
+} from "@/features/ai-trip-planner/lib/accommodation";
 import { DEFAULT_QUEBEC_ORIGIN_SUGGESTIONS } from "@/features/ai-trip-planner/constants";
 import {
+  ACCOMMODATION_NEED_BOOKED,
+  ACCOMMODATION_NEED_HOME,
+  ACCOMMODATION_NEED_LATER,
+  ACCOMMODATION_NEED_YES,
   buildControlsForStep,
   CONFIRM_EDIT,
   CONFIRM_YES,
@@ -60,6 +68,7 @@ import {
 } from "@/features/ai-trip-planner/lib/planning-step";
 import { ensureMinimalItineraryContent } from "@/features/ai-trip-planner/lib/ensure-minimal-proposal";
 import { applyInterestFromUserText } from "@/features/ai-trip-planner/lib/interest-itinerary";
+import { getTravelInterestLabel } from "@/features/ai-trip-planner/lib/labels";
 import {
   resolveRelativeDates,
   sanitizePlanningDateAgainstToday,
@@ -164,13 +173,69 @@ function applyDeterministicDraftPatches(
     }
   }
 
-  if (step === "preferences" || /gastro|nature|culture|budget/i.test(t)) {
+  if (
+    step === "preferences" ||
+    step === "itinerary_proposal" ||
+    step === "confirmation" ||
+    /gastro|nature|culture|magasin|budget|ajoute|retire|intér[eê]t/i.test(t)
+  ) {
+    const before = next.interests.join(",");
     next = applyInterestFromUserText(next, t);
+    if (next.interests.join(",") !== before && next.activities.length === 0) {
+      // proposition à reconstruire plus bas
+    }
+  }
+
+  if (step === "accommodation_need") {
+    const mode =
+      parseAccommodationMode(t) ??
+      (t === ACCOMMODATION_NEED_YES
+        ? "sebavio_suggestion"
+        : t === ACCOMMODATION_NEED_BOOKED
+          ? "already_booked"
+          : t === ACCOMMODATION_NEED_LATER
+            ? "decide_later"
+            : t === ACCOMMODATION_NEED_HOME
+              ? "return_home_each_night"
+              : null);
+    if (mode) {
+      next = {
+        ...next,
+        accommodationMode: mode,
+        lodgingRequested: mode === "sebavio_suggestion",
+        softWarnings:
+          mode === "decide_later"
+            ? Array.from(
+                new Set([
+                  ...next.softWarnings,
+                  "Cet itinéraire ne contient pas encore d’hébergement.",
+                ]),
+              )
+            : next.softWarnings.filter((w) => !/hébergement/i.test(w)),
+      };
+    }
+  }
+
+  if (step === "accommodation_type") {
+    const typed = parseAccommodationTypeChoice(t);
+    if (typed?.requested && typed.type) {
+      next = {
+        ...next,
+        accommodationMode: "sebavio_suggestion",
+        lodgingRequested: true,
+        accommodationType: typed.type,
+        lodgingType: typed.label,
+        lodgingSelection: null,
+        lodgingOptions: [],
+        proposalConfirmed: false,
+      };
+    }
   }
 
   if (/passer à l[’']itinéraire|passer a l'itineraire/i.test(lower)) {
     next = {
       ...next,
+      preferencesResolved: true,
       preferences:
         next.preferences.length > 0 ? next.preferences : ["itineraire"],
     };
@@ -558,6 +623,163 @@ export async function sendPlanningMessage(
       });
     }
 
+    // ——— Intérêts (multisélection) : résolution serveur ———
+    if (stepBefore === "preferences") {
+      draftSeed = applyInterestFromUserText(draftSeed, trimmed);
+      if (draftSeed.preferencesResolved || draftSeed.interests.length > 0) {
+        const nextStep = resolveCurrentStep(draftSeed, {
+          sessionStatus: session.status,
+          hasTripTypeHint: true,
+        });
+        const controls = buildControlsForStep({
+          step: nextStep,
+          draft: draftSeed,
+          ownedVehicles,
+          homeCity: userCtx.homeCity,
+          hasHome: Boolean(userCtx.home),
+          originSuggestions: userCtx.originSuggestions,
+          hasProposal: hasItineraryProposal(draftSeed),
+        });
+        const interestLabel =
+          draftSeed.interests.length > 0
+            ? draftSeed.interests
+                .map((i) => getTravelInterestLabel(i))
+                .join(", ")
+            : "aucun intérêt particulier";
+        const assistantMessage = {
+          id: randomUUID(),
+          role: "assistant" as const,
+          content:
+            controls.forceAssistantMessage ??
+            `Parfait, j’ai noté vos intérêts : ${interestLabel}. Continuons.`,
+          createdAt: new Date().toISOString(),
+          quickReplies: controls.quickReplies,
+        };
+        const updated = await prisma.aiTripPlanningSession.update({
+          where: { id: session.id },
+          data: {
+            sessionVersion: { increment: 1 },
+            status: resolveSessionStatus(draftSeed, nextStep),
+            messages: stripHistoricalQuickReplies([
+              ...withUser,
+              assistantMessage,
+            ]) as unknown as Prisma.InputJsonValue,
+            structuredDraft: draftSeed as unknown as Prisma.InputJsonValue,
+          },
+        });
+        success = true;
+        return toSessionDto(updated, {
+          currentStep: nextStep,
+          quickReplies: controls.quickReplies,
+          requestedInput: controls.requestedInput,
+          originSuggestions: userCtx.originSuggestions,
+          homeCity: userCtx.homeCity,
+          ownedVehicles,
+        });
+      }
+    }
+
+    // ——— Besoin d’hébergement (nuits ≥ 1) ———
+    if (stepBefore === "accommodation_need") {
+      const mode =
+        parseAccommodationMode(trimmed) ??
+        (trimmed === ACCOMMODATION_NEED_YES
+          ? "sebavio_suggestion"
+          : trimmed === ACCOMMODATION_NEED_BOOKED
+            ? "already_booked"
+            : trimmed === ACCOMMODATION_NEED_LATER
+              ? "decide_later"
+              : trimmed === ACCOMMODATION_NEED_HOME
+                ? "return_home_each_night"
+                : null);
+      if (mode) {
+        draftSeed = {
+          ...draftSeed,
+          accommodationMode: mode,
+          lodgingRequested: mode === "sebavio_suggestion",
+          softWarnings:
+            mode === "decide_later"
+              ? Array.from(
+                  new Set([
+                    ...draftSeed.softWarnings,
+                    "Cet itinéraire ne contient pas encore d’hébergement.",
+                  ]),
+                )
+              : draftSeed.softWarnings,
+        };
+        const nextStep = resolveCurrentStep(draftSeed, {
+          sessionStatus: session.status,
+          hasTripTypeHint: true,
+        });
+        const controls = buildControlsForStep({
+          step: nextStep,
+          draft: draftSeed,
+          ownedVehicles,
+          homeCity: userCtx.homeCity,
+          hasHome: Boolean(userCtx.home),
+          originSuggestions: userCtx.originSuggestions,
+          hasProposal: hasItineraryProposal(draftSeed),
+        });
+        const assistantMessage = {
+          id: randomUUID(),
+          role: "assistant" as const,
+          content:
+            controls.forceAssistantMessage ??
+            (mode === "sebavio_suggestion"
+              ? "Quel type d’hébergement préférez-vous?"
+              : mode === "decide_later"
+                ? "D’accord — l’hébergement restera à déterminer. Nous pouvons préparer l’itinéraire."
+                : mode === "return_home_each_night"
+                  ? "Parfait, vous rentrez chaque soir. Passons à l’itinéraire."
+                  : "Très bien. Souhaitez-vous ajouter l’adresse de votre hébergement à l’itinéraire?"),
+          createdAt: new Date().toISOString(),
+          quickReplies:
+            mode === "already_booked"
+              ? ["Oui, ajouter l’adresse", "Plus tard"]
+              : controls.quickReplies,
+        };
+        const updated = await prisma.aiTripPlanningSession.update({
+          where: { id: session.id },
+          data: {
+            sessionVersion: { increment: 1 },
+            status: resolveSessionStatus(draftSeed, nextStep),
+            messages: stripHistoricalQuickReplies([
+              ...withUser,
+              assistantMessage,
+            ]) as unknown as Prisma.InputJsonValue,
+            structuredDraft: draftSeed as unknown as Prisma.InputJsonValue,
+          },
+        });
+        success = true;
+        return toSessionDto(updated, {
+          currentStep: nextStep,
+          quickReplies: assistantMessage.quickReplies ?? controls.quickReplies,
+          requestedInput: controls.requestedInput,
+          originSuggestions: userCtx.originSuggestions,
+          homeCity: userCtx.homeCity,
+          ownedVehicles,
+        });
+      }
+    }
+
+    // ——— Type d’hébergement → recherche ———
+    if (stepBefore === "accommodation_type") {
+      const typed = parseAccommodationTypeChoice(trimmed);
+      if (typed?.requested) {
+        draftSeed = {
+          ...draftSeed,
+          accommodationMode: "sebavio_suggestion",
+          lodgingRequested: true,
+          accommodationType: typed.type,
+          lodgingType: typed.label,
+          lodgingSelection: null,
+          lodgingOptions: [],
+          proposalConfirmed: false,
+        };
+        // Poursuivre vers le bloc recherche hébergement ci-dessous
+      }
+    }
+
     // ——— Hébergement (gîte, etc.) : résolution serveur, pas l’IA ———
     if (/^sans h[ée]bergement$/i.test(trimmed) && draftSeed.lodgingRequested) {
       return applyPlanningLodging(userId, sessionId, {
@@ -575,32 +797,42 @@ export async function sendPlanningMessage(
       });
     }
 
-    const accommodation = parseAccommodationRequest(trimmed);
+    const accommodation =
+      parseAccommodationTypeChoice(trimmed) ??
+      parseAccommodationRequest(trimmed);
     const wantsLodgingRefresh =
       /voir d[’']autres options|relancer la recherche/i.test(trimmed) &&
       draftSeed.lodgingRequested;
+    const needsLodgingSearch =
+      Boolean(draftSeed.lodgingRequested) &&
+      Boolean(draftSeed.accommodationType || draftSeed.lodgingType) &&
+      draftSeed.lodgingOptions.length === 0 &&
+      !draftSeed.lodgingSelection?.placeId;
 
-    if (accommodation.requested || wantsLodgingRefresh) {
-      if (accommodation.requested) {
-        draftSeed = {
-          ...draftSeed,
-          lodgingRequested: true,
-          accommodationType: accommodation.type,
-          lodgingType: accommodation.label,
-          lodgingSelection: null,
-          proposalConfirmed: false,
-          // Retirer un éventuel motel inventé par l’IA
-          stops: draftSeed.stops.filter(
-            (s) =>
-              !(
-                s.category === "lodging" &&
-                /\bmotel\b/i.test(s.name) &&
-                accommodation.type === "bed_and_breakfast"
-              ),
-          ),
-        };
-      }
+    if (accommodation.requested) {
+      draftSeed = {
+        ...draftSeed,
+        lodgingRequested: true,
+        accommodationMode: draftSeed.accommodationMode ?? "sebavio_suggestion",
+        accommodationType: accommodation.type,
+        lodgingType: accommodation.label,
+        lodgingSelection: null,
+        proposalConfirmed: false,
+        stops: draftSeed.stops.filter(
+          (s) =>
+            !(
+              s.category === "lodging" &&
+              /\bmotel\b/i.test(s.name) &&
+              accommodation.type === "bed_and_breakfast"
+            ),
+        ),
+      };
+    }
 
+    if (
+      draftSeed.lodgingRequested &&
+      (accommodation.requested || wantsLodgingRefresh || needsLodgingSearch)
+    ) {
       try {
         draftSeed = await ensureDraftPlacesGeocoded(userId, draftSeed);
       } catch {
@@ -877,13 +1109,18 @@ export async function sendPlanningMessage(
       sessionStatus: session.status,
       hasTripTypeHint: true,
     });
+    const forceRebuild =
+      draft.interests.length > 0 &&
+      draft.activities.length === 0 &&
+      (stepMid === "itinerary_proposal" || stepMid === "confirmation");
     if (
       stepMid === "itinerary_proposal" ||
       stepMid === "confirmation" ||
       trimmed === GENERATE_ITINERARY ||
+      forceRebuild ||
       /proposer un itin[eé]raire|génère|genere|gastronom/i.test(trimmed)
     ) {
-      draft = ensureMinimalItineraryContent(draft);
+      draft = ensureMinimalItineraryContent(draft, { force: forceRebuild });
     }
 
     if (
@@ -1014,6 +1251,9 @@ export async function sendPlanningMessage(
           (currentStep === "origin" ||
             currentStep === "destination_mode" ||
             currentStep === "destination_radius" ||
+            currentStep === "preferences" ||
+            currentStep === "accommodation_need" ||
+            currentStep === "accommodation_type" ||
             currentStep === "itinerary_proposal" ||
             (currentStep === "confirmation" && !hasProposal))
         ) {

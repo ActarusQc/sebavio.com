@@ -16,6 +16,12 @@ export const ACCOMMODATION_TYPES = [
 
 export type AccommodationType = (typeof ACCOMMODATION_TYPES)[number];
 
+export type AccommodationPlanningMode =
+  | "sebavio_suggestion"
+  | "already_booked"
+  | "decide_later"
+  | "return_home_each_night";
+
 export type AccommodationParseResult = {
   requested: boolean;
   type: AccommodationType | null;
@@ -184,4 +190,68 @@ export function lodgingSelectionComplete(draft: {
     draft.lodgingSelection?.placeId?.trim() &&
     draft.lodgingSelection?.name?.trim(),
   );
+}
+
+export function parseAccommodationMode(
+  text: string,
+): AccommodationPlanningMode | null {
+  const t = normalize(text);
+  if (!t) return null;
+  if (
+    /oui,? proposez|proposez-moi un hebergement|proposez moi un hebergement|je veux un hebergement|suggestions? d'hebergement/.test(
+      t,
+    )
+  ) {
+    return "sebavio_suggestion";
+  }
+  if (/deja un hebergement|j'ai deja|deja reserve|deja réservé/.test(t)) {
+    return "already_booked";
+  }
+  if (
+    /m'en occuperai plus tard|plus tard|je m en occuperai|decide later|déciderai plus tard.*heberg/.test(
+      t,
+    ) ||
+    /non,? je m'en occuperai plus tard/.test(t)
+  ) {
+    return "decide_later";
+  }
+  if (
+    /retourne a la maison|chaque soir|rentre a la maison|pas besoin.*nuit/.test(
+      t,
+    )
+  ) {
+    return "return_home_each_night";
+  }
+  return null;
+}
+
+/** Choix explicite de type (étape accommodation_type). */
+export function parseAccommodationTypeChoice(
+  text: string,
+): AccommodationParseResult | null {
+  const t = normalize(text);
+  if (!t) return null;
+  if (/peu importe|n'importe|indifferent|indifférent/.test(t)) {
+    return {
+      requested: true,
+      type: "bed_and_breakfast",
+      label: "Hébergement (peu importe)",
+      searchQuery: "hébergement gîte auberge hôtel",
+      placeTypes: ["lodging", "bed_and_breakfast", "guest_house", "hotel"],
+    };
+  }
+  if (/gite|couette et cafe|bed and breakfast|\bbnb\b|maison d'hotes/.test(t)) {
+    return parseAccommodationRequest("gîte");
+  }
+  if (/auberge de jeunesse|hostel/.test(t)) {
+    return parseAccommodationRequest("auberge de jeunesse");
+  }
+  if (/auberge/.test(t)) return parseAccommodationRequest("auberge");
+  if (/motel/.test(t)) return parseAccommodationRequest("motel");
+  if (/hotel|hôtel/.test(t)) return parseAccommodationRequest("hôtel");
+  if (/camping/.test(t)) return parseAccommodationRequest("camping");
+  if (/location|chalet|airbnb|vacances/.test(t)) {
+    return parseAccommodationRequest("location de vacances");
+  }
+  return null;
 }

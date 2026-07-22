@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { Sparkles, Star } from "lucide-react";
+import { getItineraryTypeLabel } from "@/features/ai-trip-planner/lib/labels";
 import type { AiSuggestion } from "@/features/ai-trip-planner/types";
 
 type Props = {
@@ -48,7 +49,7 @@ export function AISuggestions({ suggestions }: Props) {
                   {item.name}
                 </p>
                 <p className="mt-0.5 text-xs font-medium text-[#9a7a2f]">
-                  {item.category}
+                  {getItineraryTypeLabel(item.category)}
                 </p>
                 {item.justification ? (
                   <p className="text-sebavio-slate mt-1 line-clamp-2 text-xs">

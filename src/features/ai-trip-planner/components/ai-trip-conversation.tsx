@@ -7,6 +7,12 @@ import { AITripMessage } from "@/features/ai-trip-planner/components/ai-trip-mes
 import { AIAddressInput } from "@/features/ai-trip-planner/components/ai-address-input";
 import { AIItineraryProposal } from "@/features/ai-trip-planner/components/ai-itinerary-proposal";
 import { AILodgingOptions } from "@/features/ai-trip-planner/components/ai-lodging-options";
+import { AIPlannerMultiSelect } from "@/features/ai-trip-planner/components/ai-planner-multi-select";
+import {
+  ANY_INTEREST_LABEL,
+  CONTINUE_INTERESTS_LABEL,
+  NONE_INTEREST_LABEL,
+} from "@/features/ai-trip-planner/lib/travel-interests";
 import type {
   ItineraryProposalDto,
   LodgingOptionDto,
@@ -94,6 +100,12 @@ export function AITripConversation({
     (requestedInput.field === "origin" ||
       requestedInput.field === "destination");
 
+  const showMultiChoice =
+    !disabled &&
+    !sending &&
+    requestedInput?.type === "multi_choice" &&
+    (requestedInput.choices?.length ?? 0) > 0;
+
   return (
     <section className="flex min-h-[28rem] flex-col overflow-hidden rounded-2xl border border-[#dfe7ef] bg-white shadow-[0_8px_28px_rgba(8,43,70,0.05)] lg:min-h-[36rem]">
       <header className="flex items-center gap-2 border-b border-[#e8eef3] px-4 py-3.5 sm:px-5">
@@ -120,7 +132,9 @@ export function AITripConversation({
             <AITripMessage
               key={message.id}
               message={overrides}
-              showQuickReplies={isLastAssistant && !sending && !disabled}
+              showQuickReplies={
+                isLastAssistant && !sending && !disabled && !showMultiChoice
+              }
               onQuickReply={onSend}
               quickRepliesDisabled={disabled || sending}
             />
@@ -139,6 +153,30 @@ export function AITripConversation({
             onSelect={onSelectLodging}
             onSkip={onSkipLodging}
             onRefresh={onRefreshLodging}
+          />
+        ) : null}
+
+        {showMultiChoice && requestedInput?.choices ? (
+          <AIPlannerMultiSelect
+            choices={requestedInput.choices}
+            confirmLabel={CONTINUE_INTERESTS_LABEL}
+            anyLabel={ANY_INTEREST_LABEL}
+            noneLabel={NONE_INTEREST_LABEL}
+            minimumSelections={requestedInput.minimumSelections ?? 1}
+            maximumSelections={requestedInput.maximumSelections ?? null}
+            disabled={disabled || sending}
+            onConfirm={(selected) => {
+              if (selected.length === 0) {
+                onSend(NONE_INTEREST_LABEL);
+                return;
+              }
+              onSend(
+                `${CONTINUE_INTERESTS_LABEL} : ${selected
+                  .map((c) => c.label)
+                  .join(" · ")}`,
+              );
+            }}
+            onAny={() => onSend(ANY_INTEREST_LABEL)}
           />
         ) : null}
 

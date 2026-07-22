@@ -3,6 +3,12 @@ import {
   formatPlaceSummary,
   formatDateRangeFr,
 } from "@/features/ai-trip-planner/lib/format";
+import {
+  formatInterestsListFr,
+  getTravelInterestLabel,
+} from "@/features/ai-trip-planner/lib/labels";
+import { computeNights } from "@/features/ai-trip-planner/lib/nights";
+import { lodgingSelectionComplete } from "@/features/ai-trip-planner/lib/accommodation";
 
 export const PLANNER_STEPS = [
   "trip_type",
@@ -14,6 +20,8 @@ export const PLANNER_STEPS = [
   "travelers",
   "vehicle",
   "preferences",
+  "accommodation_need",
+  "accommodation_type",
   "lodging",
   "itinerary_proposal",
   "confirmation",
@@ -27,6 +35,7 @@ export type ItineraryProposalItem = {
   category: string;
   justification: string | null;
   durationMinutes: number | null;
+  themeLabels?: string[];
 };
 
 export type ItineraryProposalDay = {
@@ -44,6 +53,8 @@ export type ItineraryProposal = {
   estimatedDistanceKm: number | null;
   estimatedDurationMinutes: number | null;
   estimatedFuelStops: number | null;
+  interestsLabels: string[];
+  softWarnings: string[];
   days: ItineraryProposalDay[];
   highlights: string[];
 };
@@ -63,6 +74,25 @@ function hasDates(draft: TripDraftParsed): boolean {
   );
 }
 
+function preferencesDone(draft: TripDraftParsed): boolean {
+  return draft.preferencesResolved || draft.interests.length > 0;
+}
+
+function accommodationDecisionDone(draft: TripDraftParsed): boolean {
+  const nights = computeNights(
+    draft.departureDate,
+    draft.returnDate,
+    draft.durationDays,
+  );
+  if (nights < 1) return true;
+  if (!draft.accommodationMode) return false;
+  if (draft.accommodationMode === "sebavio_suggestion") {
+    if (!draft.accommodationType && !draft.lodgingType) return false;
+    return lodgingSelectionComplete(draft);
+  }
+  return true;
+}
+
 /** Contenu concret affichable avant confirmation (placeholders génériques exclus). */
 export function hasItineraryProposal(draft: TripDraftParsed): boolean {
   if (!draft.origin.name?.trim() || !draft.destination.name?.trim()) {
@@ -70,7 +100,6 @@ export function hasItineraryProposal(draft: TripDraftParsed): boolean {
   }
   const hasEstimate =
     draft.estimatedDistanceKm != null || draft.estimatedDurationMinutes != null;
-  // Import dynamique évité : logique inline pour ne pas créer de cycle
   const generic =
     /^arriv[ée]e et balade|^point d[’']int[ée]r[êe]t pr[èe]s|^d[ée]couverte de |^pause route entre /i;
   const concrete = [
@@ -102,6 +131,12 @@ export function buildItineraryProposal(
         category: a.category,
         justification: a.justification,
         durationMinutes: a.durationMinutes,
+        themeLabels: draft.interests.length
+          ? draft.interests
+              .slice(0, 2)
+              .map((i) => getTravelInterestLabel(i))
+              .filter(Boolean)
+          : undefined,
       })),
     ...draft.suggestions
       .filter((s) => s.accepted)
@@ -113,7 +148,6 @@ export function buildItineraryProposal(
       })),
   ];
 
-  // Dédupliquer par nom
   const seen = new Set<string>();
   const unique = items.filter((item) => {
     const key = item.name.trim().toLowerCase();
@@ -155,6 +189,13 @@ export function buildItineraryProposal(
     summaryParts.push(h > 0 ? `≈ ${h} h ${m} min de route` : `≈ ${m} min`);
   }
 
+  const softWarnings = [...draft.softWarnings];
+  if (draft.accommodationMode === "decide_later") {
+    if (!softWarnings.some((w) => /hébergement/i.test(w))) {
+      softWarnings.push("Cet itinéraire ne contient pas encore d’hébergement.");
+    }
+  }
+
   return {
     title,
     summary: summaryParts.join(" · "),
@@ -164,6 +205,8 @@ export function buildItineraryProposal(
     estimatedDistanceKm: draft.estimatedDistanceKm,
     estimatedDurationMinutes: draft.estimatedDurationMinutes,
     estimatedFuelStops: draft.estimatedFuelStops,
+    interestsLabels: draft.interests.map((i) => getTravelInterestLabel(i)),
+    softWarnings,
     days: days.filter((d) => d.items.length > 0),
     highlights: unique
       .slice(0, 5)
@@ -185,7 +228,8 @@ export function resolveCurrentStep(
     if (
       !options?.hasTripTypeHint &&
       draft.travelStyle.length === 0 &&
-      draft.preferences.length === 0
+      draft.preferences.length === 0 &&
+      draft.interests.length === 0
     ) {
       return "trip_type";
     }
@@ -210,26 +254,47 @@ export function resolveCurrentStep(
   if (!hasTravelers(draft)) return "travelers";
   if (!draft.vehicleId) return "vehicle";
 
-  // Préférences légères : si déjà des contraintes/style, on passe
-  if (
-    draft.travelStyle.length === 0 &&
-    draft.preferences.length === 0 &&
-    draft.constraints.length === 0 &&
-    !draft.budgetLevel
-  ) {
+  if (!preferencesDone(draft)) {
     return "preferences";
   }
 
-  // Hébergement demandé mais non sélectionné — prioritaire avant confirmation
+  const nights = computeNights(
+    draft.departureDate,
+    draft.returnDate,
+    draft.durationDays,
+  );
+
+  if (nights >= 1 && !draft.accommodationMode) {
+    return "accommodation_need";
+  }
+
   if (
-    draft.lodgingRequested &&
-    !(draft.lodgingSelection?.placeId && draft.lodgingSelection?.name)
+    draft.accommodationMode === "sebavio_suggestion" &&
+    !draft.accommodationType &&
+    !draft.lodgingType
+  ) {
+    return "accommodation_type";
+  }
+
+  if (
+    (draft.lodgingRequested ||
+      draft.accommodationMode === "sebavio_suggestion") &&
+    !lodgingSelectionComplete({
+      lodgingRequested:
+        draft.lodgingRequested ||
+        draft.accommodationMode === "sebavio_suggestion",
+      lodgingSelection: draft.lodgingSelection,
+    })
   ) {
     return "lodging";
   }
 
   if (!hasItineraryProposal(draft)) {
     return "itinerary_proposal";
+  }
+
+  if (!accommodationDecisionDone(draft)) {
+    return "accommodation_need";
   }
 
   if (options?.sessionStatus === "ready_for_confirmation") {
@@ -249,6 +314,9 @@ export function resolveSessionStatus(
   if (
     step === "itinerary_proposal" ||
     step === "confirmation" ||
+    step === "lodging" ||
+    step === "accommodation_need" ||
+    step === "accommodation_type" ||
     hasItineraryProposal(draft)
   ) {
     return "proposing";
@@ -283,7 +351,6 @@ export function parseDriveLimitFromText(text: string): {
       return { maxDistanceKm: d };
     }
   }
-  // Raccourcis
   if (/\b1\s*h\b|\bune heure\b/.test(t)) return { maxDriveMinutes: 60 };
   if (/\b2\s*h\b|\bdeux heures\b/.test(t)) return { maxDriveMinutes: 120 };
   if (/\b3\s*h\b|\btrois heures\b/.test(t)) return { maxDriveMinutes: 180 };
@@ -291,4 +358,11 @@ export function parseDriveLimitFromText(text: string): {
   if (/\bdemi[- ]?journee\b|\bmatin(ee)?\b/.test(t))
     return { maxDriveMinutes: 180 };
   return {};
+}
+
+export function formatDraftInterestsSummary(draft: TripDraftParsed): string {
+  if (draft.interests.length > 0) {
+    return formatInterestsListFr(draft.interests);
+  }
+  return draft.preferences.join(" · ");
 }

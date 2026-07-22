@@ -1,22 +1,18 @@
 "use client";
 
 import { Clock3, Fuel, MapPinned, Route } from "lucide-react";
+import {
+  formatDurationFr,
+  getItineraryTypeLabel,
+} from "@/features/ai-trip-planner/lib/labels";
 import type { ItineraryProposalDto } from "@/features/ai-trip-planner/types";
 
 type Props = {
   proposal: ItineraryProposalDto;
 };
 
-function formatDuration(minutes: number | null): string | null {
-  if (minutes == null) return null;
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h <= 0) return `${m} min`;
-  return m > 0 ? `${h} h ${m} min` : `${h} h`;
-}
-
 export function AIItineraryProposal({ proposal }: Props) {
-  const drive = formatDuration(proposal.estimatedDurationMinutes);
+  const drive = formatDurationFr(proposal.estimatedDurationMinutes);
 
   return (
     <section
@@ -38,6 +34,23 @@ export function AIItineraryProposal({ proposal }: Props) {
             {proposal.dateLabel}
           </p>
         ) : null}
+        {proposal.interestsLabels?.length ? (
+          <p className="text-sebavio-navy/90 text-xs">
+            <span className="font-semibold">Vos préférences</span>
+            {" — "}
+            {proposal.interestsLabels.join(", ")}
+          </p>
+        ) : null}
+        {proposal.softWarnings?.length
+          ? proposal.softWarnings.map((w) => (
+              <p
+                key={w}
+                className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs text-amber-900"
+              >
+                {w}
+              </p>
+            ))
+          : null}
       </header>
 
       <div className="text-sebavio-navy flex flex-wrap gap-3 text-xs">
@@ -84,7 +97,10 @@ export function AIItineraryProposal({ proposal }: Props) {
                   <div className="min-w-0">
                     <p className="text-sebavio-navy font-medium">{item.name}</p>
                     <p className="text-sebavio-slate text-xs">
-                      {item.category}
+                      {getItineraryTypeLabel(item.category)}
+                      {item.themeLabels?.length
+                        ? ` · ${item.themeLabels.join(" · ")}`
+                        : ""}
                       {item.justification ? ` — ${item.justification}` : ""}
                     </p>
                   </div>

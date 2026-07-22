@@ -7,6 +7,12 @@ import {
 } from "@/features/ai-trip-planner/constants";
 import type { TripDraftParsed } from "@/features/ai-trip-planner/schemas/draft";
 import type { PlannerStep } from "@/features/ai-trip-planner/lib/planning-step";
+import {
+  ANY_INTEREST_LABEL,
+  CONTINUE_INTERESTS_LABEL,
+  INTEREST_CHOICES,
+  NONE_INTEREST_LABEL,
+} from "@/features/ai-trip-planner/lib/travel-interests";
 import type {
   OriginSuggestionDto,
   RequestedInputDto,
@@ -23,7 +29,23 @@ const CONFIRM_YES = "Confirmer cet itinéraire";
 const CONFIRM_EDIT = "Modifier des détails";
 const GENERATE_ITINERARY = "Proposer un itinéraire";
 
+export const ACCOMMODATION_NEED_YES = "Oui, proposez-moi un hébergement";
+export const ACCOMMODATION_NEED_BOOKED = "Non, j’ai déjà un hébergement";
+export const ACCOMMODATION_NEED_LATER = "Non, je m’en occuperai plus tard";
+export const ACCOMMODATION_NEED_HOME = "Je retourne à la maison chaque soir";
+
+export const ACCOMMODATION_TYPE_CHOICES = [
+  "Gîte ou couette et café",
+  "Auberge",
+  "Hôtel",
+  "Motel",
+  "Location de vacances",
+  "Camping",
+  "Peu importe",
+] as const;
+
 export { CONFIRM_YES, CONFIRM_EDIT, GENERATE_ITINERARY };
+export { CONTINUE_INTERESTS_LABEL, ANY_INTEREST_LABEL, NONE_INTEREST_LABEL };
 
 export function buildControlsForStep(input: {
   step: PlannerStep;
@@ -189,12 +211,31 @@ export function buildControlsForStep(input: {
 
     case "preferences":
       return {
+        quickReplies: [],
+        requestedInput: {
+          type: "multi_choice",
+          field: "interests",
+          placeholder: null,
+          countryBias: "CA",
+          regionBias: "QC",
+          minimumSelections: 1,
+          maximumSelections: null,
+          choices: INTEREST_CHOICES.map((c) => ({
+            id: c.id,
+            label: c.label,
+          })),
+        },
+        forceAssistantMessage:
+          "Quels types d’expériences souhaitez-vous inclure? Vous pouvez choisir plusieurs réponses.",
+      };
+
+    case "accommodation_need":
+      return {
         quickReplies: [
-          "Nature et plein air",
-          "Culture et villages",
-          "Gastronomie",
-          "Budget modéré",
-          "Passer à l’itinéraire",
+          ACCOMMODATION_NEED_YES,
+          ACCOMMODATION_NEED_BOOKED,
+          ACCOMMODATION_NEED_LATER,
+          ACCOMMODATION_NEED_HOME,
         ],
         requestedInput: {
           type: "choice",
@@ -203,6 +244,21 @@ export function buildControlsForStep(input: {
           countryBias: "CA",
           regionBias: "QC",
         },
+        forceAssistantMessage:
+          "Souhaitez-vous que Sebavio vous propose un hébergement pour la nuit?",
+      };
+
+    case "accommodation_type":
+      return {
+        quickReplies: [...ACCOMMODATION_TYPE_CHOICES],
+        requestedInput: {
+          type: "choice",
+          field: "lodging",
+          placeholder: null,
+          countryBias: "CA",
+          regionBias: "QC",
+        },
+        forceAssistantMessage: "Quel type d’hébergement préférez-vous?",
       };
 
     case "lodging": {
@@ -249,7 +305,8 @@ export function buildControlsForStep(input: {
 
     case "confirmation":
       if (
-        draft.lodgingRequested &&
+        (draft.lodgingRequested ||
+          draft.accommodationMode === "sebavio_suggestion") &&
         !(draft.lodgingSelection?.placeId && draft.lodgingSelection?.name)
       ) {
         return {
@@ -322,7 +379,14 @@ export function filterAiQuickRepliesForStep(
   if (step === "confirmation") {
     return aiReplies.filter(looksLikeConfirm);
   }
-  // Sur les autres étapes : rejeter véhicules et confirmation
+  if (
+    step === "preferences" ||
+    step === "accommodation_need" ||
+    step === "accommodation_type" ||
+    step === "lodging"
+  ) {
+    return null;
+  }
   const cleaned = aiReplies.filter(
     (r) => !looksLikeVehicle(r) && !looksLikeConfirm(r),
   );

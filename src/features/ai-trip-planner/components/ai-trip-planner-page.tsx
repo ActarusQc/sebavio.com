@@ -132,7 +132,11 @@ export function AITripPlannerPage() {
             error={error}
             requestedInput={session.requestedInput}
             activeQuickReplies={
-              session.currentStep === "lodging" ? [] : session.quickReplies
+              session.currentStep === "lodging" ||
+              session.currentStep === "preferences" ||
+              session.requestedInput?.type === "multi_choice"
+                ? []
+                : session.quickReplies
             }
             proposal={session.proposal}
             showLodgingPicker={
