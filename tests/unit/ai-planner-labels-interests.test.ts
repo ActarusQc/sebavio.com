@@ -52,7 +52,7 @@ describe("nuits et hébergement", () => {
     expect(needsOvernightStay("2026-07-25", "2026-07-25", 1)).toBe(false);
   });
 
-  it("demande l’hébergement avant l’itinéraire pour 1 nuit", () => {
+  it("propose l’itinéraire avant de demander l’hébergement", () => {
     const draft = tripDraftSchema.parse({
       origin: { name: "Bromont", city: "Bromont" },
       destination: { name: "Magog", city: "Magog" },
@@ -63,6 +63,29 @@ describe("nuits et hébergement", () => {
       vehicleId: "11111111-1111-4111-8111-111111111111",
       interests: ["gastronomy", "nature", "shopping"],
       preferencesResolved: true,
+    });
+    expect(resolveCurrentStep(draft, { hasTripTypeHint: true })).toBe(
+      "itinerary_proposal",
+    );
+  });
+
+  it("demande l’hébergement après une proposition pour 1 nuit", () => {
+    const draft = tripDraftSchema.parse({
+      origin: { name: "Bromont", city: "Bromont" },
+      destination: { name: "Magog", city: "Magog" },
+      destinationMode: "known",
+      departureDate: "2026-07-25",
+      returnDate: "2026-07-26",
+      adults: 2,
+      vehicleId: "11111111-1111-4111-8111-111111111111",
+      interests: ["gastronomy"],
+      preferencesResolved: true,
+      estimatedDistanceKm: 40,
+      estimatedDurationMinutes: 40,
+      activities: [
+        { name: "Marché de Magog", category: "meal" },
+        { name: "Parc Orford", category: "activity" },
+      ],
     });
     expect(resolveCurrentStep(draft, { hasTripTypeHint: true })).toBe(
       "accommodation_need",

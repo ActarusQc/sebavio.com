@@ -154,13 +154,19 @@ export function useTripFuelEstimate({
               code === "FUEL_006" ||
               code === "EXT_004" ||
               code === "FDE_009" ||
-              res.status === 422 ||
-              /FUEL_006|non support|non pris en charge|manuel|prix/i.test(msg);
+              /FUEL_006|aucun prix automatique|non supporté par FDE|non pris en charge/i.test(
+                msg,
+              );
             if (needsManual) {
               setForm((f) =>
                 f.forceManualPrice ? f : { ...f, forceManualPrice: true },
               );
               setError(MANUAL_PRICE_MSG);
+            } else if (code === "VEHICLE_FUEL_CONSUMPTION_REQUIRED") {
+              setError(
+                msg ||
+                  "La consommation de ce véhicule est inconnue. Ajoutez-la dans la fiche du véhicule.",
+              );
             } else {
               setError(msg);
             }

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { BedDouble, MapPin, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { LodgingOptionDto } from "@/features/ai-trip-planner/types";
@@ -77,26 +78,47 @@ export function AILodgingOptions({
               type="button"
               disabled={disabled}
               onClick={() => onSelect(option)}
-              className="hover:border-sebavio-gold/50 w-full rounded-xl border border-[#e2eaf1] bg-white px-3 py-2.5 text-left transition hover:bg-[#fff9ef] disabled:opacity-50"
+              className="hover:border-sebavio-gold/50 flex w-full gap-3 rounded-xl border border-[#e2eaf1] bg-white p-2.5 text-left transition hover:bg-[#fff9ef] disabled:opacity-50"
             >
-              <p className="text-sebavio-navy text-sm font-semibold">
-                {option.name}
-              </p>
-              {option.address || option.city ? (
-                <p className="text-sebavio-slate mt-0.5 flex items-start gap-1 text-xs">
-                  <MapPin className="mt-0.5 size-3 shrink-0" aria-hidden />
-                  {option.address || option.city}
+              <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-[#eef3f8]">
+                {option.imageUrl ? (
+                  // Proxy authentifié /api/places/photo — unoptimized
+                  <Image
+                    src={option.imageUrl}
+                    alt=""
+                    fill
+                    className="object-cover"
+                    sizes="64px"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="text-sebavio-teal flex h-full w-full items-center justify-center">
+                    <BedDouble className="size-5" aria-hidden />
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1 py-0.5">
+                <p className="text-sebavio-navy text-sm font-semibold">
+                  {option.name}
                 </p>
-              ) : null}
-              {option.rating != null ? (
-                <p className="text-sebavio-navy/80 mt-1 flex items-center gap-1 text-xs">
-                  <Star className="text-sebavio-gold size-3" aria-hidden />
-                  {option.rating.toFixed(1)}
-                  {option.ratingCount != null
-                    ? ` (${option.ratingCount} avis)`
-                    : ""}
-                </p>
-              ) : null}
+                {option.address || option.city ? (
+                  <p className="text-sebavio-slate mt-0.5 flex items-start gap-1 text-xs">
+                    <MapPin className="mt-0.5 size-3 shrink-0" aria-hidden />
+                    <span className="line-clamp-2">
+                      {option.address || option.city}
+                    </span>
+                  </p>
+                ) : null}
+                {option.rating != null ? (
+                  <p className="text-sebavio-navy/80 mt-1 flex items-center gap-1 text-xs">
+                    <Star className="text-sebavio-gold size-3" aria-hidden />
+                    {option.rating.toFixed(1)}
+                    {option.ratingCount != null
+                      ? ` (${option.ratingCount} avis)`
+                      : ""}
+                  </p>
+                ) : null}
+              </div>
             </button>
           </li>
         ))}

@@ -173,6 +173,7 @@ export const lodgingOptionSchema = z.object({
   ratingCount: nullableNumber,
   googleMapsUrl: nullableString(2000),
   primaryType: nullableString(80),
+  imageUrl: nullableString(2000),
 });
 
 export const lodgingSelectionSchema = z

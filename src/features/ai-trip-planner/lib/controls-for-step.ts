@@ -245,7 +245,7 @@ export function buildControlsForStep(input: {
           regionBias: "QC",
         },
         forceAssistantMessage:
-          "Souhaitez-vous que Sebavio vous propose un hébergement pour la nuit?",
+          "Voici une proposition d’itinéraire. Souhaitez-vous que Sebavio vous propose un hébergement pour la nuit?",
       };
 
     case "accommodation_type":

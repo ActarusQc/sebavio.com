@@ -54,6 +54,7 @@ export type LodgingOptionDto = {
   ratingCount: number | null;
   googleMapsUrl: string | null;
   primaryType: string | null;
+  imageUrl: string | null;
 };
 
 export type LodgingSelectionDto = {

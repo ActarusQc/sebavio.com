@@ -8,6 +8,7 @@ import {
   searchTextActivities,
 } from "@/features/trips/activities/google-places-activity-provider";
 import type { AccommodationParseResult } from "@/features/ai-trip-planner/lib/accommodation";
+import { buildPlacesPhotoProxyUrl } from "@/features/ai-trip-planner/lib/places-photo";
 import type { TripDraftParsed } from "@/features/ai-trip-planner/schemas/draft";
 
 export type LodgingOption = TripDraftParsed["lodgingOptions"][number];
@@ -74,6 +75,7 @@ export async function searchLodgingOptions(input: {
     reviewCount: number | null;
     googleMapsUrl: string | null;
     primaryType: string | null;
+    photoReference?: string | null;
   }) => {
     const key = c.googlePlaceId || `${c.name}:${c.latitude}:${c.longitude}`;
     if (seen.has(key) || !c.name.trim()) return;
@@ -103,6 +105,7 @@ export async function searchLodgingOptions(input: {
       ratingCount: c.reviewCount,
       googleMapsUrl: c.googleMapsUrl,
       primaryType: c.primaryType,
+      imageUrl: buildPlacesPhotoProxyUrl(c.photoReference ?? null, 320),
     });
   };
 

@@ -141,7 +141,7 @@ export function AITripConversation({
           );
         })}
 
-        {proposal && !sending && !showLodgingPicker ? (
+        {proposal && !sending ? (
           <AIItineraryProposal proposal={proposal} />
         ) : null}
 

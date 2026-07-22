@@ -258,6 +258,11 @@ export function resolveCurrentStep(
     return "preferences";
   }
 
+  // D’abord une proposition concrète — l’hébergement vient ensuite
+  if (!hasItineraryProposal(draft)) {
+    return "itinerary_proposal";
+  }
+
   const nights = computeNights(
     draft.departureDate,
     draft.returnDate,
@@ -287,10 +292,6 @@ export function resolveCurrentStep(
     })
   ) {
     return "lodging";
-  }
-
-  if (!hasItineraryProposal(draft)) {
-    return "itinerary_proposal";
   }
 
   if (!accommodationDecisionDone(draft)) {

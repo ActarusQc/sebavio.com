@@ -35,9 +35,10 @@ describe("sélecteur type carburant", () => {
     expect(mapDefaultFuelType("Diesel")).toBe("diesel");
     expect(mapDefaultFuelType("midGrade")).toBe("midGrade");
     expect(mapDefaultFuelType("E85")).toBe("ethanol");
+    expect(mapDefaultFuelType("Hybrid")).toBe("regular");
   });
 
-  it("ne remplace pas silencieusement un type inconnu par regular", () => {
+  it("ne remplace pas silencieusement un type non-FDE par regular", () => {
     expect(mapDefaultFuelType("propane")).toBe("other");
     expect(mapDefaultFuelType("hydrogène")).toBe("other");
   });

@@ -32,12 +32,19 @@ export function mapDefaultFuelType(
   raw: string | null | undefined,
 ): TripFuelTypeValue {
   if (!raw) return "regular";
-  const k = raw.toLowerCase().replace(/[\s_-]+/g, "");
+  const k = raw
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .replace(/[\s_-]+/g, "");
   if (
     k === "regular" ||
     k.includes("ordinaire") ||
     k === "gasoline" ||
-    k === "essence"
+    k === "essence" ||
+    k === "hybrid" ||
+    k === "hybride" ||
+    k.includes("essenceordinaire")
   ) {
     return "regular";
   }
@@ -45,8 +52,34 @@ export function mapDefaultFuelType(
   if (k.includes("premium") || k.includes("super")) return "premium";
   if (k.includes("mid") || k.includes("inter")) return "midGrade";
   if (k.includes("e85") || k.includes("ethanol")) return "ethanol";
-  if (k === "other" || k.includes("autre")) return "other";
-  if (k.length > 0 && k !== "null" && k !== "undefined") return "other";
+  if (
+    k === "other" ||
+    k.includes("autre") ||
+    k.includes("propane") ||
+    k.includes("hydrogen") ||
+    k.includes("hydrogene")
+  ) {
+    return "other";
+  }
+  // Types thermiques / hybrides inconnus → essence ordinaire (FDE), pas « other »
+  if (
+    k.includes("gas") ||
+    k.includes("petrol") ||
+    k.includes("fuel") ||
+    k.includes("therm")
+  ) {
+    return "regular";
+  }
+  // Électrique / PHEV : laisser regular côté formulaire ; le backend gère not_applicable
+  if (
+    k.includes("electric") ||
+    k.includes("electrique") ||
+    k.includes("plugin") ||
+    k.includes("phev") ||
+    k === "bev"
+  ) {
+    return "regular";
+  }
   return "regular";
 }
 
