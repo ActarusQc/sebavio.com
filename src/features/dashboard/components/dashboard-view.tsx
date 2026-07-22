@@ -13,9 +13,17 @@ type DashboardViewProps = {
 };
 
 export function DashboardView({ data }: DashboardViewProps) {
+  const continueTripHref =
+    data.nextTrip?.status === "in_progress"
+      ? `/dashboard/trips/${data.nextTrip.id}`
+      : null;
+
   return (
     <div className="flex w-full flex-col gap-5 lg:gap-6">
-      <DashboardHero firstName={data.greetingFirstName} />
+      <DashboardHero
+        firstName={data.greetingFirstName}
+        continueTripHref={continueTripHref}
+      />
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-[minmax(280px,0.9fr)_minmax(360px,1.2fr)_minmax(300px,1fr)] xl:gap-6">
         <WeatherWidget weather={data.weather} />

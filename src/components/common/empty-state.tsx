@@ -11,7 +11,7 @@ export type EmptyStateProps = {
 };
 
 /**
- * État vide chaleureux — identité Sebavio (voyage / préparation).
+ * État vide — style nuit premium.
  */
 export function EmptyState({
   title,
@@ -25,29 +25,29 @@ export function EmptyState({
     <div
       role="status"
       className={cn(
-        "border-client-border bg-client-warm-white/80 dark:bg-card/50 relative flex flex-col items-center justify-center gap-4 overflow-hidden rounded-[var(--client-radius)] border border-dashed px-6 py-12 text-center shadow-[var(--client-shadow)] dark:border-white/10",
+        "relative flex flex-col items-center justify-center gap-4 overflow-hidden rounded-[1.25rem] border border-dashed border-white/15 bg-[rgba(12,30,56,0.6)] px-6 py-12 text-center shadow-[0_8px_32px_rgb(0_0_0/0.2)]",
         className,
       )}
     >
       <div
         aria-hidden
-        className="from-client-petrol/8 to-client-star/10 pointer-events-none absolute inset-0 bg-gradient-to-br via-transparent"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.12),transparent_60%)]"
       />
       <div className="relative flex flex-col items-center gap-4">
         {icon ? (
           <div
-            className="bg-client-pale text-client-teal dark:bg-client-petrol/40 flex size-14 items-center justify-center rounded-2xl [&_img]:size-8 [&_svg]:size-7"
+            className="flex size-14 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,rgba(59,130,246,0.3),rgba(139,92,246,0.3))] text-[#c4b5fd] [&_img]:size-8 [&_svg]:size-7"
             aria-hidden
           >
             {icon}
           </div>
         ) : null}
         <div className="flex max-w-md flex-col gap-1.5">
-          <p className="font-heading text-client-night dark:text-foreground text-base font-semibold">
+          <p className="font-heading text-base font-semibold text-white">
             {title}
           </p>
           {description ? (
-            <p className="text-client-text-muted text-sm leading-relaxed">
+            <p className="text-sm leading-relaxed text-white/60">
               {description}
             </p>
           ) : null}

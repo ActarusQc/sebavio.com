@@ -25,36 +25,47 @@
   --sebavio-orange-soft: #fff3e8;
   --sebavio-surface: #f0f4f8;
 
-  /* Espace client — dérivé de l’identité publique (pas une 2ᵉ palette) */
-  --client-background: var(--sebavio-background);
-  --client-surface: #fffefb;
-  --client-surface-strong: #ffffff;
-  --client-text: var(--sebavio-navy);
-  --client-text-muted: var(--sebavio-muted);
-  --client-primary: var(--sebavio-navy);
-  --client-primary-hover: #0a2438;
+  /* Espace client — thème nuit premium (défaut), dérivé du hero public */
+  --client-background: var(--sebavio-night);
+  --client-surface: #0c1e38;
+  --client-surface-strong: #122844;
+  --client-text: #f5f7fb;
+  --client-text-muted: #9aa8bc;
+  --client-primary: var(--sebavio-gradient-from);
+  --client-primary-hover: #60a5fa;
   --client-accent: var(--sebavio-gold);
   --client-accent-hover: var(--sebavio-gold-hover);
-  --client-border: var(--sebavio-gray-200);
-  --client-shadow: var(--shadow-md);
-  --client-shadow-hover: var(--shadow-lg);
-  --client-sidebar: #f7f5f0;
-  --client-sidebar-active: var(--sebavio-navy);
+  --client-border: rgb(255 255 255 / 12%);
+  --client-shadow: 0 8px 32px rgb(0 0 0 / 0.35);
+  --client-shadow-hover: 0 12px 40px rgb(0 0 0 / 0.45);
+  --client-sidebar: #071018;
+  --client-sidebar-active: linear-gradient(
+    135deg,
+    rgb(59 130 246 / 0.35),
+    rgb(139 92 246 / 0.35)
+  );
   --client-radius: 1.25rem;
-  --client-content-max: 100rem; /* ~1600 px */
+  --client-content-max: 100rem;
+  --client-cta: linear-gradient(
+    135deg,
+    var(--sebavio-gradient-from),
+    var(--sebavio-gradient-to)
+  );
+  --client-cta-shadow: 0 8px 24px rgb(59 130 246 / 0.35);
+  --client-glow: rgb(59 130 246 / 0.2);
 
-  /* Alias compatibles (composants existants) → branding public */
-  --client-night: var(--sebavio-navy);
-  --client-petrol: var(--sebavio-navy);
+  /* Alias composants */
+  --client-night: var(--sebavio-night);
+  --client-petrol: var(--sebavio-night-elevated);
   --client-teal: var(--sebavio-slate);
-  --client-turquoise: #eef3f3;
-  --client-pale: #f3f1ec;
+  --client-turquoise: rgb(59 130 246 / 0.18);
+  --client-pale: #122844;
   --client-bg: var(--client-background);
-  --client-bg-secondary: #f3f1ec;
+  --client-bg-secondary: #0a1628;
   --client-warm-white: var(--client-surface);
   --client-star: var(--sebavio-gold);
-  --client-green-soft: #d4e5df;
-  --client-beige: #f4efe4;
+  --client-green-soft: #1a3a42;
+  --client-beige: #1a2438;
 
   /* Landing marketing (hero nuit / CTA) — palette maquette */
   --sebavio-night: #050b1c;

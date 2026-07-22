@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
+import { useTheme } from "next-themes";
 import type { UserRole } from "@/lib/constants";
 import { ThemeToggle } from "@/components/common";
 import { NotificationBell } from "@/features/notifications/components";
@@ -14,6 +15,7 @@ import { MobileNav } from "./mobile-nav";
 import { UserMenu } from "./user-menu";
 import { AppSidebar } from "./app-sidebar";
 import { buildBreadcrumbs } from "./navigation";
+import { CLIENT_THEME_KEY } from "./client-theme";
 
 export type DashboardShellProps = {
   email: string;
@@ -34,6 +36,21 @@ export function DashboardShell({
   const pathname = usePathname();
   const isDashboardHome = pathname === "/dashboard";
   const crumbs = buildBreadcrumbs(pathname);
+  const { setTheme } = useTheme();
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(CLIENT_THEME_KEY);
+      if (stored === "light" || stored === "dark") {
+        setTheme(stored);
+      } else {
+        setTheme("dark");
+        window.localStorage.setItem(CLIENT_THEME_KEY, "dark");
+      }
+    } catch {
+      setTheme("dark");
+    }
+  }, [setTheme]);
 
   return (
     <AppShell
@@ -42,7 +59,7 @@ export function DashboardShell({
           brand={
             <div className="flex items-center gap-2 md:hidden">
               <MobileNav role={role} />
-              <span className="font-heading text-client-night dark:text-foreground text-sm font-semibold tracking-tight">
+              <span className="font-heading text-sm font-semibold tracking-tight text-white">
                 Sebavio
               </span>
             </div>
@@ -65,11 +82,11 @@ export function DashboardShell({
         />
       }
       footer={
-        <Footer className="border-client-border text-client-text-muted bg-transparent" />
+        <Footer className="border-white/10 bg-transparent text-white/45" />
       }
     >
       {!isDashboardHome ? (
-        <Breadcrumbs items={crumbs} className="mb-4" />
+        <Breadcrumbs items={crumbs} className="mb-4 text-white/60" />
       ) : null}
       {children}
     </AppShell>

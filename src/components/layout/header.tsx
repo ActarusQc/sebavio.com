@@ -9,13 +9,13 @@ export type HeaderProps = {
 };
 
 /**
- * Barre supérieure espace client.
+ * Barre supérieure espace client — glass sombre premium.
  */
 export function Header({ brand, search, actions, className }: HeaderProps) {
   return (
     <header
       className={cn(
-        "border-client-border bg-client-surface/90 sticky top-0 z-40 flex h-14 items-center gap-3 border-b px-3 backdrop-blur-md sm:h-16 sm:gap-4 sm:px-6 dark:border-white/10 dark:bg-[#0b2235]/90",
+        "sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-white/10 bg-[rgba(5,11,28,0.85)] px-3 backdrop-blur-md sm:h-16 sm:gap-4 sm:px-6",
         className,
       )}
     >

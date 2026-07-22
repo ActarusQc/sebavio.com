@@ -35,7 +35,7 @@ export function MobileNav({ role }: MobileNavProps) {
           <Button
             variant="ghost"
             size="icon-sm"
-            className="text-client-night md:hidden"
+            className="text-white hover:bg-white/10 md:hidden"
             aria-label="Ouvrir le menu"
           />
         }
@@ -43,22 +43,22 @@ export function MobileNav({ role }: MobileNavProps) {
         <Menu />
       </DialogTrigger>
       <DialogContent
-        className="bg-sidebar text-sidebar-foreground top-0 left-0 h-full max-h-full w-72 max-w-[min(18rem,85vw)] translate-x-0 translate-y-0 rounded-none p-0 sm:max-w-72"
+        className="top-0 left-0 h-full max-h-full w-72 max-w-[min(18rem,85vw)] translate-x-0 translate-y-0 rounded-none border-white/10 bg-[#071018] p-0 text-white sm:max-w-72"
         showCloseButton
       >
-        <DialogHeader className="border-client-border border-b p-4">
+        <DialogHeader className="border-b border-white/10 p-4">
           <DialogTitle className="sr-only">Navigation</DialogTitle>
           <div className="flex flex-col gap-1">
             <div className="relative h-12 w-40">
               <Image
-                src={BRAND_ASSETS.logo}
+                src={BRAND_ASSETS.logoBlanc}
                 alt=""
                 fill
                 className="object-contain object-left"
                 sizes="160px"
               />
             </div>
-            <p className="text-client-text-muted text-[0.6875rem] font-medium tracking-[0.06em] uppercase">
+            <p className="text-[0.6875rem] font-medium tracking-[0.06em] text-white/45 uppercase">
               Seba = étoile · Via = route
             </p>
           </div>
@@ -74,16 +74,15 @@ export function MobileNav({ role }: MobileNavProps) {
                 aria-current={active ? "page" : undefined}
                 onClick={() => setOpen(false)}
                 className={cn(
-                  "focus-visible:ring-sidebar-ring flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none",
-                  "text-client-text hover:bg-client-pale",
+                  "flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-white/75 transition-colors hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-[#3b82f6] focus-visible:outline-none",
                   active &&
-                    "bg-sebavio-navy hover:bg-sebavio-navy font-semibold text-white hover:text-white",
+                    "bg-[linear-gradient(135deg,rgba(59,130,246,0.35),rgba(139,92,246,0.35))] font-semibold text-white",
                 )}
               >
                 <span
                   className={cn(
                     "inline-flex size-5 shrink-0 items-center justify-center [&_svg]:size-[1.125rem]",
-                    active ? "text-sebavio-gold" : "text-sebavio-slate",
+                    active ? "text-[#f0b64d]" : "text-[#c4b5fd]",
                   )}
                   aria-hidden
                 >
@@ -92,7 +91,7 @@ export function MobileNav({ role }: MobileNavProps) {
                 <span className="flex min-w-0 flex-1 items-center gap-2">
                   <span className="truncate">{item.label}</span>
                   {showBadge ? (
-                    <span className="border-sebavio-gold/40 bg-sebavio-orange-100 text-sebavio-navy shrink-0 rounded-full border px-2 py-0.5 text-[0.6875rem] font-semibold">
+                    <span className="shrink-0 rounded-full border border-[#f0b64d]/40 bg-[rgba(240,182,77,0.15)] px-2 py-0.5 text-[0.6875rem] font-semibold text-[#f0b64d]">
                       Nouveau
                     </span>
                   ) : null}
@@ -101,12 +100,12 @@ export function MobileNav({ role }: MobileNavProps) {
             );
           })}
         </nav>
-        <div className="border-client-border mt-auto border-t p-3">
+        <div className="mt-auto border-t border-white/10 p-3">
           <Button
             render={
               <Link href="/dashboard/ai" onClick={() => setOpen(false)} />
             }
-            className="text-sebavio-navy h-11 w-full gap-2 border-0 bg-gradient-to-r from-[#f0b64d] to-[#e8923a]"
+            className="h-11 w-full gap-2 border-0 bg-[linear-gradient(135deg,#3b82f6,#8b5cf6)] text-white shadow-[0_8px_24px_rgba(59,130,246,0.35)]"
           >
             <Sparkles className="size-4" aria-hidden />
             Planifier avec Sebavio

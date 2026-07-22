@@ -4,13 +4,14 @@ import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
+import { CLIENT_THEME_KEY } from "@/components/layout/client-theme";
 
 function subscribe() {
   return () => undefined;
 }
 
 /**
- * Bascule clair / crépuscule (semi-sombre).
+ * Bascule crépuscule (défaut) / clair — espace client.
  */
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
@@ -28,6 +29,7 @@ export function ThemeToggle() {
         size="icon-sm"
         aria-label="Changer le thème"
         disabled
+        className="text-white/70"
       >
         <Sun className="size-4" />
       </Button>
@@ -41,11 +43,19 @@ export function ThemeToggle() {
       type="button"
       variant="ghost"
       size="icon-sm"
-      className="text-client-text min-h-11 min-w-11 sm:min-h-0 sm:min-w-0"
+      className="min-h-11 min-w-11 text-white/80 hover:bg-white/10 hover:text-white sm:min-h-0 sm:min-w-0"
       aria-label={
         isDark ? "Passer en thème clair" : "Passer en thème crépuscule"
       }
-      onClick={() => setTheme(isDark ? "light" : "dark")}
+      onClick={() => {
+        const next = isDark ? "light" : "dark";
+        setTheme(next);
+        try {
+          window.localStorage.setItem(CLIENT_THEME_KEY, next);
+        } catch {
+          /* ignore */
+        }
+      }}
     >
       {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
     </Button>

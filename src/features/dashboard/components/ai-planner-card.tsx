@@ -1,39 +1,37 @@
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
-import { Button } from "@/components/ui";
 
 export function AiPlannerCard() {
   return (
     <section
       aria-labelledby="ai-planner-heading"
-      className="from-sebavio-navy to-sebavio-slate relative flex h-full flex-col overflow-hidden rounded-[var(--client-radius)] bg-gradient-to-br via-[#0f3550] p-6 shadow-[var(--client-shadow)] sm:p-7"
+      className="relative flex h-full flex-col overflow-hidden rounded-[1.25rem] border border-white/12 bg-[linear-gradient(145deg,#0a1628_0%,#122044_45%,#1a1540_100%)] p-6 shadow-[0_8px_32px_rgb(0_0_0/0.35)] sm:p-7"
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_15%,rgb(240_182_77/0.28),transparent_40%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_15%,rgba(139,92,246,0.35),transparent_42%),radial-gradient(circle_at_15%_80%,rgba(59,130,246,0.22),transparent_45%)]"
       />
       <svg
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-24 w-full opacity-30"
-        viewBox="0 0 400 80"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-28 w-full opacity-40"
+        viewBox="0 0 400 90"
         preserveAspectRatio="none"
       >
         <path
-          d="M0 60 Q80 20 160 45 T320 30 L400 50 L400 80 L0 80 Z"
-          fill="rgb(240 182 77 / 0.25)"
+          d="M0 70 Q80 30 160 50 T320 35 L400 55 L400 90 L0 90 Z"
+          fill="rgba(59,130,246,0.2)"
         />
         <path
-          d="M0 65 Q100 40 200 55 T400 40"
+          d="M0 75 Q100 45 200 60 T400 45"
           fill="none"
-          stroke="rgb(240 182 77 / 0.55)"
+          stroke="rgba(240,182,77,0.55)"
           strokeWidth="2"
         />
+        <circle cx="340" cy="22" r="2.5" fill="#f0b64d" />
+        <circle cx="60" cy="18" r="1.5" fill="#fff" opacity="0.7" />
       </svg>
       <div className="relative z-10 flex flex-1 flex-col gap-5">
-        <div
-          className="text-sebavio-gold flex items-center gap-1.5"
-          aria-hidden
-        >
+        <div className="flex items-center gap-1.5 text-[#f0b64d]" aria-hidden>
           <Sparkles className="size-5" />
           <Sparkles className="size-3.5 opacity-70" />
           <Sparkles className="size-4 opacity-85" />
@@ -45,20 +43,19 @@ export function AiPlannerCard() {
           >
             Votre copilote est prêt
           </h2>
-          <p className="max-w-sm text-[0.9375rem] leading-relaxed text-white/80">
-            Décrivez votre prochain voyage et Sebavio vous aidera à construire
-            un itinéraire adapté à vos envies, à votre véhicule et à votre façon
-            de voyager.
+          <p className="max-w-sm text-[0.9375rem] leading-relaxed text-white/70">
+            Décrivez votre prochain voyage et Sebavio vous aide à bâtir un
+            itinéraire adapté à vos envies, à votre véhicule et à votre façon de
+            voyager.
           </p>
         </div>
-        <Button
-          className="text-sebavio-navy mt-auto h-11 w-full gap-2 border-0 bg-gradient-to-r from-[#f0b64d] to-[#e8923a] shadow-sm hover:brightness-[0.97] sm:w-auto"
-          size="lg"
-          render={<Link href="/dashboard/ai" />}
+        <Link
+          href="/dashboard/ai"
+          className="font-heading mt-auto inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,#3b82f6,#8b5cf6)] px-5 text-[0.95rem] font-semibold text-white shadow-[0_8px_24px_rgba(59,130,246,0.35)] transition-[filter] hover:brightness-110 focus-visible:ring-2 focus-visible:ring-[#3b82f6] focus-visible:outline-none sm:w-auto"
         >
           <Sparkles className="size-4" aria-hidden />
           Planifier avec Sebavio
-        </Button>
+        </Link>
       </div>
     </section>
   );

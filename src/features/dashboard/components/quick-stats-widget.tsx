@@ -52,25 +52,23 @@ export function QuickStatsWidget({ stats }: QuickStatsWidgetProps) {
           <li
             key={key}
             className={cn(
-              "flex flex-col gap-2.5 rounded-xl border p-3.5 transition-shadow duration-200 hover:shadow-[var(--client-shadow)]",
+              "flex flex-col gap-2.5 rounded-xl border p-3.5 transition-shadow duration-200",
               accent
-                ? "border-sebavio-gold/35 bg-sebavio-orange-100/70"
-                : "border-client-border bg-client-pale/80",
+                ? "border-[#f0b64d]/30 bg-[rgba(240,182,77,0.1)]"
+                : "border-white/10 bg-white/5",
             )}
           >
             <Icon
               className={cn(
                 "size-5",
-                accent ? "text-sebavio-gold" : "text-sebavio-slate",
+                accent ? "text-[#f0b64d]" : "text-[#c4b5fd]",
               )}
               aria-hidden
             />
-            <p className="font-heading text-client-text text-2xl font-bold tracking-tight tabular-nums">
+            <p className="font-heading text-2xl font-bold tracking-tight text-white tabular-nums">
               {format(stats)}
             </p>
-            <p className="text-client-text-muted text-sm leading-snug">
-              {title}
-            </p>
+            <p className="text-sm leading-snug text-white/55">{title}</p>
           </li>
         ))}
       </ul>

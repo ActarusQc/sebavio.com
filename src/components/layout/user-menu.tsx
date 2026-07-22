@@ -32,13 +32,13 @@ export function UserMenu({ email, role, displayName }: UserMenuProps) {
           <Button
             variant="outline"
             size="sm"
-            className="border-client-border text-client-text hover:bg-client-pale h-10 gap-2 rounded-full px-2.5 dark:border-white/15"
+            className="h-10 gap-2 rounded-full border-white/15 bg-white/5 px-2.5 text-white hover:bg-white/10 hover:text-white"
             aria-label="Menu profil"
           />
         }
       >
         <span
-          className="bg-client-night text-client-star inline-flex size-7 items-center justify-center rounded-full text-xs font-semibold"
+          className="inline-flex size-7 items-center justify-center rounded-full bg-[linear-gradient(135deg,#3b82f6,#8b5cf6)] text-xs font-semibold text-white"
           aria-hidden
         >
           {initial}
@@ -46,10 +46,7 @@ export function UserMenu({ email, role, displayName }: UserMenuProps) {
         <span className="hidden max-w-[10rem] truncate text-xs font-medium sm:inline">
           {label}
         </span>
-        <ChevronDown
-          className="text-client-text-muted size-3.5 shrink-0"
-          aria-hidden
-        />
+        <ChevronDown className="size-3.5 shrink-0 text-white/50" aria-hidden />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-56">
         <DropdownMenuGroup>
