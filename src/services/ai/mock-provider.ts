@@ -231,8 +231,19 @@ export class MockAiProvider implements AiProvider {
     if (this.shouldFail) {
       throw new Error("mock_openai_failure");
     }
+    const isVehicleSpecs =
+      input.systemPrompt.includes("tankCapacityL") ||
+      input.systemPrompt.includes("consommation combinée");
+    const rawText = isVehicleSpecs
+      ? JSON.stringify({
+          consumptionL100: 9.2,
+          tankCapacityL: 54,
+          confidence: "medium",
+          isFullyElectric: false,
+        })
+      : buildMockTripPlanningJson(input.userPayload);
     return {
-      rawText: buildMockTripPlanningJson(input.userPayload),
+      rawText,
       model: input.model || "mock-model",
       inputTokens: 12,
       outputTokens: 48,

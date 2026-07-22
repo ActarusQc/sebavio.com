@@ -55,6 +55,22 @@ describe("vehicleCreateSchema", () => {
     expect(result.success).toBe(true);
   });
 
+  it("accepte une création sans kilométrage ni consommation", () => {
+    const result = vehicleCreateSchema.safeParse({
+      modelId: null,
+      isManualEntry: true,
+      manualManufacturerName: "Winnebago",
+      manualModelName: "View",
+      manualYear: 2020,
+      fuelType: "diesel",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.currentOdometer).toBe(0);
+      expect(result.data.officialCombinedConsumptionL100).toBeNull();
+    }
+  });
+
   it("refuse manuel sans marque/modèle/année", () => {
     expect(
       vehicleCreateSchema.safeParse({

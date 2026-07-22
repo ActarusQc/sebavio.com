@@ -472,6 +472,32 @@ model VehicleCatalogEntry {
   @@map("vehicle_catalog_entries")
 }
 
+/// Cache partagé d’estimations conso / réservoir (NRCan + IA).
+model VehicleSpecEstimate {
+  id                 String    @id @default(uuid(4)) @db.Uuid
+  /// Clé normalisée make|model|year|configuration ou catalog:<uuid>
+  cacheKey           String    @unique @map("cache_key") @db.VarChar(400)
+  catalogEntryId     String?   @map("catalog_entry_id") @db.Uuid
+  make               String?   @db.VarChar(150)
+  model              String?   @db.VarChar(200)
+  year               Int?
+  configuration      String?   @db.VarChar(300)
+  consumptionL100    Decimal?  @map("consumption_l100") @db.Decimal(6, 2)
+  tankCapacityL      Decimal?  @map("tank_capacity_l") @db.Decimal(6, 2)
+  /// nrcan | ai_estimate | catalog_cache
+  consumptionSource  String?   @map("consumption_source") @db.VarChar(40)
+  tankCapacitySource String?   @map("tank_capacity_source") @db.VarChar(40)
+  /// high | medium | low
+  confidence         String?   @db.VarChar(20)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt          DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  @@index([catalogEntryId])
+  @@index([deletedAt])
+  @@map("vehicle_spec_estimates")
+}
+
 /// Journal de synchronisation du catalogue NRCan.
 model VehicleCatalogSync {
   id                String    @id @default(uuid(4)) @db.Uuid

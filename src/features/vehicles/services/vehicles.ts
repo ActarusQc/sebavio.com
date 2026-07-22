@@ -357,7 +357,7 @@ export async function createVehicle(
           licensePlate: input.licensePlate ?? null,
           purchaseDate: input.purchaseDate ?? null,
           purchasePrice: input.purchasePrice ?? null,
-          currentOdometer: input.currentOdometer,
+          currentOdometer: input.currentOdometer ?? 0,
           odometerUpdatedAt: new Date(),
           tankCapacityOverride: input.tankCapacityOverride ?? null,
           tankCapacitySource:

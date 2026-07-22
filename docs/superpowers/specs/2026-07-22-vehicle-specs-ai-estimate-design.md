@@ -1,7 +1,7 @@
 # Spécification — Préremplissage conso / réservoir (NRCan + IA)
 
 Date: 2026-07-22  
-Statut: **brouillon validé en dialogue** — en attente relecture fichier  
+Statut: **implémenté** — plan : `docs/superpowers/plans/2026-07-22-vehicle-specs-ai-estimate.md`  
 Réf.: catalogue NRCan (`fuel-vehicle-catalog`), formulaire véhicule (`features/vehicles`), abstraction IA (`services/ai`), estimation carburant (`docs/features/fuel-cost-estimation.md`)
 
 ## 1. Objectif

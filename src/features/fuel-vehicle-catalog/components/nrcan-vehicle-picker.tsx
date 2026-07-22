@@ -23,10 +23,21 @@ type Configuration = {
   vehicleClass: string | null;
 };
 
+export type NrcanSelectionPayload = {
+  catalogEntryId: string;
+  make: string;
+  model: string;
+  year: number;
+  configuration: string | null;
+  fuelType: string | null;
+  combinedConsumptionL100Km: number | null;
+};
+
 type NrcanVehiclePickerProps = {
   disabled?: boolean;
   initialCatalogEntryId?: string | null;
   onManualFallback: () => void;
+  onSelectionChange?: (selection: NrcanSelectionPayload | null) => void;
 };
 
 async function fetchJson<T>(url: string): Promise<T> {
@@ -49,6 +60,7 @@ function fmtL100(n: number | null | undefined): string {
 export function NrcanVehiclePicker({
   disabled,
   onManualFallback,
+  onSelectionChange,
 }: NrcanVehiclePickerProps) {
   const baseId = useId();
   const [years, setYears] = useState<number[]>([]);
@@ -296,7 +308,21 @@ export function NrcanVehiclePicker({
           onChange={(e) => {
             const id = e.target.value;
             setConfigId(id);
-            setSelected(configs.find((c) => c.id === id) ?? null);
+            const next = configs.find((c) => c.id === id) ?? null;
+            setSelected(next);
+            if (!next || !year || !make || !model) {
+              onSelectionChange?.(null);
+              return;
+            }
+            onSelectionChange?.({
+              catalogEntryId: next.id,
+              make,
+              model,
+              year: Number(year),
+              configuration: next.label,
+              fuelType: next.fuelType,
+              combinedConsumptionL100Km: next.combinedConsumptionL100Km,
+            });
           }}
         >
           <option value="">

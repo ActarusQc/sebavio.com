@@ -149,16 +149,6 @@ function refineCatalogOrManual(
         path: ["manualYear"],
       });
     }
-    if (
-      data.officialCombinedConsumptionL100 == null ||
-      data.officialCombinedConsumptionL100 <= 0
-    ) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Consommation combinée requise en saisie manuelle",
-        path: ["officialCombinedConsumptionL100"],
-      });
-    }
     return;
   }
 
@@ -270,10 +260,13 @@ export const vehicleCreateSchema = z
     modelId: uuidOrNull,
     catalogEntryId: uuidOrNull,
     isManualEntry: z.boolean().optional(),
-    currentOdometer: z.coerce
-      .number()
-      .int({ error: "Kilométrage invalide" })
-      .min(0, { error: "Kilométrage invalide" }),
+    currentOdometer: z.preprocess(
+      (v) => (v === "" || v === null || v === undefined ? 0 : v),
+      z.coerce
+        .number()
+        .int({ error: "Kilométrage invalide" })
+        .min(0, { error: "Kilométrage invalide" }),
+    ),
     ...vehicleBaseFields,
   })
   .superRefine((data, ctx) => refineCatalogOrManual(data, ctx, "create"));
@@ -357,3 +350,60 @@ export type VehicleSettingsUpdateInput = z.infer<
   typeof vehicleSettingsUpdateSchema
 >;
 export type VehiclesListInput = z.infer<typeof vehiclesListSchema>;
+
+const specsEstimateSourceSchema = z.enum([
+  "nrcan",
+  "ai_estimate",
+  "catalog_cache",
+]);
+
+export const vehicleSpecsEstimateRequestSchema = z
+  .object({
+    catalogEntryId: uuidOrNull,
+    make: optionalString(150),
+    model: optionalString(200),
+    year: z.preprocess((v) => {
+      if (v === "" || v === null || v === undefined) return null;
+      if (typeof v === "string") return Number(v);
+      return v;
+    }, z.number().int().min(1950).max(2100).nullable().optional()),
+    configuration: optionalString(300),
+    fuelType: optionalString(80),
+  })
+  .superRefine((data, ctx) => {
+    if (data.catalogEntryId) return;
+    if (!data.make?.trim() || !data.model?.trim() || data.year == null) {
+      ctx.addIssue({
+        code: "custom",
+        message: "catalogue ou marque / modèle / année requis",
+        path: ["catalogEntryId"],
+      });
+    }
+  });
+
+export const vehicleSpecsEstimateAiPayloadSchema = z.object({
+  consumptionL100: z.number().min(1).max(100).nullable().optional(),
+  tankCapacityL: z.number().min(10).max(500).nullable().optional(),
+  confidence: z.enum(["high", "medium", "low"]).nullable().optional(),
+  isFullyElectric: z.boolean().optional(),
+});
+
+export const vehicleSpecsEstimateResultSchema = z.object({
+  consumptionL100: z.number().min(1).max(100).nullable(),
+  tankCapacityL: z.number().min(10).max(500).nullable(),
+  sources: z.object({
+    consumption: specsEstimateSourceSchema.nullable(),
+    tankCapacity: specsEstimateSourceSchema.nullable(),
+  }),
+  confidence: z.enum(["high", "medium", "low"]).nullable(),
+});
+
+export type VehicleSpecsEstimateRequest = z.infer<
+  typeof vehicleSpecsEstimateRequestSchema
+>;
+export type VehicleSpecsEstimateResult = z.infer<
+  typeof vehicleSpecsEstimateResultSchema
+>;
+export type VehicleSpecsEstimateSource = z.infer<
+  typeof specsEstimateSourceSchema
+>;

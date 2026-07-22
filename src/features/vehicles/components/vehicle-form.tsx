@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   createVehicleAction,
@@ -8,8 +8,10 @@ import {
   type VehiclesActionResult,
 } from "@/features/vehicles/actions";
 import { VEHICLE_CATEGORIES } from "@/features/vehicle-catalog/constants";
-import { NrcanVehiclePicker } from "@/features/fuel-vehicle-catalog/components/nrcan-vehicle-picker";
-import { VinDecodePanel } from "@/features/vehicle-maintenance/components/vin-decode-panel";
+import {
+  NrcanVehiclePicker,
+  type NrcanSelectionPayload,
+} from "@/features/fuel-vehicle-catalog/components/nrcan-vehicle-picker";
 import type { UserVehicleDto } from "@/features/vehicles/types";
 import { FormField } from "@/components/common";
 import { Button, Input } from "@/components/ui";
@@ -24,9 +26,42 @@ const initial: VehiclesActionResult | undefined = undefined;
 const selectClassName =
   "border-input focus-visible:border-ring focus-visible:ring-ring/50 h-8 w-full rounded-lg border bg-transparent px-2.5 text-sm outline-none focus-visible:ring-3";
 
+type SpecsEstimateResult = {
+  consumptionL100: number | null;
+  tankCapacityL: number | null;
+  sources: {
+    consumption: "nrcan" | "ai_estimate" | "catalog_cache" | null;
+    tankCapacity: "nrcan" | "ai_estimate" | "catalog_cache" | null;
+  };
+  confidence: "high" | "medium" | "low" | null;
+};
+
 type VehicleFormProps = {
   vehicle?: UserVehicleDto;
 };
+
+function sourceHint(
+  source: SpecsEstimateResult["sources"]["consumption"],
+): string | undefined {
+  if (source === "nrcan") return "Source : NRCan";
+  if (source === "ai_estimate") return "Source : IA (estimé)";
+  if (source === "catalog_cache") return "Source : cache";
+  return undefined;
+}
+
+async function fetchSpecsEstimate(
+  body: Record<string, unknown>,
+): Promise<SpecsEstimateResult | null> {
+  const res = await fetch("/api/v1/vehicles/specs-estimate", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) return null;
+  const json = (await res.json()) as { data?: SpecsEstimateResult };
+  return json.data ?? null;
+}
 
 export function VehicleForm({ vehicle }: VehicleFormProps) {
   const router = useRouter();
@@ -42,13 +77,105 @@ export function VehicleForm({ vehicle }: VehicleFormProps) {
     return "catalog";
   });
 
+  const [manualMake, setManualMake] = useState(
+    vehicle?.manualManufacturerName ?? "",
+  );
+  const [manualModel, setManualModel] = useState(
+    vehicle?.manualModelName ?? "",
+  );
+  const [manualYear, setManualYear] = useState(
+    vehicle?.manualYear != null ? String(vehicle.manualYear) : "",
+  );
+  const [manualTrim, setManualTrim] = useState(vehicle?.manualTrim ?? "");
+  const [manualFuelType, setManualFuelType] = useState(
+    vehicle?.fuelType ?? "regular",
+  );
+  const [officialCombined, setOfficialCombined] = useState(
+    vehicle?.officialCombinedConsumptionL100 ?? "",
+  );
+  const [officialCombinedDirty, setOfficialCombinedDirty] = useState(false);
+
+  const [estimate, setEstimate] = useState<SpecsEstimateResult | null>(null);
+  const [estimateToken, setEstimateToken] = useState(0);
+  const [estimating, setEstimating] = useState(false);
+  const [dirtyConso, setDirtyConso] = useState(false);
+  const [dirtyTank, setDirtyTank] = useState(false);
+  const estimateSeq = useRef(0);
+  const editEstimateStarted = useRef(false);
+
   useEffect(() => {
     if (state?.ok && state.id && !isEdit) {
       router.push(`/dashboard/vehicles/${state.id}`);
     }
   }, [state, isEdit, router]);
 
+  async function runEstimate(body: Record<string, unknown>) {
+    const seq = ++estimateSeq.current;
+    setEstimating(true);
+    try {
+      const data = await fetchSpecsEstimate(body);
+      if (seq !== estimateSeq.current) return;
+      if (!data) return;
+      setEstimate(data);
+      setEstimateToken((t) => t + 1);
+      if (
+        !officialCombinedDirty &&
+        data.consumptionL100 != null &&
+        mode === "manual"
+      ) {
+        setOfficialCombined(String(data.consumptionL100));
+      }
+    } finally {
+      if (seq === estimateSeq.current) setEstimating(false);
+    }
+  }
+
+  function handleCatalogSelection(selection: NrcanSelectionPayload | null) {
+    if (!selection) return;
+    void runEstimate({
+      catalogEntryId: selection.catalogEntryId,
+      make: selection.make,
+      model: selection.model,
+      year: selection.year,
+      configuration: selection.configuration,
+      fuelType: selection.fuelType,
+    });
+  }
+
+  useEffect(() => {
+    if (mode !== "manual") return;
+    const make = manualMake.trim();
+    const model = manualModel.trim();
+    const year = Number(manualYear);
+    if (!make || !model || !Number.isFinite(year) || year < 1950) return;
+
+    const handle = window.setTimeout(() => {
+      void runEstimate({
+        make,
+        model,
+        year,
+        configuration: manualTrim.trim() || null,
+        fuelType: manualFuelType || null,
+      });
+    }, 600);
+    return () => window.clearTimeout(handle);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- debounce manuel volontaire
+  }, [mode, manualMake, manualModel, manualYear, manualTrim, manualFuelType]);
+
+  useEffect(() => {
+    if (!isEdit || !vehicle?.catalogEntryId || mode !== "catalog") return;
+    if (editEstimateStarted.current) return;
+    editEstimateStarted.current = true;
+    const catalogEntryId = vehicle.catalogEntryId;
+    const handle = window.setTimeout(() => {
+      void runEstimate({ catalogEntryId });
+    }, 0);
+    return () => window.clearTimeout(handle);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- une fois à l’édition catalogue
+  }, [isEdit, vehicle?.catalogEntryId, mode]);
+
   const manufacturerConso =
+    estimate?.consumptionL100 ??
     vehicle?.effectiveSpecs.manufacturerConsumptionL100 ??
     (vehicle?.officialCombinedConsumptionL100 != null
       ? Number(vehicle.officialCombinedConsumptionL100)
@@ -58,6 +185,7 @@ export function VehicleForm({ vehicle }: VehicleFormProps) {
       ? Number(vehicle.customConsumptionL100)
       : null;
   const manufacturerTank =
+    estimate?.tankCapacityL ??
     vehicle?.effectiveSpecs.manufacturerTankCapacityL ??
     (vehicle?.manufacturerTankCapacityL != null
       ? Number(vehicle.manufacturerTankCapacityL)
@@ -72,7 +200,18 @@ export function VehicleForm({ vehicle }: VehicleFormProps) {
       "electric",
     ) ||
     vehicle?.effectiveSpecs.fuelType === "plugin_hybrid" ||
-    Boolean(vehicle?.catalogElectricRangeKm);
+    Boolean(vehicle?.catalogElectricRangeKm) ||
+    manualFuelType === "electric";
+
+  const consoHint =
+    sourceHint(estimate?.sources.consumption ?? null) ??
+    (vehicle?.realAvgConsumption
+      ? `Moyenne des pleins : ${vehicle.realAvgConsumption} L/100 km (utilisée si aucune valeur personnalisée).`
+      : undefined);
+
+  const tankHint =
+    sourceHint(estimate?.sources.tankCapacity ?? null) ??
+    "Utile pour l'estimation carburant. Le catalogue NRCan ne fournit généralement pas cette donnée.";
 
   return (
     <form action={formAction} className="grid gap-4 sm:grid-cols-2">
@@ -82,6 +221,7 @@ export function VehicleForm({ vehicle }: VehicleFormProps) {
         <NrcanVehiclePicker
           disabled={pending}
           onManualFallback={() => setMode("manual")}
+          onSelectionChange={handleCatalogSelection}
         />
       ) : null}
 
@@ -138,7 +278,8 @@ export function VehicleForm({ vehicle }: VehicleFormProps) {
               name="manualManufacturerName"
               required
               maxLength={150}
-              defaultValue={vehicle?.manualManufacturerName ?? ""}
+              value={manualMake}
+              onChange={(e) => setManualMake(e.target.value)}
             />
           </FormField>
           <FormField htmlFor="veh-man-model" label="Modèle" required>
@@ -147,7 +288,8 @@ export function VehicleForm({ vehicle }: VehicleFormProps) {
               name="manualModelName"
               required
               maxLength={150}
-              defaultValue={vehicle?.manualModelName ?? ""}
+              value={manualModel}
+              onChange={(e) => setManualModel(e.target.value)}
             />
           </FormField>
           <FormField htmlFor="veh-man-year" label="Année" required>
@@ -158,7 +300,8 @@ export function VehicleForm({ vehicle }: VehicleFormProps) {
               required
               min={1950}
               max={2100}
-              defaultValue={vehicle?.manualYear ?? ""}
+              value={manualYear}
+              onChange={(e) => setManualYear(e.target.value)}
             />
           </FormField>
           <FormField htmlFor="veh-man-trim" label="Configuration / version">
@@ -166,7 +309,8 @@ export function VehicleForm({ vehicle }: VehicleFormProps) {
               id="veh-man-trim"
               name="manualTrim"
               maxLength={150}
-              defaultValue={vehicle?.manualTrim ?? ""}
+              value={manualTrim}
+              onChange={(e) => setManualTrim(e.target.value)}
             />
           </FormField>
           <FormField htmlFor="veh-man-cat" label="Catégorie">
@@ -194,7 +338,8 @@ export function VehicleForm({ vehicle }: VehicleFormProps) {
               name="fuelType"
               className={selectClassName}
               required
-              defaultValue={vehicle?.fuelType ?? "regular"}
+              value={manualFuelType}
+              onChange={(e) => setManualFuelType(e.target.value)}
             >
               {FUEL_TYPE_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -206,15 +351,17 @@ export function VehicleForm({ vehicle }: VehicleFormProps) {
           <FormField
             htmlFor="veh-off-combined"
             label="Consommation combinée (L/100 km)"
-            required
           >
             <Input
               id="veh-off-combined"
               name="officialCombinedConsumptionL100"
               type="text"
               inputMode="decimal"
-              required
-              defaultValue={vehicle?.officialCombinedConsumptionL100 ?? ""}
+              value={officialCombined}
+              onChange={(e) => {
+                setOfficialCombinedDirty(true);
+                setOfficialCombined(e.target.value);
+              }}
             />
           </FormField>
           <FormField
@@ -252,17 +399,12 @@ export function VehicleForm({ vehicle }: VehicleFormProps) {
           defaultValue={vehicle?.nickname ?? ""}
         />
       </FormField>
-      <FormField
-        htmlFor="veh-odo"
-        label="Kilométrage actuel"
-        required={!isEdit}
-      >
+      <FormField htmlFor="veh-odo" label="Kilométrage actuel">
         <Input
           id="veh-odo"
           name="currentOdometer"
           type="number"
           min={0}
-          required={!isEdit}
           defaultValue={vehicle?.currentOdometer ?? ""}
         />
       </FormField>
@@ -301,35 +443,6 @@ export function VehicleForm({ vehicle }: VehicleFormProps) {
         </FormField>
       ) : null}
 
-      <VinDecodePanel defaultVin={vehicle?.vin ?? ""} />
-
-      <FormField htmlFor="veh-plate" label="Plaque">
-        <Input
-          id="veh-plate"
-          name="licensePlate"
-          maxLength={20}
-          defaultValue={vehicle?.licensePlate ?? ""}
-        />
-      </FormField>
-      <FormField htmlFor="veh-purchase-date" label="Date d'achat">
-        <Input
-          id="veh-purchase-date"
-          name="purchaseDate"
-          type="date"
-          defaultValue={vehicle?.purchaseDate ?? ""}
-        />
-      </FormField>
-      <FormField htmlFor="veh-purchase-price" label="Prix d'achat">
-        <Input
-          id="veh-purchase-price"
-          name="purchasePrice"
-          type="number"
-          step="0.01"
-          min={0}
-          defaultValue={vehicle?.purchasePrice ?? ""}
-        />
-      </FormField>
-
       <div className="border-t pt-4 sm:col-span-2">
         <h3 className="mb-3 text-sm font-semibold">
           Caractéristiques pour les calculs
@@ -337,6 +450,7 @@ export function VehicleForm({ vehicle }: VehicleFormProps) {
         <p className="text-muted-foreground mb-4 text-xs">
           Les valeurs constructeur / catalogue servent de suggestion. Vous
           pouvez les adapter à la réalité de votre véhicule.
+          {estimating ? " Estimation en cours…" : null}
         </p>
       </div>
 
@@ -354,6 +468,7 @@ export function VehicleForm({ vehicle }: VehicleFormProps) {
       ) : null}
 
       <OverridableNumberField
+        key={dirtyConso ? "conso-user" : `conso-${estimateToken}`}
         id="veh-conso"
         name="customConsumptionL100"
         label="Consommation moyenne"
@@ -368,15 +483,12 @@ export function VehicleForm({ vehicle }: VehicleFormProps) {
         min={1}
         max={100}
         step="0.01"
-        required={!manufacturerConso}
-        hint={
-          vehicle?.realAvgConsumption
-            ? `Moyenne des pleins : ${vehicle.realAvgConsumption} L/100 km (utilisée si aucune valeur personnalisée).`
-            : undefined
-        }
+        onDirtyChange={setDirtyConso}
+        hint={consoHint}
       />
 
       <OverridableNumberField
+        key={dirtyTank ? "tank-user" : `tank-${estimateToken}`}
         id="veh-tank"
         name="tankCapacityOverride"
         label="Capacité du réservoir"
@@ -387,8 +499,8 @@ export function VehicleForm({ vehicle }: VehicleFormProps) {
         min={10}
         max={500}
         step="0.1"
-        required={!customTank && !manufacturerTank}
-        hint="Obligatoire pour l'estimation carburant. Le catalogue NRCan ne fournit généralement pas cette donnée."
+        onDirtyChange={setDirtyTank}
+        hint={tankHint}
       />
       {manufacturerTank != null ? (
         <input
@@ -426,55 +538,6 @@ export function VehicleForm({ vehicle }: VehicleFormProps) {
           />
         </>
       ) : null}
-
-      <OverridableNumberField
-        id="veh-length"
-        name="specLengthM"
-        label="Longueur"
-        unit="m"
-        suggestedValue={
-          vehicle?.model
-            ? vehicle.effectiveSpecs.lengthM != null &&
-              vehicle.specOverrides?.lengthM == null
-              ? vehicle.effectiveSpecs.lengthM
-              : null
-            : null
-        }
-        customValue={vehicle?.specOverrides?.lengthM ?? null}
-        defaultValue={vehicle?.effectiveSpecs.lengthM}
-        step="0.01"
-      />
-      <OverridableNumberField
-        id="veh-width"
-        name="specWidthM"
-        label="Largeur"
-        unit="m"
-        suggestedValue={null}
-        customValue={vehicle?.specOverrides?.widthM ?? null}
-        defaultValue={vehicle?.effectiveSpecs.widthM}
-        step="0.01"
-      />
-      <OverridableNumberField
-        id="veh-height"
-        name="specHeightM"
-        label="Hauteur"
-        unit="m"
-        suggestedValue={null}
-        customValue={vehicle?.specOverrides?.heightM ?? null}
-        defaultValue={vehicle?.effectiveSpecs.heightM}
-        step="0.01"
-      />
-      <OverridableNumberField
-        id="veh-weight"
-        name="specWeightKg"
-        label="Poids"
-        unit="kg"
-        suggestedValue={null}
-        customValue={vehicle?.specOverrides?.weightKg ?? null}
-        defaultValue={vehicle?.effectiveSpecs.weightKg}
-        step="1"
-        inputMode="numeric"
-      />
 
       {!isEdit ? (
         <label className="flex items-center gap-2 text-sm sm:col-span-2">

@@ -23,3 +23,8 @@ export {
 } from "./mappers";
 
 export { assertOdometerNotDecreasing, bumpOdometerIfHigher } from "./odometer";
+
+export {
+  estimateVehicleSpecs,
+  assertSpecsEstimateRateLimit,
+} from "./specs-estimate";

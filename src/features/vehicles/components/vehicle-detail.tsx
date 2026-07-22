@@ -56,14 +56,6 @@ export function VehicleDetailPanels({ vehicle }: VehicleDetailProps) {
             <dd>{vehicle.currentOdometer.toLocaleString("fr-CA")} km</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">VIN</dt>
-            <dd>{vehicle.vin ?? "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Plaque</dt>
-            <dd>{vehicle.licensePlate ?? "—"}</dd>
-          </div>
-          <div>
             <dt className="text-muted-foreground">Consommation utilisée</dt>
             <dd>
               {vehicle.effectiveSpecs.consumptionLPer100Km != null

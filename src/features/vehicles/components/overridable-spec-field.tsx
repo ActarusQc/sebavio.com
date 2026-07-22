@@ -22,6 +22,7 @@ type OverridableNumberFieldProps = {
   inputMode?: "decimal" | "numeric";
   placeholder?: string;
   hint?: string;
+  onDirtyChange?: (dirty: boolean) => void;
 };
 
 /**
@@ -44,6 +45,7 @@ export function OverridableNumberField({
   inputMode = "decimal",
   placeholder,
   hint,
+  onDirtyChange,
 }: OverridableNumberFieldProps) {
   const initial =
     defaultValue != null && defaultValue !== ""
@@ -99,6 +101,7 @@ export function OverridableNumberField({
           value={value}
           onChange={(e) => {
             setClearedCustom(false);
+            onDirtyChange?.(true);
             setValue(e.target.value);
           }}
           className="flex-1"
