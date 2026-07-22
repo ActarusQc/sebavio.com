@@ -6,8 +6,10 @@ import { AITripComposer } from "@/features/ai-trip-planner/components/ai-trip-co
 import { AITripMessage } from "@/features/ai-trip-planner/components/ai-trip-message";
 import { AIAddressInput } from "@/features/ai-trip-planner/components/ai-address-input";
 import { AIItineraryProposal } from "@/features/ai-trip-planner/components/ai-itinerary-proposal";
+import { AILodgingOptions } from "@/features/ai-trip-planner/components/ai-lodging-options";
 import type {
   ItineraryProposalDto,
+  LodgingOptionDto,
   OriginSuggestionDto,
   PlannerMessage,
   RequestedInputDto,
@@ -23,6 +25,9 @@ type Props = {
   /** Autorité serveur — remplace les QR du dernier message. */
   activeQuickReplies?: string[];
   proposal?: ItineraryProposalDto | null;
+  lodgingOptions?: LodgingOptionDto[];
+  lodgingTypeLabel?: string | null;
+  showLodgingPicker?: boolean;
   homeCity?: string | null;
   originSuggestions?: OriginSuggestionDto[];
   onSend: (content: string) => void;
@@ -31,6 +36,9 @@ type Props = {
     address: AddressSelection,
   ) => void;
   onUseHome?: () => void;
+  onSelectLodging?: (option: LodgingOptionDto) => void;
+  onSkipLodging?: () => void;
+  onRefreshLodging?: () => void;
   onRetry?: () => void;
 };
 
@@ -42,11 +50,17 @@ export function AITripConversation({
   requestedInput,
   activeQuickReplies,
   proposal,
+  lodgingOptions = [],
+  lodgingTypeLabel,
+  showLodgingPicker,
   homeCity,
   originSuggestions,
   onSend,
   onSelectAddress,
   onUseHome,
+  onSelectLodging,
+  onSkipLodging,
+  onRefreshLodging,
   onRetry,
 }: Props) {
   const listRef = useRef<HTMLDivElement>(null);
@@ -113,8 +127,19 @@ export function AITripConversation({
           );
         })}
 
-        {proposal && !sending ? (
+        {proposal && !sending && !showLodgingPicker ? (
           <AIItineraryProposal proposal={proposal} />
+        ) : null}
+
+        {showLodgingPicker && onSelectLodging ? (
+          <AILodgingOptions
+            options={lodgingOptions}
+            lodgingTypeLabel={lodgingTypeLabel}
+            disabled={disabled || sending}
+            onSelect={onSelectLodging}
+            onSkip={onSkipLodging}
+            onRefresh={onRefreshLodging}
+          />
         ) : null}
 
         {showAddress && onSelectAddress ? (

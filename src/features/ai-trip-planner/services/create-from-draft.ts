@@ -181,6 +181,7 @@ export async function createTripFromPlanningSession(
           address: stop.address ?? stop.name,
           latitude: stop.latitude,
           longitude: stop.longitude,
+          placeId: stop.placeId,
           stopType: mapStopType(stop.category),
           direction: "outbound",
           durationMinutes: stop.durationMinutes ?? 60,

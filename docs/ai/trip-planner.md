@@ -29,6 +29,10 @@ Résolues côté serveur (`lib/resolve-relative-dates.ts`) selon le fuseau du pr
 « Ce week-end » → samedi/dimanche pertinents en année courante (jamais l’IA).
 Placeholders génériques (« Arrivée et balade… ») non confirmables ; gastronomie → arrêts concrets.
 
+## Hébergement
+
+« Gîte » (QC) → `bed_and_breakfast` (jamais motel). Recherche Places réelle, choix utilisateur obligatoire avant confirmation (`POST …/lodging`).
+
 ## Machine d’états (serveur = autorité)
 
 Étapes : `trip_type` → `origin` → `destination_mode` → `destination_radius` → `destination` → `dates` → `travelers` → `vehicle` → `preferences` → `itinerary_proposal` → `confirmation`.

@@ -37,6 +37,13 @@ import {
   isHomeQuickReply,
   isOtherAddressQuickReply,
 } from "@/features/ai-trip-planner/services/apply-place";
+import {
+  applyPlanningLodging,
+  findLodgingOptionByReply,
+} from "@/features/ai-trip-planner/services/apply-lodging";
+import { searchLodgingOptions } from "@/features/ai-trip-planner/services/search-lodging";
+import { ensureDraftPlacesGeocoded } from "@/features/ai-trip-planner/services/geocode-places";
+import { parseAccommodationRequest } from "@/features/ai-trip-planner/lib/accommodation";
 import { DEFAULT_QUEBEC_ORIGIN_SUGGESTIONS } from "@/features/ai-trip-planner/constants";
 import {
   buildControlsForStep,
@@ -551,6 +558,128 @@ export async function sendPlanningMessage(
       });
     }
 
+    // ——— Hébergement (gîte, etc.) : résolution serveur, pas l’IA ———
+    if (/^sans h[ée]bergement$/i.test(trimmed) && draftSeed.lodgingRequested) {
+      return applyPlanningLodging(userId, sessionId, {
+        skip: true,
+        expectedVersion: session.sessionVersion,
+      });
+    }
+
+    const matchedLodging = findLodgingOptionByReply(draftSeed, trimmed);
+    if (matchedLodging && draftSeed.lodgingRequested) {
+      return applyPlanningLodging(userId, sessionId, {
+        optionId: matchedLodging.id,
+        optionName: matchedLodging.name,
+        expectedVersion: session.sessionVersion,
+      });
+    }
+
+    const accommodation = parseAccommodationRequest(trimmed);
+    const wantsLodgingRefresh =
+      /voir d[’']autres options|relancer la recherche/i.test(trimmed) &&
+      draftSeed.lodgingRequested;
+
+    if (accommodation.requested || wantsLodgingRefresh) {
+      if (accommodation.requested) {
+        draftSeed = {
+          ...draftSeed,
+          lodgingRequested: true,
+          accommodationType: accommodation.type,
+          lodgingType: accommodation.label,
+          lodgingSelection: null,
+          proposalConfirmed: false,
+          // Retirer un éventuel motel inventé par l’IA
+          stops: draftSeed.stops.filter(
+            (s) =>
+              !(
+                s.category === "lodging" &&
+                /\bmotel\b/i.test(s.name) &&
+                accommodation.type === "bed_and_breakfast"
+              ),
+          ),
+        };
+      }
+
+      try {
+        draftSeed = await ensureDraftPlacesGeocoded(userId, draftSeed);
+      } catch {
+        // Continuer : la recherche peut échouer sans coords
+      }
+
+      const searchAcc = accommodation.requested
+        ? accommodation
+        : parseAccommodationRequest(draftSeed.lodgingType ?? "gîte").requested
+          ? parseAccommodationRequest(draftSeed.lodgingType ?? "gîte")
+          : {
+              requested: true,
+              type:
+                draftSeed.accommodationType ?? ("bed_and_breakfast" as const),
+              label: draftSeed.lodgingType ?? "Gîte / couette et café",
+              searchQuery: "gîte touristique couette et café bed and breakfast",
+              placeTypes: ["bed_and_breakfast", "guest_house", "lodging"],
+            };
+
+      const { options, areaLabel } = await searchLodgingOptions({
+        userId,
+        sessionId,
+        draft: draftSeed,
+        accommodation: searchAcc,
+      });
+
+      draftSeed = {
+        ...draftSeed,
+        lodgingOptions: options,
+        lodgingRequested: true,
+      };
+
+      const lodgingControls = buildControlsForStep({
+        step: "lodging",
+        draft: draftSeed,
+        ownedVehicles,
+        homeCity: userCtx.homeCity,
+        hasHome: Boolean(userCtx.home),
+        originSuggestions: userCtx.originSuggestions,
+        hasProposal: hasItineraryProposal(draftSeed),
+      });
+
+      const area =
+        areaLabel ?? draftSeed.destination.city ?? "votre destination";
+      const typeLabel = draftSeed.lodgingType ?? "hébergement";
+      const assistantMessage = {
+        id: randomUUID(),
+        role: "assistant" as const,
+        content:
+          options.length > 0
+            ? `Vous souhaitez un ${typeLabel.toLowerCase()}. Voici des établissements réels près de ${area}. Choisissez-en un pour l’ajouter à l’itinéraire.`
+            : `Vous souhaitez un ${typeLabel.toLowerCase()} près de ${area}, mais je n’ai pas trouvé d’établissement pour le moment. Vous pouvez relancer la recherche ou continuer sans hébergement.`,
+        createdAt: new Date().toISOString(),
+        quickReplies: lodgingControls.quickReplies,
+      };
+
+      const updated = await prisma.aiTripPlanningSession.update({
+        where: { id: session.id },
+        data: {
+          sessionVersion: { increment: 1 },
+          status: "proposing",
+          messages: stripHistoricalQuickReplies([
+            ...withUser,
+            assistantMessage,
+          ]) as unknown as Prisma.InputJsonValue,
+          structuredDraft: draftSeed as unknown as Prisma.InputJsonValue,
+        },
+      });
+      success = true;
+      return toSessionDto(updated, {
+        currentStep: "lodging",
+        quickReplies: lodgingControls.quickReplies,
+        requestedInput: lodgingControls.requestedInput,
+        originSuggestions: userCtx.originSuggestions,
+        homeCity: userCtx.homeCity,
+        ownedVehicles,
+      });
+    }
+
     const systemPrompt = buildTripPlannerSystemPrompt({
       vehicles: ownedVehicles,
       groups: ownedGroups,
@@ -840,6 +969,37 @@ export async function sendPlanningMessage(
         assistantText =
           dateConfirmationMessage ??
           `Les dates sont notées (${draft.departureDate} → ${draft.returnDate}). Continuons.`;
+      }
+    }
+
+    // Hébergement en attente : jamais confirmer ni afficher les thèmes
+    if (
+      draft.lodgingRequested &&
+      !(draft.lodgingSelection?.placeId && draft.lodgingSelection?.name)
+    ) {
+      currentStep = "lodging";
+      status = "proposing";
+      const lodgingControls = buildControlsForStep({
+        step: "lodging",
+        draft,
+        ownedVehicles,
+        homeCity: userCtx.homeCity,
+        hasHome: Boolean(userCtx.home),
+        originSuggestions: userCtx.originSuggestions,
+        hasProposal,
+      });
+      quickReplies = lodgingControls.quickReplies;
+      if (
+        /\bmotel\b/i.test(assistantText) &&
+        draft.accommodationType === "bed_and_breakfast"
+      ) {
+        assistantText =
+          lodgingControls.forceAssistantMessage ??
+          "Pour un gîte (couette et café), choisissez un établissement parmi les options ci-dessous — pas un motel.";
+      } else {
+        assistantText =
+          lodgingControls.forceAssistantMessage ??
+          `Sélectionnez un ${(draft.lodgingType ?? "hébergement").toLowerCase()} parmi les options proposées.`;
       }
     }
 

@@ -30,6 +30,7 @@ export function AITripPlannerPage() {
     successTripId,
     sendMessage,
     selectPlace,
+    selectLodging,
     restart,
     createTrip,
     retry,
@@ -130,8 +131,17 @@ export function AITripPlannerPage() {
             disabled={session.status === "created" || creating}
             error={error}
             requestedInput={session.requestedInput}
-            activeQuickReplies={session.quickReplies}
+            activeQuickReplies={
+              session.currentStep === "lodging" ? [] : session.quickReplies
+            }
             proposal={session.proposal}
+            showLodgingPicker={
+              session.currentStep === "lodging" ||
+              (session.draft.lodgingRequested &&
+                !session.draft.lodgingSelection?.placeId)
+            }
+            lodgingOptions={session.draft.lodgingOptions}
+            lodgingTypeLabel={session.draft.lodgingType}
             homeCity={session.homeCity}
             originSuggestions={session.originSuggestions}
             onSend={(content) => void sendMessage(content)}
@@ -139,6 +149,9 @@ export function AITripPlannerPage() {
               void selectPlace(field, { address })
             }
             onUseHome={() => void selectPlace("origin", { useHome: true })}
+            onSelectLodging={(option) => void selectLodging({ option })}
+            onSkipLodging={() => void selectLodging({ skip: true })}
+            onRefreshLodging={() => void selectLodging({ refresh: true })}
             onRetry={() => void retry()}
           />
         </div>

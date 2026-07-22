@@ -14,6 +14,7 @@ export const PLANNER_STEPS = [
   "travelers",
   "vehicle",
   "preferences",
+  "lodging",
   "itinerary_proposal",
   "confirmation",
   "created",
@@ -217,6 +218,14 @@ export function resolveCurrentStep(
     !draft.budgetLevel
   ) {
     return "preferences";
+  }
+
+  // Hébergement demandé mais non sélectionné — prioritaire avant confirmation
+  if (
+    draft.lodgingRequested &&
+    !(draft.lodgingSelection?.placeId && draft.lodgingSelection?.name)
+  ) {
+    return "lodging";
   }
 
   if (!hasItineraryProposal(draft)) {

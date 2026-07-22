@@ -26,6 +26,13 @@ export function detectMissingFields(draft: TripDraftParsed): string[] {
     missing.push("itineraryProposal");
   }
 
+  if (
+    draft.lodgingRequested &&
+    !(draft.lodgingSelection?.placeId && draft.lodgingSelection?.name)
+  ) {
+    missing.push("lodgingSelection");
+  }
+
   return missing;
 }
 
@@ -45,10 +52,15 @@ function detectMissingFieldsBasicsComplete(draft: TripDraftParsed): boolean {
 
 /** Champs scalaires seuls (sans exiger la proposition). */
 export function detectMissingScalarFields(draft: TripDraftParsed): string[] {
-  return detectMissingFields(draft).filter((f) => f !== "itineraryProposal");
+  return detectMissingFields(draft).filter(
+    (f) => f !== "itineraryProposal" && f !== "lodgingSelection",
+  );
 }
 
 export function isDraftReadyForCreation(draft: TripDraftParsed): boolean {
+  if (draft.lodgingRequested && !draft.lodgingSelection?.placeId) {
+    return false;
+  }
   return (
     detectMissingScalarFields(draft).length === 0 && hasItineraryProposal(draft)
   );

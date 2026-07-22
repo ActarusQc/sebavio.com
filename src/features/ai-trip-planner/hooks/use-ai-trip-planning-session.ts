@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import type {
+  LodgingOptionDto,
   TripPlannerAccessDto,
   TripPlannerSessionDto,
 } from "@/features/ai-trip-planner/types";
@@ -250,6 +251,55 @@ export function useAITripPlanningSession() {
     [session, sending],
   );
 
+  const selectLodging = useCallback(
+    async (options: {
+      option?: LodgingOptionDto | null;
+      skip?: boolean;
+      refresh?: boolean;
+    }) => {
+      if (!session || sending) return;
+      if (options.refresh) {
+        await sendMessage("Voir d’autres options");
+        return;
+      }
+      setSending(true);
+      setError(null);
+      try {
+        const res = await fetch(
+          `/api/ai-trip-planner/session/${session.id}/lodging`,
+          {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              optionId: options.option?.id,
+              optionName: options.option?.name,
+              skip: Boolean(options.skip),
+              expectedVersion: session.sessionVersion,
+            }),
+          },
+        );
+        const data = await parseJson<{ session: TripPlannerSessionDto }>(res);
+        startTransition(() =>
+          setSession((prev) => {
+            if (!prev) return data.session;
+            if (data.session.sessionVersion < prev.sessionVersion) return prev;
+            return data.session;
+          }),
+        );
+      } catch (e) {
+        setError(
+          e instanceof Error
+            ? e.message
+            : "Impossible d’enregistrer l’hébergement. Réessayez.",
+        );
+      } finally {
+        setSending(false);
+      }
+    },
+    [session, sending, sendMessage],
+  );
+
   const createTrip = useCallback(async () => {
     if (!session || createLockRef.current || creating) return null;
     createLockRef.current = true;
@@ -295,6 +345,7 @@ export function useAITripPlanningSession() {
     successTripId,
     sendMessage,
     selectPlace,
+    selectLodging,
     restart,
     createTrip,
     retry: bootstrap,

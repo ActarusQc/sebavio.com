@@ -42,6 +42,31 @@ export type AiSuggestion = {
   accepted: boolean;
 };
 
+export type LodgingOptionDto = {
+  id: string;
+  name: string;
+  address: string | null;
+  city: string | null;
+  placeId: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  rating: number | null;
+  ratingCount: number | null;
+  googleMapsUrl: string | null;
+  primaryType: string | null;
+};
+
+export type LodgingSelectionDto = {
+  name: string;
+  placeId: string | null;
+  address: string | null;
+  city: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  rating: number | null;
+  googleMapsUrl: string | null;
+};
+
 export type TripDraft = {
   title: string | null;
   origin: PlaceRef;
@@ -60,6 +85,19 @@ export type TripDraft = {
   preferences: string[];
   constraints: string[];
   lodgingType: string | null;
+  accommodationType:
+    | "bed_and_breakfast"
+    | "inn"
+    | "hotel"
+    | "motel"
+    | "vacation_rental"
+    | "campground"
+    | "hostel"
+    | "other"
+    | null;
+  lodgingRequested: boolean;
+  lodgingOptions: LodgingOptionDto[];
+  lodgingSelection: LodgingSelectionDto | null;
   pace: string | null;
   stops: StopDraft[];
   activities: StopDraft[];

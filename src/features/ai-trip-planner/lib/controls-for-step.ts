@@ -205,6 +205,30 @@ export function buildControlsForStep(input: {
         },
       };
 
+    case "lodging": {
+      const optionLabels = draft.lodgingOptions
+        .slice(0, 5)
+        .map((o) => o.name.slice(0, 60));
+      const typeLabel = draft.lodgingType ?? "hébergement";
+      return {
+        quickReplies:
+          optionLabels.length > 0
+            ? [...optionLabels, "Voir d’autres options", "Sans hébergement"]
+            : ["Relancer la recherche", "Sans hébergement"],
+        requestedInput: {
+          type: "choice",
+          field: "lodging",
+          placeholder: `Choisissez un ${typeLabel.toLowerCase()}`,
+          countryBias: "CA",
+          regionBias: "QC",
+        },
+        forceAssistantMessage:
+          optionLabels.length > 0
+            ? `Voici des établissements correspondant à « ${typeLabel} ». Sélectionnez celui que vous préférez pour l’ajouter à l’itinéraire.`
+            : `Je n’ai pas encore trouvé d’établissement pour « ${typeLabel} ». Souhaitez-vous relancer la recherche ou continuer sans hébergement?`,
+      };
+    }
+
     case "itinerary_proposal":
       return {
         quickReplies: [
@@ -224,6 +248,25 @@ export function buildControlsForStep(input: {
       };
 
     case "confirmation":
+      if (
+        draft.lodgingRequested &&
+        !(draft.lodgingSelection?.placeId && draft.lodgingSelection?.name)
+      ) {
+        return {
+          quickReplies: draft.lodgingOptions
+            .slice(0, 4)
+            .map((o) => o.name.slice(0, 60)),
+          requestedInput: {
+            type: "choice",
+            field: "lodging",
+            placeholder: null,
+            countryBias: "CA",
+            regionBias: "QC",
+          },
+          forceAssistantMessage:
+            "Avant de confirmer, choisissez un hébergement parmi les options proposées.",
+        };
+      }
       if (!hasProposal) {
         return {
           quickReplies: [GENERATE_ITINERARY],

@@ -141,11 +141,19 @@ export function AITripSummary({
           accent
         />
         <SummaryRow icon={<Sparkles />} label="Style" value={style || null} />
-        {draft.lodgingType ? (
+        {draft.lodgingSelection?.name || draft.lodgingType ? (
           <SummaryRow
             icon={<MapPin />}
             label="Hébergement"
-            value={draft.lodgingType}
+            value={
+              draft.lodgingSelection?.name
+                ? draft.lodgingType
+                  ? `${draft.lodgingSelection.name} (${draft.lodgingType})`
+                  : draft.lodgingSelection.name
+                : draft.lodgingRequested
+                  ? `${draft.lodgingType ?? "Hébergement"} — à choisir`
+                  : draft.lodgingType
+            }
           />
         ) : null}
         {draft.pace ? (

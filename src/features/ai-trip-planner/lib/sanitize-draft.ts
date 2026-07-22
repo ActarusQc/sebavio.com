@@ -189,6 +189,26 @@ export function sanitizeAndMergeDraft(input: {
         : undefined,
       prev.lodgingType,
     ),
+    accommodationType: pickScalar(
+      typeof raw.accommodationType === "string" ||
+        raw.accommodationType === null
+        ? (raw.accommodationType as TripDraftParsed["accommodationType"])
+        : undefined,
+      prev.accommodationType,
+    ),
+    lodgingRequested:
+      typeof raw.lodgingRequested === "boolean"
+        ? raw.lodgingRequested
+        : prev.lodgingRequested,
+    lodgingOptions: Array.isArray(raw.lodgingOptions)
+      ? (raw.lodgingOptions as TripDraftParsed["lodgingOptions"])
+      : prev.lodgingOptions,
+    lodgingSelection:
+      raw.lodgingSelection === null
+        ? null
+        : raw.lodgingSelection !== undefined
+          ? (raw.lodgingSelection as TripDraftParsed["lodgingSelection"])
+          : prev.lodgingSelection,
     pace: pickScalar(
       typeof raw.pace === "string" || raw.pace === null
         ? (raw.pace as string | null)

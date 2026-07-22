@@ -130,6 +130,46 @@ export const budgetLevelSchema = z.enum([
   "premium",
 ]);
 
+export const accommodationTypeSchema = z.enum([
+  "bed_and_breakfast",
+  "inn",
+  "hotel",
+  "motel",
+  "vacation_rental",
+  "campground",
+  "hostel",
+  "other",
+]);
+
+export const lodgingOptionSchema = z.object({
+  id: z.string().min(1).max(80),
+  name: z.string().trim().min(1).max(200),
+  address: nullableString(2000),
+  city: nullableString(120),
+  placeId: nullableString(255),
+  latitude: nullableNumber,
+  longitude: nullableNumber,
+  rating: nullableNumber,
+  ratingCount: nullableNumber,
+  googleMapsUrl: nullableString(2000),
+  primaryType: nullableString(80),
+});
+
+export const lodgingSelectionSchema = z
+  .object({
+    name: z.string().trim().min(1).max(200),
+    placeId: nullableString(255),
+    address: nullableString(2000),
+    city: nullableString(120),
+    latitude: nullableNumber,
+    longitude: nullableNumber,
+    rating: nullableNumber,
+    googleMapsUrl: nullableString(2000),
+  })
+  .nullable()
+  .optional()
+  .transform((v) => v ?? null);
+
 export const sessionStatusSchema = z.enum([
   "collecting",
   "proposing",
@@ -185,6 +225,14 @@ export const tripDraftSchema = z
     preferences: z.array(z.string().max(120)).max(30).default([]),
     constraints: z.array(z.string().max(200)).max(30).default([]),
     lodgingType: nullableString(120),
+    accommodationType: accommodationTypeSchema
+      .nullable()
+      .optional()
+      .catch(null)
+      .transform((v) => v ?? null),
+    lodgingRequested: z.boolean().optional().default(false),
+    lodgingOptions: z.array(lodgingOptionSchema).max(8).default([]),
+    lodgingSelection: lodgingSelectionSchema,
     pace: nullableString(80),
     stops: z.array(stopDraftSchema).max(40).default([]),
     activities: z.array(stopDraftSchema).max(40).default([]),
@@ -236,6 +284,10 @@ export const tripDraftSchema = z
     preferences: d.preferences ?? [],
     constraints: d.constraints ?? [],
     lodgingType: d.lodgingType ?? null,
+    accommodationType: d.accommodationType ?? null,
+    lodgingRequested: Boolean(d.lodgingRequested),
+    lodgingOptions: d.lodgingOptions ?? [],
+    lodgingSelection: d.lodgingSelection ?? null,
     pace: d.pace ?? null,
     stops: d.stops ?? [],
     activities: d.activities ?? [],
@@ -266,6 +318,7 @@ export const plannerStepSchema = z.enum([
   "travelers",
   "vehicle",
   "preferences",
+  "lodging",
   "itinerary_proposal",
   "proposal",
   "confirmation",
