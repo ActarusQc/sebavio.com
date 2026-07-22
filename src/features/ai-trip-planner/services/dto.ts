@@ -8,6 +8,7 @@ import {
   detectMissingFields,
   isDraftReadyForCreation,
 } from "@/features/ai-trip-planner/lib/missing-fields";
+import { assignSoleVehicleIfNeeded } from "@/features/ai-trip-planner/lib/assign-sole-vehicle";
 import {
   buildItineraryProposal,
   resolveCurrentStep,
@@ -130,7 +131,8 @@ export function toSessionDto(
     ownedVehicles?: Array<{ id: string; label: string }>;
   },
 ): TripPlannerSessionDto {
-  const draft = parseStoredDraft(session.structuredDraft);
+  let draft = parseStoredDraft(session.structuredDraft);
+  draft = assignSoleVehicleIfNeeded(draft, extras?.ownedVehicles ?? []);
   const messages = parseStoredMessages(session.messages);
   const missingFields = detectMissingFields(draft);
   const hasTripTypeHint =

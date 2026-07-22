@@ -66,6 +66,7 @@ import {
   resolveCurrentStep,
   resolveSessionStatus,
 } from "@/features/ai-trip-planner/lib/planning-step";
+import { assignSoleVehicleIfNeeded } from "@/features/ai-trip-planner/lib/assign-sole-vehicle";
 import { ensureMinimalItineraryContent } from "@/features/ai-trip-planner/lib/ensure-minimal-proposal";
 import { applyInterestFromUserText } from "@/features/ai-trip-planner/lib/interest-itinerary";
 import { getTravelInterestLabel } from "@/features/ai-trip-planner/lib/labels";
@@ -339,7 +340,7 @@ export async function sendPlanningMessage(
   expectedVersion?: number,
 ): Promise<TripPlannerSessionDto> {
   await assertTripPlannerAccess(userId);
-  await assertAiRateLimit(userId);
+  // Rate-limit IA uniquement avant l’appel modèle (pas les raccourcis serveur)
 
   const config = getAiRuntimeConfig();
   const trimmed = content.trim();
@@ -488,14 +489,20 @@ export async function sendPlanningMessage(
           ),
       );
 
-    const stepBefore = resolveCurrentStep(previousDraft, {
+    // Un seul véhicule → assignation automatique (pas de question)
+    const draftWithVehicle = assignSoleVehicleIfNeeded(
+      previousDraft,
+      ownedVehicles,
+    );
+
+    const stepBefore = resolveCurrentStep(draftWithVehicle, {
       sessionStatus: session.status,
       hasTripTypeHint,
     });
 
     // Pré-remplir ville QC selon l’étape (jamais écraser une autre étape)
     const prePatch = applyDeterministicDraftPatches(
-      previousDraft,
+      draftWithVehicle,
       trimmed,
       stepBefore,
       userCtx.timezone,
@@ -937,6 +944,9 @@ export async function sendPlanningMessage(
         ownedVehicles,
       });
     }
+
+    // ——— Appel modèle uniquement : rate-limit anti-abus ———
+    await assertAiRateLimit(userId);
 
     const systemPrompt = buildTripPlannerSystemPrompt({
       vehicles: ownedVehicles,
