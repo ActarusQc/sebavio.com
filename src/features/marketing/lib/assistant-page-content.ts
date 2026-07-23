@@ -150,6 +150,10 @@ export const ASSISTANT_PAGE = {
       href: "/planificateur-road-trip-quebec",
       label: "Découvrez comment organiser un road trip complet au Québec",
     },
+    fuelCostLink: {
+      href: "/calculateur-cout-carburant-voyage",
+      label: "Comprendre l’estimation du coût de carburant",
+    },
   },
   voice: {
     title: "Parler à Sebavia",

@@ -131,6 +131,10 @@ export const FEATURES_PAGE = {
     example:
       "Exemple : un trajet de fin de semaine avec un détour d’activité — Sebavia met à jour la distance, le carburant estimé et les arrêts possibles.",
     note: "Le plein initial peut être traité séparément. Les prix et disponibilités des stations varient : les estimations ne sont pas des garanties, et les arrêts doivent être confirmés pendant le voyage.",
+    costCalculatorLink: {
+      href: "/calculateur-cout-carburant-voyage",
+      label: "Comprendre le calcul du coût de carburant",
+    },
   },
   personalization: {
     title: "Un même trajet, plusieurs façons de voyager",

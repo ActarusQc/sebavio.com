@@ -82,6 +82,13 @@ export function PricingAgentSection({
             </Link>
             {" · "}
             <Link
+              href="/calculateur-cout-carburant-voyage"
+              className="font-medium text-[#3b6f9c] hover:underline"
+            >
+              Coût de carburant
+            </Link>
+            {" · "}
+            <Link
               href="/fonctionnalites"
               className="font-medium text-[#3b6f9c] hover:underline"
             >

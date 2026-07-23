@@ -133,6 +133,10 @@ export const ROAD_TRIP_PAGE = {
       href: "/fonctionnalites#carburant",
       label: "Voir les fonctions carburant",
     },
+    costCalculatorLink: {
+      href: "/calculateur-cout-carburant-voyage",
+      label: "Voir comment le coût du carburant est calculé",
+    },
   },
   fuelStops: {
     title: "Anticipez les arrêts de ravitaillement",

@@ -263,6 +263,13 @@ export default function PlanificateurRoadTripQuebecPage() {
         <p className="mt-5 text-sm text-white/55">{page.fuel.note}</p>
         <p className="mt-4 text-sm">
           <Link
+            href={page.fuel.costCalculatorLink.href}
+            className="text-sky-300 hover:underline"
+          >
+            {page.fuel.costCalculatorLink.label}
+          </Link>
+          {" · "}
+          <Link
             href={page.fuel.featuresLink.href}
             className="text-sky-300 hover:underline"
           >

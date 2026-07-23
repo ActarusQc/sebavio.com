@@ -152,6 +152,10 @@ export default function FeaturesPage() {
         <p className="mt-5 rounded-xl border border-[#d7e0ea] bg-white px-4 py-3 text-sm leading-relaxed text-[#405466]">
           {fuel.example}
         </p>
+        <FeaturesInlineLink
+          href={fuel.costCalculatorLink.href}
+          label={fuel.costCalculatorLink.label}
+        />
       </FeaturesCapabilitySection>
 
       <FeaturesCapabilitySection

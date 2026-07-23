@@ -3,14 +3,14 @@
 export const LANDING = {
   brandTagline: "Votre copilote de voyage",
   definition:
-    "Sebavio est une plateforme québécoise de planification de voyages routiers qui combine itinéraires, véhicule, consommation de carburant, météo, activités et agent conversationnel.",
+    "Sebavia est une plateforme québécoise de planification de voyages routiers qui combine itinéraires, véhicule, consommation de carburant, météo, activités et agent conversationnel.",
   hero: {
     titleBefore: "Votre voyage commence par une",
     titleHighlight: "conversation.",
     subtitle:
-      "Sebavio planifie votre itinéraire, prévoit vos arrêts de carburant, tient compte de votre véhicule, de la météo et adapte votre voyage avec vous.",
+      "Sebavia planifie votre itinéraire, prévoit vos arrêts de carburant, tient compte de votre véhicule, de la météo et adapte votre voyage avec vous.",
     primaryCta: "Planifier mon voyage",
-    secondaryCta: "Voir Sebavio en action",
+    secondaryCta: "Voir Sebavia en action",
     benefits: [
       {
         id: "agent",
@@ -72,22 +72,22 @@ export const LANDING = {
       {
         id: "chat",
         title: "Discutez avec votre copilote",
-        body: "Parlez à Sebavio comme à un copilote. Il comprend votre voyage et vous aide à le modifier simplement.",
+        body: "Parlez à Sebavia comme à un copilote. Il comprend votre voyage et vous aide à le modifier simplement.",
       },
       {
         id: "fuel",
         title: "Prévoyez vos ravitaillements",
-        body: "Sebavio calcule vos arrêts de carburant selon votre véhicule, sa consommation réelle, son réservoir et votre niveau d’essence au départ.",
+        body: "Sebavia calcule vos arrêts de carburant selon votre véhicule, sa consommation réelle, son réservoir et votre niveau d’essence au départ.",
       },
       {
         id: "adapt",
         title: "Adaptez votre trajet à mesure que vous roulez",
-        body: "Ajoutez une activité, une étape ou un détour. Sebavio recalcule la distance, l’horaire, les arrêts et les estimations.",
+        body: "Ajoutez une activité, une étape ou un détour. Sebavia recalcule la distance, l’horaire, les arrêts et les estimations.",
       },
       {
         id: "vehicle",
         title: "Voyagez avec votre propre véhicule",
-        body: "Sebavio connaît les caractéristiques de votre véhicule, sa consommation réelle, son réservoir et ses besoins d’entretien.",
+        body: "Sebavia connaît les caractéristiques de votre véhicule, sa consommation réelle, son réservoir et ses besoins d’entretien.",
       },
     ],
   },
@@ -107,7 +107,7 @@ export const LANDING = {
       },
       {
         n: 3,
-        title: "Laissez Sebavio calculer et vous accompagner",
+        title: "Laissez Sebavia calculer et vous accompagner",
         body: "Recevez votre itinéraire personnalisé, vos arrêts, vos estimations et vos recommandations.",
       },
     ],
@@ -117,7 +117,7 @@ export const LANDING = {
     seeAll: "Voir tous les forfaits",
   },
   lifecycle: {
-    title: "Sebavio vous accompagne à chaque étape",
+    title: "Sebavia vous accompagne à chaque étape",
     columns: [
       {
         id: "before",
@@ -165,7 +165,7 @@ export const LANDING = {
       {
         id: "long",
         title: "Long trajet avec ravitaillements",
-        body: "Sebavio calcule les arrêts selon votre réservoir, votre consommation et le niveau d’essence au départ.",
+        body: "Sebavia calcule les arrêts selon votre réservoir, votre consommation et le niveau d’essence au départ.",
       },
       {
         id: "detour",
@@ -175,9 +175,9 @@ export const LANDING = {
     ],
   },
   nameMeaning: {
-    title: "Pourquoi le nom Sebavio?",
+    title: "Pourquoi le nom Sebavia?",
     intro:
-      "Le nom Sebavio unit deux symboles au cœur de notre vision : l’étoile et la route.",
+      "Le nom Sebavia unit deux symboles au cœur de notre vision : l’étoile et la route.",
     seba: {
       word: "Seba",
       label: "L’étoile qui guide",
@@ -189,35 +189,35 @@ export const LANDING = {
       body: "« Via » signifie la route, le chemin qui mène vers une destination, une découverte ou une nouvelle aventure.",
     },
     result: {
-      word: "Sebavio",
+      word: "Sebavia",
       label: "L’étoile qui guide votre route",
-      body: "Sebavio représente ainsi l’étoile qui guide votre route. Une plateforme pensée pour vous accompagner dans la préparation de vos voyages, vous aider à prendre de meilleures décisions et simplifier chaque étape du trajet.",
+      body: "Sebavia représente ainsi l’étoile qui guide votre route. Une plateforme pensée pour vous accompagner dans la préparation de vos voyages, vous aider à prendre de meilleures décisions et simplifier chaque étape du trajet.",
     },
   },
   geo: {
-    title: "Qu’est-ce que Sebavio?",
+    title: "Qu’est-ce que Sebavia?",
     questions: [
       {
         q: "Comment Sebavia planifie-t-il un voyage?",
         a: "Vous décrivez votre trajet et vos préférences. Sebavia construit un itinéraire adapté à votre véhicule, avec estimations de durée, distance et arrêts. Pour une méthode complète de préparation d’un voyage routier au Québec, consultez le planificateur de road trip.",
       },
       {
-        q: "Comment Sebavio calcule-t-il les arrêts de carburant?",
-        a: "À partir de la consommation réelle, de la capacité du réservoir et du niveau d’essence au départ, Sebavio propose un plan de ravitaillement sur le parcours.",
+        q: "Comment Sebavia calcule-t-il les arrêts de carburant?",
+        a: "À partir de la consommation réelle, de la capacité du réservoir et du niveau d’essence au départ, Sebavia propose un plan de ravitaillement sur le parcours. Pour comprendre l’estimation du coût de l’essence selon la distance et le véhicule, consultez le calculateur de coût de carburant.",
       },
       {
         q: "À quoi sert l’agent conversationnel?",
         a: "Il vous permet de modifier le voyage en langage naturel : ajouter une activité, trouver une pause, ou recalculer l’itinéraire sans tout recommencer.",
       },
       {
-        q: "Quelle est la différence entre Sebavio et une application de carte?",
-        a: "Une carte montre la route. Sebavio connaît aussi votre véhicule, le carburant, la météo et les activités, et vous accompagne avant, pendant et après le voyage.",
+        q: "Quelle est la différence entre Sebavia et une application de carte?",
+        a: "Une carte montre la route. Sebavia connaît aussi votre véhicule, le carburant, la météo et les activités, et vous accompagne avant, pendant et après le voyage.",
       },
     ],
   },
   finalCta: {
     title: "Prêt à planifier autrement?",
-    body: "Décrivez votre prochain voyage à Sebavio et laissez votre copilote s’occuper du reste.",
+    body: "Décrivez votre prochain voyage à Sebavia et laissez votre copilote s’occuper du reste.",
     primary: "Planifier mon voyage",
     secondary: "Découvrir les fonctionnalités",
   },

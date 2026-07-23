@@ -66,6 +66,13 @@ export function FeatureGrid() {
             >
               Planifier un road trip au Québec
             </Link>
+            {" · "}
+            <Link
+              href="/calculateur-cout-carburant-voyage"
+              className="text-[#3b6f9c] hover:underline"
+            >
+              Estimer le coût du carburant
+            </Link>
           </p>
         </div>
       </div>
