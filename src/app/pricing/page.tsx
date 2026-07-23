@@ -24,9 +24,9 @@ import {
 import { PRICING_PAGE } from "@/features/marketing/lib/pricing-content";
 import { BRAND_ASSETS } from "@/features/marketing/lib/brand-assets";
 import { auth } from "@/lib/auth";
+import { getSiteUrl } from "@/lib/site-url";
 
-const SITE_URL =
-  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://sebavia.com";
+const SITE_URL = getSiteUrl();
 
 export const metadata: Metadata = {
   title: PRICING_PAGE.meta.title,

@@ -1,4 +1,18 @@
+import type { Metadata } from "next";
 import { ForgotPasswordForm } from "@/features/auth";
+import { getSiteUrl, NOINDEX_FOLLOW_ROBOTS } from "@/lib/site-url";
+
+const siteUrl = getSiteUrl();
+
+export const metadata: Metadata = {
+  title: "Mot de passe oublié",
+  description:
+    "Réinitialisez le mot de passe de votre compte Sebavia en toute sécurité.",
+  alternates: {
+    canonical: `${siteUrl}/forgot-password`,
+  },
+  robots: NOINDEX_FOLLOW_ROBOTS,
+};
 
 export default function ForgotPasswordPage() {
   return (

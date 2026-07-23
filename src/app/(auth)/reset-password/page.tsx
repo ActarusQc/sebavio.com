@@ -1,4 +1,17 @@
+import type { Metadata } from "next";
 import { ResetPasswordForm } from "@/features/auth";
+import { getSiteUrl, NOINDEX_FOLLOW_ROBOTS } from "@/lib/site-url";
+
+const siteUrl = getSiteUrl();
+
+export const metadata: Metadata = {
+  title: "Nouveau mot de passe",
+  description: "Choisissez un nouveau mot de passe pour votre compte Sebavia.",
+  alternates: {
+    canonical: `${siteUrl}/reset-password`,
+  },
+  robots: NOINDEX_FOLLOW_ROBOTS,
+};
 
 type Props = {
   searchParams: Promise<{ email?: string; token?: string }>;

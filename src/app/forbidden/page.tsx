@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/common";
 import { Button } from "@/components/ui";
+import { NOINDEX_FOLLOW_ROBOTS } from "@/lib/site-url";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Accès non autorisé",
+  robots: NOINDEX_FOLLOW_ROBOTS,
+};
 
 /**
  * Refus d'accès explicite — pas de détail sur les permissions internes.

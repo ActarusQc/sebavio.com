@@ -5,20 +5,20 @@
 
 export const PRICING_PAGE = {
   meta: {
-    title: "Tarifs Sebavio — Planifiez vos voyages simplement",
+    title: "Tarifs Sebavia — Planifiez vos voyages simplement",
     description:
-      "Découvrez les forfaits Sebavio : aperçu gratuit, Pass 30 jours ou accès annuel. Planifiez vos itinéraires, votre carburant, vos activités et échangez avec votre agent de voyage intelligent.",
+      "Forfaits Sebavia : aperçu gratuit, Pass 30 jours ou accès annuel. Itinéraires, carburant, activités et assistant de voyage intelligent.",
   },
   hero: {
     badge: "DES FORFAITS POUR CHAQUE FAÇON DE VOYAGER",
-    title: "Choisissez jusqu’où Sebavio vous accompagne",
+    title: "Choisissez jusqu’où Sebavia vous accompagne",
     subtitle:
-      "Découvrez la plateforme gratuitement, préparez un voyage complet avec le Pass 30 jours ou profitez de Sebavio toute l’année.",
+      "Découvrez la plateforme gratuitement, préparez un voyage complet avec le Pass 30 jours ou profitez de Sebavia toute l’année.",
     trust: "Des prix simples, en dollars canadiens, sans frais cachés.",
   },
   plans: {
     decouverte: {
-      subtitle: "Pour explorer Sebavio avant de prendre la route.",
+      subtitle: "Pour explorer Sebavia avant de prendre la route.",
       priceNote: "Gratuit, sans carte de crédit",
       cta: "Découvrir gratuitement",
       limitNote:
@@ -27,7 +27,7 @@ export const PRICING_PAGE = {
     },
     pass: {
       badge: "Idéal pour un voyage",
-      subtitle: "Tout Sebavio pendant 30 jours, sans abonnement.",
+      subtitle: "Tout Sebavia pendant 30 jours, sans abonnement.",
       priceNote: "Paiement unique · Accès complet pendant 30 jours",
       cta: "Préparer mon prochain voyage",
       renewNote: "Aucun renouvellement automatique.",
@@ -37,19 +37,19 @@ export const PRICING_PAGE = {
       badge: "Meilleure valeur",
       subtitle: "Votre compagnon de voyage pour toute l’année.",
       priceNote: "Facturation annuelle",
-      cta: "Choisir Sebavio Plus",
+      cta: "Choisir Sebavia Plus",
       detailsLabel: "Voir les détails",
     },
   },
   agent: {
     title: "Bien plus qu’un planificateur de trajet",
-    body: "Sebavio vous accompagne dans une véritable conversation. Demandez-lui de trouver une activité, de prévoir un arrêt pour dîner, d’évaluer la météo, de modifier votre itinéraire ou de vous guider pendant le voyage.",
+    body: "Sebavia vous accompagne dans une véritable conversation. Demandez-lui de trouver une activité, de prévoir un arrêt pour dîner, d’évaluer la météo, de modifier votre itinéraire ou de vous guider pendant le voyage.",
     textTitle: "Conversation écrite",
     textBody:
-      "Écrivez naturellement ce que vous recherchez et Sebavio tient compte de votre trajet, de votre véhicule et de vos préférences.",
+      "Écrivez naturellement ce que vous recherchez et Sebavia tient compte de votre trajet, de votre véhicule et de vos préférences.",
     voiceTitle: "Conversation vocale",
     voiceBody:
-      "Parlez directement à Sebavio et écoutez ses réponses, particulièrement pratique sur mobile et lors de vos déplacements.",
+      "Parlez directement à Sebavia et écoutez ses réponses, particulièrement pratique sur mobile et lors de vos déplacements.",
     footnote:
       "Pensé pour le Web aujourd’hui et les expériences mobiles de demain.",
     demoUser: "Trouve-nous un restaurant familial pour dîner sur le trajet.",
@@ -80,9 +80,9 @@ export const PRICING_PAGE = {
       {
         id: "year",
         title: "Je voyage plusieurs fois par année",
-        body: "Choisissez Sebavio Plus pour conserver votre compagnon de voyage toute l’année.",
+        body: "Choisissez Sebavia Plus pour conserver votre compagnon de voyage toute l’année.",
         href: "#forfait-sebavio-plus",
-        cta: "Voir Sebavio Plus",
+        cta: "Voir Sebavia Plus",
       },
     ],
   },
@@ -103,8 +103,8 @@ export const PRICING_PAGE = {
     title: "Questions fréquentes",
     items: [
       {
-        q: "Puis-je essayer Sebavio gratuitement?",
-        a: "Oui. Le forfait Découverte vous permet d’explorer l’interface, de créer votre profil et d’enregistrer un véhicule. La planification complète d’un voyage nécessite toutefois un accès payant (Pass 30 jours ou Sebavio Plus).",
+        q: "Puis-je essayer Sebavia gratuitement?",
+        a: "Oui. Le forfait Découverte vous permet d’explorer l’interface, de créer votre profil et d’enregistrer un véhicule. La planification complète d’un voyage nécessite toutefois un accès payant (Pass 30 jours ou Sebavia Plus).",
       },
       {
         q: "Le Pass 30 jours est-il un abonnement?",
@@ -116,29 +116,29 @@ export const PRICING_PAGE = {
       },
       {
         q: "Que se passe-t-il après les 30 jours?",
-        a: "Votre compte revient au forfait Découverte. Vos données restent accessibles dans les limites de ce forfait; la planification complète et les fonctions avancées nécessitent un nouveau Pass ou Sebavio Plus.",
+        a: "Votre compte revient au forfait Découverte. Vos données restent accessibles dans les limites de ce forfait; la planification complète et les fonctions avancées nécessitent un nouveau Pass ou Sebavia Plus.",
       },
       {
-        q: "Sebavio Plus se renouvelle-t-il automatiquement?",
-        a: "Oui. Sebavio Plus est un abonnement annuel facturé via Stripe. Il se renouvelle automatiquement à chaque échéance, sauf si vous l’annulez depuis le portail de facturation.",
+        q: "Sebavia Plus se renouvelle-t-il automatiquement?",
+        a: "Oui. Sebavia Plus est un abonnement annuel facturé via Stripe. Il se renouvelle automatiquement à chaque échéance, sauf si vous l’annulez depuis le portail de facturation.",
       },
       {
         q: "La conversation vocale est-elle incluse?",
-        a: "La conversation écrite et vocale avec l’agent Sebavio est incluse dans le Pass 30 jours et Sebavio Plus, selon les capacités configurées pour ces forfaits. Le forfait Découverte offre une découverte limitée de l’agent.",
+        a: "La conversation écrite et vocale avec l’agent Sebavia est incluse dans le Pass 30 jours et Sebavia Plus, selon les capacités configurées pour ces forfaits. Le forfait Découverte offre une découverte limitée de l’agent.",
       },
       {
-        q: "Puis-je utiliser Sebavio sur mon téléphone?",
-        a: "Oui. Le site Sebavio est conçu pour les appareils mobiles. Une application native n’est pas encore publiée; vous utilisez Sebavio via le navigateur de votre téléphone.",
+        q: "Puis-je utiliser Sebavia sur mon téléphone?",
+        a: "Oui. Le site Sebavia est conçu pour les appareils mobiles. Une application native n’est pas encore publiée; vous utilisez Sebavia via le navigateur de votre téléphone.",
       },
       {
         q: "Mes paiements sont-ils sécurisés?",
-        a: "Oui. Les paiements sont traités par Stripe. Sebavio ne conserve pas directement les données complètes de votre carte bancaire.",
+        a: "Oui. Les paiements sont traités par Stripe. Sebavia ne conserve pas directement les données complètes de votre carte bancaire.",
       },
     ],
   },
   finalCta: {
     title: "Votre prochaine route commence ici",
-    body: "Découvrez Sebavio gratuitement ou choisissez l’accompagnement qui correspond à votre prochaine aventure.",
+    body: "Découvrez Sebavia gratuitement ou choisissez l’accompagnement qui correspond à votre prochaine aventure.",
     primary: "Commencer gratuitement",
     secondary: "Choisir mon forfait",
   },

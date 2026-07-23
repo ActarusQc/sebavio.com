@@ -1,4 +1,18 @@
+import type { Metadata } from "next";
 import { RegisterForm } from "@/features/auth";
+import { getSiteUrl, NOINDEX_FOLLOW_ROBOTS } from "@/lib/site-url";
+
+const siteUrl = getSiteUrl();
+
+export const metadata: Metadata = {
+  title: "Créer un compte",
+  description:
+    "Créez votre compte Sebavia et commencez à planifier vos voyages routiers.",
+  alternates: {
+    canonical: `${siteUrl}/register`,
+  },
+  robots: NOINDEX_FOLLOW_ROBOTS,
+};
 
 export default function RegisterPage() {
   return (

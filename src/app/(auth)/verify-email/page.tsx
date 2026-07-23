@@ -1,5 +1,18 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { verifyEmailAction } from "@/features/auth";
+import { getSiteUrl, NOINDEX_FOLLOW_ROBOTS } from "@/lib/site-url";
+
+const siteUrl = getSiteUrl();
+
+export const metadata: Metadata = {
+  title: "Vérification du courriel",
+  description: "Confirmez l’adresse courriel de votre compte Sebavia.",
+  alternates: {
+    canonical: `${siteUrl}/verify-email`,
+  },
+  robots: NOINDEX_FOLLOW_ROBOTS,
+};
 
 type Props = {
   searchParams: Promise<{ email?: string; token?: string }>;

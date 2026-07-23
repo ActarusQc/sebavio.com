@@ -15,12 +15,14 @@ import { listPublicOfficialPlans } from "@/features/subscriptions/services/publi
 import { auth } from "@/lib/auth";
 import { LANDING } from "@/features/marketing/lib/landing-content";
 import { BRAND_ASSETS } from "@/features/marketing/lib/brand-assets";
+import { getSiteUrl } from "@/lib/site-url";
 
-const SITE_URL =
-  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://sebavia.com";
+const SITE_URL = getSiteUrl();
 
 export const metadata: Metadata = {
-  title: "Sebavia | Copilote intelligent pour planifier vos voyages",
+  title: {
+    absolute: "Sebavia | Copilote intelligent pour planifier vos voyages",
+  },
   description:
     "Planifiez votre itinéraire, vos arrêts de carburant, vos activités et votre météo avec Sebavia, le copilote intelligent conçu au Québec.",
   alternates: {

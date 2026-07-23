@@ -53,7 +53,7 @@ describe("pricing page — présentation", () => {
     const plans = resolvePricingPlans([
       {
         slug: OFFICIAL_PLAN_SLUGS.SEBAVIO_PLUS,
-        publicName: "Sebavio Plus",
+        publicName: "Sebavia Plus",
         shortDescription: null,
         unitAmountCents: PLUS_PRICE_CENTS,
         currency: "cad",
@@ -97,7 +97,7 @@ describe("pricing page — présentation", () => {
       },
       {
         slug: OFFICIAL_PLAN_SLUGS.SEBAVIO_PLUS,
-        publicName: "Sebavio Plus",
+        publicName: "Sebavia Plus",
         shortDescription: null,
         unitAmountCents: 7999,
         currency: "cad",
@@ -146,7 +146,7 @@ describe("pricing page — présentation", () => {
     expect(PRICING_PAGE.plans.plus.badge).toBe("Meilleure valeur");
     expect(PRICING_PAGE.plans.decouverte.cta).toBe("Découvrir gratuitement");
     expect(PRICING_PAGE.plans.pass.cta).toBe("Préparer mon prochain voyage");
-    expect(PRICING_PAGE.plans.plus.cta).toBe("Choisir Sebavio Plus");
+    expect(PRICING_PAGE.plans.plus.cta).toBe("Choisir Sebavia Plus");
   });
 
   it("présente Découverte comme aperçu limité", () => {

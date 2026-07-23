@@ -1,4 +1,18 @@
+import type { Metadata } from "next";
 import { LoginForm } from "@/features/auth";
+import { getSiteUrl, NOINDEX_FOLLOW_ROBOTS } from "@/lib/site-url";
+
+const siteUrl = getSiteUrl();
+
+export const metadata: Metadata = {
+  title: "Connexion",
+  description:
+    "Connectez-vous à votre compte Sebavia pour accéder à vos voyages.",
+  alternates: {
+    canonical: `${siteUrl}/login`,
+  },
+  robots: NOINDEX_FOLLOW_ROBOTS,
+};
 
 export default function LoginPage() {
   return (

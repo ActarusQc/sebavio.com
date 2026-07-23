@@ -2,17 +2,78 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteFooter, SiteHeader } from "@/features/marketing";
 import { LANDING } from "@/features/marketing/lib/landing-content";
+import { BRAND_ASSETS } from "@/features/marketing/lib/brand-assets";
 import { MarketingCtaButton } from "@/features/marketing/components/marketing-cta-button";
+import { getSiteUrl } from "@/lib/site-url";
+
+const siteUrl = getSiteUrl();
+const FAQ_PATH = `${siteUrl}/faq`;
+const FAQ_TITLE = "FAQ Sebavia | Planification de voyages routiers avec l’IA";
+const FAQ_DESCRIPTION =
+  "Trouvez les réponses à vos questions sur Sebavia, la création d’itinéraires, l’assistant IA, les forfaits et la planification de voyages routiers.";
 
 export const metadata: Metadata = {
-  title: "FAQ",
-  description:
-    "Réponses aux questions fréquentes sur Sebavio : planification, carburant, agent conversationnel et différences avec une carte.",
+  title: {
+    absolute: FAQ_TITLE,
+  },
+  description: FAQ_DESCRIPTION,
+  alternates: {
+    canonical: FAQ_PATH,
+  },
+  openGraph: {
+    type: "website",
+    locale: "fr_CA",
+    url: FAQ_PATH,
+    siteName: "Sebavia",
+    title: FAQ_TITLE,
+    description: FAQ_DESCRIPTION,
+    images: [
+      {
+        url: BRAND_ASSETS.heroLandscape,
+        width: 1200,
+        height: 630,
+        alt: "Sebavia — copilote intelligent de voyage",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: FAQ_TITLE,
+    description: FAQ_DESCRIPTION,
+    images: [BRAND_ASSETS.heroLandscape],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
+
+function FaqJsonLd() {
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: LANDING.geo.questions.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.a,
+      },
+    })),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
+  );
+}
 
 export default function FaqPage() {
   return (
     <div className="flex min-h-full flex-1 flex-col bg-white">
+      <FaqJsonLd />
       <SiteHeader variant="light" />
       <main className="flex-1">
         <section className="mx-auto max-w-3xl px-4 py-14 sm:px-6 sm:py-16 lg:px-8">

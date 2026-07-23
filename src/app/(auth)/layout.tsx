@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { BRAND_ASSETS } from "@/features/marketing";
+import { NOINDEX_FOLLOW_ROBOTS } from "@/lib/site-url";
+
+export const metadata: Metadata = {
+  robots: NOINDEX_FOLLOW_ROBOTS,
+};
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
@@ -17,7 +23,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           >
             <Image
               src={BRAND_ASSETS.logo}
-              alt="Sebavio — L’étoile qui guide votre route"
+              alt="Sebavia — L’étoile qui guide votre route"
               width={731}
               height={723}
               className="mx-auto h-auto w-[200px] max-w-full"

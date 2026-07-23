@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Poppins } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { getSiteUrl } from "@/lib/site-url";
 import "./globals.css";
 
 const inter = Inter({
@@ -17,17 +18,17 @@ const poppins = Poppins({
   display: "swap",
 });
 
+const siteUrl = getSiteUrl();
+
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
-      "https://sebavia.com",
-  ),
+  metadataBase: new URL(siteUrl),
   title: {
     default: "Sebavia | Copilote intelligent pour planifier vos voyages",
     template: "%s | Sebavia",
   },
   description:
     "Planifiez votre itinéraire, vos arrêts de carburant, vos activités et votre météo avec Sebavia, le copilote intelligent conçu au Québec.",
+  applicationName: "Sebavia",
 };
 
 export default function RootLayout({
