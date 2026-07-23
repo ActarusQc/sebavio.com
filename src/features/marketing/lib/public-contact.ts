@@ -1,7 +1,9 @@
 /**
- * Courriel de soutien public — uniquement depuis la config serveur réelle.
- * Ne jamais inventer d’adresse (ex. support@…) si elle n’existe pas.
+ * Courriel public officiel Sebavia.
+ * CONTACT_EMAIL (env) peut surcharger pour les environnements non prod.
  */
+export const OFFICIAL_PUBLIC_EMAIL = "bonjour@sebavia.com";
+
 export function parseEmailAddress(
   raw: string | undefined | null,
 ): string | null {
@@ -14,13 +16,14 @@ export function parseEmailAddress(
 }
 
 /**
- * Destinataire des messages contact / confidentialité.
- * Priorité : CONTACT_EMAIL → EMAIL_REPLY_TO → EMAIL_FROM (partie adresse).
+ * Adresse publique / destinataire contact.
+ * Ne dépend JAMAIS de EMAIL_FROM (expéditeur technique SMTP).
  */
-export function getPublicSupportEmail(): string | null {
-  return (
-    parseEmailAddress(process.env.CONTACT_EMAIL) ||
-    parseEmailAddress(process.env.EMAIL_REPLY_TO) ||
-    parseEmailAddress(process.env.EMAIL_FROM)
-  );
+export function getPublicSupportEmail(): string {
+  return parseEmailAddress(process.env.CONTACT_EMAIL) ?? OFFICIAL_PUBLIC_EMAIL;
+}
+
+/** Destinataire inbox du formulaire (= CONTACT_EMAIL / officiel). */
+export function getContactInboxEmail(): string {
+  return getPublicSupportEmail();
 }

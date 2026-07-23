@@ -5,6 +5,7 @@
 
 export const LEGAL_LAST_UPDATED_ISO = "2026-07-23";
 export const LEGAL_LAST_UPDATED_LABEL = "23 juillet 2026";
+export const LEGAL_VERSION = "1.1";
 
 export const ABOUT_PAGE = {
   meta: {
@@ -142,8 +143,7 @@ export const CONTACT_PAGE = {
     successBody:
       "Merci. Votre message a bien été transmis. Nous vous répondrons à l’adresse indiquée dès que possible.",
   },
-  noEmailFallback:
-    "Le formulaire de contact n’est pas encore disponible. Réessayez plus tard ou consultez la FAQ en attendant.",
+  noEmailFallback: `Le formulaire de contact n’est pas encore disponible. Écrivez-nous à bonjour@sebavia.com ou consultez la FAQ.`,
 } as const;
 
 export const PRIVACY_PAGE = {

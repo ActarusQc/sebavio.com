@@ -5,6 +5,8 @@ export type SendEmailInput = {
   text: string;
   /** Diagnostic only — never logged with token/body. */
   kind: string;
+  /** Remplace EMAIL_REPLY_TO pour cet envoi (ex. formulaire contact). */
+  replyTo?: string;
 };
 
 export type SendEmailResult = { ok: true } | { ok: false; reason: string };
@@ -27,4 +29,13 @@ export type SendNotificationEmailInput = {
   title: string;
   body: string;
   href?: string | null;
+  replyTo?: string;
+};
+
+export type SendContactEmailInput = {
+  to: string;
+  visitorName: string;
+  visitorEmail: string;
+  category: string;
+  message: string;
 };

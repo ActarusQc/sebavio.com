@@ -29,6 +29,7 @@ export type {
   SendAuthEmailInput,
   SendEmailResult,
   SendNotificationEmailInput,
+  SendContactEmailInput,
 } from "./types";
 
 export {
@@ -135,6 +136,7 @@ async function deliver(
     subject: string;
     html: string;
     text: string;
+    replyTo?: string;
   },
 ): Promise<SendEmailResult> {
   emailSendStats.attempts += 1;
@@ -211,6 +213,7 @@ export async function sendNotificationEmail(
       subject: content.subject,
       html: content.html,
       text: content.text,
+      replyTo: input.replyTo,
     });
   } catch (error) {
     emailSendStats.failures += 1;
@@ -218,4 +221,41 @@ export async function sendNotificationEmail(
     console.error("[email] échec préparation notification");
     return { ok: false, reason };
   }
+}
+
+/**
+ * Message issu du formulaire de contact public.
+ * From = expéditeur SMTP autorisé ; Reply-To = visiteur.
+ */
+export async function sendContactEmail(
+  input: import("./types").SendContactEmailInput,
+): Promise<SendEmailResult> {
+  const subject = `[Contact Sebavia] ${input.category}`;
+  const text = [
+    `Nom : ${input.visitorName}`,
+    `Courriel : ${input.visitorEmail}`,
+    `Sujet : ${input.category}`,
+    "",
+    input.message,
+  ].join("\n");
+  const html = `<p><strong>Nom :</strong> ${escapeHtml(input.visitorName)}</p>
+<p><strong>Courriel :</strong> ${escapeHtml(input.visitorEmail)}</p>
+<p><strong>Sujet :</strong> ${escapeHtml(input.category)}</p>
+<pre style="white-space:pre-wrap;font-family:inherit">${escapeHtml(input.message)}</pre>`;
+
+  return deliver("contact", {
+    to: input.to,
+    subject,
+    text,
+    html,
+    replyTo: input.visitorEmail,
+  });
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }

@@ -15,17 +15,8 @@ export const metadata = buildTrustPageMetadata({
   description: CONTACT_PAGE.meta.description,
 });
 
-function ContactJsonLd({ email }: { email: string | null }) {
+function ContactJsonLd({ email }: { email: string }) {
   const siteUrl = getSiteUrl();
-  const contactPoint = email
-    ? {
-        "@type": "ContactPoint",
-        contactType: "customer support",
-        email,
-        availableLanguage: ["fr", "French"],
-      }
-    : undefined;
-
   const data = {
     "@context": "https://schema.org",
     "@graph": [
@@ -37,7 +28,13 @@ function ContactJsonLd({ email }: { email: string | null }) {
         description: CONTACT_PAGE.meta.description,
         isPartOf: { "@id": `${siteUrl}/#website` },
         inLanguage: "fr-CA",
-        ...(contactPoint ? { mainEntity: contactPoint } : {}),
+        mainEntity: {
+          "@type": "ContactPoint",
+          contactType: "customer support",
+          email,
+          url: `${siteUrl}/contact`,
+          availableLanguage: ["fr"],
+        },
       },
       {
         "@type": "BreadcrumbList",
@@ -119,17 +116,15 @@ export default function ContactPage() {
                 </Link>
               </li>
             </ul>
-            {supportEmail ? (
-              <p className="mt-5 text-sm text-[#405466]">
-                Courriel :{" "}
-                <a
-                  href={`mailto:${supportEmail}`}
-                  className="font-medium text-[#3b6f9c] hover:underline"
-                >
-                  {supportEmail}
-                </a>
-              </p>
-            ) : null}
+            <p className="mt-5 text-sm text-[#405466]">
+              Courriel :{" "}
+              <a
+                href={`mailto:${supportEmail}`}
+                className="font-medium text-[#3b6f9c] hover:underline"
+              >
+                {supportEmail}
+              </a>
+            </p>
           </div>
         </aside>
 
@@ -142,13 +137,7 @@ export default function ContactPage() {
             garanti.
           </p>
           <div className="relative mt-6">
-            {supportEmail ? (
-              <ContactForm supportEmail={supportEmail} />
-            ) : (
-              <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                {CONTACT_PAGE.noEmailFallback}
-              </p>
-            )}
+            <ContactForm supportEmail={supportEmail} />
           </div>
         </section>
       </div>

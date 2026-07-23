@@ -35,7 +35,7 @@ export function logProductionEmailMisconfiguration(context: string): void {
     "[email:CRITICAL] Les courriels ne partent PAS. Vérifiez EMAIL_PROVIDER=smtp,",
   );
   console.error(
-    "[email:CRITICAL] SMTP_HOST/PORT/USER/PASSWORD et EMAIL_FROM (@sebavio.com).",
+    "[email:CRITICAL] SMTP_HOST/PORT/USER/PASSWORD et EMAIL_FROM (expéditeur autorisé SMTP2GO).",
   );
   console.error(BANNER);
 }

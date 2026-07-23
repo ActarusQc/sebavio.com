@@ -18,7 +18,7 @@ function wrapHtml(title: string, paragraphs: string[]): string {
 <body style="font-family:system-ui,sans-serif;line-height:1.5;color:#1a1a1a;max-width:560px;margin:0 auto;padding:24px;">
   <h1 style="font-size:1.25rem;margin:0 0 16px;">${escapeHtml(title)}</h1>
   ${body}
-  <p style="margin:24px 0 0;font-size:0.875rem;color:#666;">Sebavio — ne répondez pas à ce message automatique.</p>
+  <p style="margin:24px 0 0;font-size:0.875rem;color:#666;">Sebavia — ne répondez pas à ce message automatique.</p>
 </body>
 </html>`;
 }
@@ -30,9 +30,9 @@ export function buildAuthEmailContent(
   const safeLink = escapeHtml(link);
 
   if (kind === "verify-email") {
-    const subject = "Vérifiez votre courriel — Sebavio";
+    const subject = "Vérifiez votre courriel — Sebavia";
     const text = [
-      "Bienvenue sur Sebavio.",
+      "Bienvenue sur Sebavia.",
       "",
       "Pour activer votre compte, ouvrez ce lien (valide 24 h) :",
       link,
@@ -40,7 +40,7 @@ export function buildAuthEmailContent(
       "Si vous n'avez pas créé de compte, ignorez ce message.",
     ].join("\n");
     const html = wrapHtml(subject, [
-      "Bienvenue sur Sebavio.",
+      "Bienvenue sur Sebavia.",
       `Pour activer votre compte, cliquez sur le lien ci-dessous (valide 24&nbsp;h)&nbsp;:`,
       `<a href="${safeLink}" data-no-track>Vérifier mon courriel</a>`,
       `Ou copiez cette adresse&nbsp;:<br><span style="word-break:break-all;">${safeLink}</span>`,
@@ -49,9 +49,9 @@ export function buildAuthEmailContent(
     return { subject, html, text };
   }
 
-  const subject = "Réinitialisation du mot de passe — Sebavio";
+  const subject = "Réinitialisation du mot de passe — Sebavia";
   const text = [
-    "Une demande de réinitialisation de mot de passe a été faite pour votre compte Sebavio.",
+    "Une demande de réinitialisation de mot de passe a été faite pour votre compte Sebavia.",
     "",
     "Ouvrez ce lien (valide 1 h) :",
     link,
@@ -59,7 +59,7 @@ export function buildAuthEmailContent(
     "Si vous n'êtes pas à l'origine de cette demande, ignorez ce message.",
   ].join("\n");
   const html = wrapHtml(subject, [
-    "Une demande de réinitialisation de mot de passe a été faite pour votre compte Sebavio.",
+    "Une demande de réinitialisation de mot de passe a été faite pour votre compte Sebavia.",
     `Cliquez sur le lien ci-dessous (valide 1&nbsp;h)&nbsp;:`,
     `<a href="${safeLink}" data-no-track>Réinitialiser mon mot de passe</a>`,
     `Ou copiez cette adresse&nbsp;:<br><span style="word-break:break-all;">${safeLink}</span>`,
@@ -74,7 +74,7 @@ export function buildNotificationEmailContent(input: {
   href?: string | null;
   appBaseUrl: string;
 }): { subject: string; html: string; text: string } {
-  const subject = `${input.title} — Sebavio`;
+  const subject = `${input.title} — Sebavia`;
   let absoluteHref: string | null = null;
   if (input.href) {
     if (input.href.startsWith("http://") || input.href.startsWith("https://")) {
@@ -89,14 +89,14 @@ export function buildNotificationEmailContent(input: {
 
   const textParts = [input.title, "", input.body];
   if (absoluteHref) {
-    textParts.push("", `Voir dans Sebavio : ${absoluteHref}`);
+    textParts.push("", `Voir dans Sebavia : ${absoluteHref}`);
   }
   const text = textParts.join("\n");
 
   const paragraphs = [
     escapeHtml(input.body),
     absoluteHref
-      ? `<a href="${escapeHtml(absoluteHref)}" data-no-track>Ouvrir dans Sebavio</a>`
+      ? `<a href="${escapeHtml(absoluteHref)}" data-no-track>Ouvrir dans Sebavia</a>`
       : "",
   ].filter(Boolean);
 

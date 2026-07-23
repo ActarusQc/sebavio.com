@@ -1,8 +1,11 @@
 import { z } from "zod";
 import { getRedis } from "@/lib/redis";
 import { AppError } from "@/lib/errors";
-import { sendNotificationEmail } from "@/services/email";
-import { getPublicSupportEmail } from "../lib/public-contact";
+import { sendContactEmail } from "@/services/email";
+import {
+  getContactInboxEmail,
+  OFFICIAL_PUBLIC_EMAIL,
+} from "../lib/public-contact";
 import { CONTACT_PAGE } from "../lib/trust-content";
 
 const CONTACT_RATE_LIMIT_MAX = 5;
@@ -37,8 +40,8 @@ const contactSchema = z.object({
   consent: z.literal("on", {
     error: "Le consentement est requis pour envoyer le message.",
   }),
-  /** Champ piège antirobot — doit rester vide. */
-  company: z.string().max(0).optional(),
+  /** Champ piège antirobot — si rempli, succès silencieux (pas d’envoi). */
+  company: z.string().optional(),
 });
 
 export type ContactActionResult =
@@ -92,10 +95,7 @@ export async function submitContactMessage(
   formData: FormData,
   headers: Headers,
 ): Promise<ContactActionResult> {
-  const supportEmail = getPublicSupportEmail();
-  if (!supportEmail) {
-    return { ok: false, error: CONTACT_PAGE.noEmailFallback };
-  }
+  const inbox = getContactInboxEmail();
 
   const parsed = contactSchema.safeParse({
     name: formData.get("name"),
@@ -121,7 +121,6 @@ export async function submitContactMessage(
 
   const data = parsed.data;
   if (data.company) {
-    // Honeypot déclenché : succès silencieux.
     return { ok: true };
   }
 
@@ -135,24 +134,19 @@ export async function submitContactMessage(
     return { ok: false, error: message };
   }
 
-  const result = await sendNotificationEmail({
-    to: supportEmail,
-    title: `[Contact Sebavia] ${data.category}`,
-    body: [
-      `Nom : ${data.name}`,
-      `Courriel : ${data.email}`,
-      `Sujet : ${data.category}`,
-      "",
-      data.message,
-    ].join("\n"),
+  const result = await sendContactEmail({
+    to: inbox,
+    visitorName: data.name,
+    visitorEmail: data.email,
+    category: data.category,
+    message: data.message,
   });
 
   if (!result.ok) {
-    console.error("[contact] échec envoi (raison omise pour privacy)");
+    console.error("[contact] échec envoi (détails SMTP omis)");
     return {
       ok: false,
-      error:
-        "L’envoi a échoué temporairement. Réessayez plus tard ou utilisez l’adresse courriel affichée.",
+      error: `Le message n’a pas pu être envoyé pour le moment. Veuillez réessayer plus tard ou écrire à ${OFFICIAL_PUBLIC_EMAIL}.`,
     };
   }
 

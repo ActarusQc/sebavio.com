@@ -96,20 +96,6 @@ describe("submitContactMessage", () => {
     vi.restoreAllMocks();
   });
 
-  it("refuse sans destinataire configuré", async () => {
-    vi.stubEnv("CONTACT_EMAIL", "");
-    vi.stubEnv("EMAIL_REPLY_TO", "");
-    vi.stubEnv("EMAIL_FROM", "");
-    const fd = new FormData();
-    fd.set("name", "Test User");
-    fd.set("email", "user@example.com");
-    fd.set("category", CONTACT_PAGE.subjects[0]!);
-    fd.set("message", "Message suffisamment long pour la validation.");
-    fd.set("consent", "on");
-    const result = await submitContactMessage(fd, new Headers());
-    expect(result.ok).toBe(false);
-  });
-
   it("valide les champs obligatoires", async () => {
     vi.stubEnv("CONTACT_EMAIL", "ops@example.com");
     const fd = new FormData();

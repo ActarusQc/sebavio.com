@@ -8,6 +8,7 @@ import {
 import {
   LEGAL_LAST_UPDATED_ISO,
   LEGAL_LAST_UPDATED_LABEL,
+  LEGAL_VERSION,
   PRIVACY_PAGE,
 } from "@/features/marketing/lib/trust-content";
 import { buildTrustPageMetadata } from "@/features/marketing/lib/build-trust-metadata";
@@ -85,6 +86,8 @@ export default function PrivacyPage() {
           <time dateTime={LEGAL_LAST_UPDATED_ISO}>
             {LEGAL_LAST_UPDATED_LABEL}
           </time>
+          {" · "}
+          Version {LEGAL_VERSION}
         </p>
 
         <EditorialToc items={toc} className="mt-6" />
@@ -174,12 +177,11 @@ export default function PrivacyPage() {
               et le contexte de voyage pertinent.
             </p>
             <p>
-              En production, Sebavia utilise actuellement un fournisseur d’IA
-              (xAI). Les appels sont configurés de façon à ne pas demander le
-              stockage du contenu chez le fournisseur lorsque l’option est
-              disponible. Des conversations peuvent toutefois être conservées
-              dans Sebavia pour assurer le service (historique, sessions de
-              planification).
+              En production, Sebavia utilise xAI (Grok) pour ces fonctions. Les
+              appels sont configurés de façon à ne pas demander le stockage du
+              contenu chez le fournisseur lorsque l’option est disponible. Des
+              conversations peuvent toutefois être conservées dans Sebavia pour
+              assurer le service (historique, sessions de planification).
             </p>
             <p>
               Ne transmettez pas de renseignements confidentiels inutiles (mots
@@ -213,27 +215,26 @@ export default function PrivacyPage() {
 
           <LegalSection id="fournisseurs" title="Fournisseurs de services">
             <p>
-              Pour fournir le service, Sebavia s’appuie notamment sur des
-              catégories de fournisseurs suivantes (selon les fonctions
-              utilisées) :
+              Pour fournir le service, Sebavia s’appuie notamment sur les
+              catégories suivantes (selon les fonctions utilisées) :
             </p>
             <ul className="list-disc space-y-2 pl-5">
               <li>hébergement et infrastructure serveur;</li>
               <li>paiement : Stripe;</li>
               <li>cartographie, géocodage, directions et lieux : Google;</li>
-              <li>météo : OpenWeather (configuration actuelle);</li>
-              <li>estimation de prix de carburant : service FDE;</li>
+              <li>météo : OpenWeather;</li>
               <li>
-                messagerie transactionnelle : SMTP (domaine @sebavio.com);
+                estimation des coûts et des arrêts de carburant : moteur interne
+                d’estimation (données de référence agrégées);
               </li>
               <li>
-                intelligence artificielle : xAI (et éventuellement d’autres
-                fournisseurs configurés pour des fonctions précises, comme la
-                voix).
+                messagerie transactionnelle : SMTP2GO, pour l’envoi des messages
+                liés au service;
               </li>
+              <li>intelligence artificielle : xAI.</li>
             </ul>
             <p>
-              Ces fournisseurs traitent uniquement les données nécessaires à
+              Ces prestataires traitent uniquement les données nécessaires à
               leur rôle. Aucun outil d’analyse marketing tiers (type pixel
               publicitaire) n’est actuellement intégré dans l’application
               publique.

@@ -8,28 +8,21 @@ import {
 import {
   LEGAL_LAST_UPDATED_ISO,
   LEGAL_LAST_UPDATED_LABEL,
+  LEGAL_VERSION,
   TERMS_PAGE,
 } from "@/features/marketing/lib/trust-content";
 import { buildTrustPageMetadata } from "@/features/marketing/lib/build-trust-metadata";
-import { getPublicSupportEmail } from "@/features/marketing/lib/public-contact";
-import { getSiteUrl } from "@/lib/site-url";
 import {
-  PASS_PRICE_CENTS,
-  PLUS_PRICE_CENTS,
-} from "@/features/subscriptions/lib/official-plan-slugs";
+  getPublicSupportEmail,
+  OFFICIAL_PUBLIC_EMAIL,
+} from "@/features/marketing/lib/public-contact";
+import { getSiteUrl } from "@/lib/site-url";
 
 export const metadata = buildTrustPageMetadata({
   path: "/conditions-utilisation",
   title: TERMS_PAGE.meta.title,
   description: TERMS_PAGE.meta.description,
 });
-
-function formatCadFromCents(cents: number): string {
-  return new Intl.NumberFormat("fr-CA", {
-    style: "currency",
-    currency: "CAD",
-  }).format(cents / 100);
-}
 
 function TermsJsonLd() {
   const siteUrl = getSiteUrl();
@@ -77,8 +70,6 @@ function TermsJsonLd() {
 export default function TermsPage() {
   const supportEmail = getPublicSupportEmail();
   const { hero, toc } = TERMS_PAGE;
-  const passPrice = formatCadFromCents(PASS_PRICE_CENTS);
-  const plusPrice = formatCadFromCents(PLUS_PRICE_CENTS);
 
   return (
     <InstitutionalPageShell jsonLd={<TermsJsonLd />}>
@@ -98,11 +89,8 @@ export default function TermsPage() {
           <time dateTime={LEGAL_LAST_UPDATED_ISO}>
             {LEGAL_LAST_UPDATED_LABEL}
           </time>
-        </p>
-        <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-          Ce document décrit le fonctionnement actuel du service. Il doit encore
-          être validé par un conseiller juridique avant d’être considéré comme
-          version définitive.
+          {" · "}
+          Version {LEGAL_VERSION}
         </p>
 
         <EditorialToc items={toc} className="mt-6" />
@@ -213,36 +201,45 @@ export default function TermsPage() {
               <Link href="/pricing" className="text-[#3b6f9c] hover:underline">
                 Tarifs
               </Link>{" "}
-              et peuvent évoluer. À titre indicatif selon la configuration
-              officielle du produit :
+              et peuvent évoluer :
             </p>
             <ul className="list-disc space-y-2 pl-5">
               <li>
-                <strong>Découverte</strong> : accès gratuit d’aperçu;
+                <strong>Découverte</strong> : accès gratuit d’aperçu, avec des
+                fonctionnalités limitées;
               </li>
               <li>
-                <strong>Pass 30 jours</strong> : paiement unique d’environ{" "}
-                {passPrice}, accès complet pendant 30 jours, sans renouvellement
-                automatique;
+                <strong>Pass 30 jours</strong> : achat unique donnant accès
+                complet pendant 30 jours, sans renouvellement automatique;
               </li>
               <li>
-                <strong>Sebavia Plus</strong> : abonnement annuel d’environ{" "}
-                {plusPrice}, facturation récurrente annuelle.
+                <strong>Sebavia Plus</strong> : abonnement récurrent annuel.
+                L’accès se poursuit jusqu’à la fin de la période déjà payée
+                lorsque l’abonnement est annulé selon les mécanismes
+                disponibles.
               </li>
             </ul>
             <p>
-              Les prix affichés sont en dollars canadiens. Les taxes applicables
-              peuvent s’ajouter selon votre situation et le traitement Stripe.
+              Les prix, taxes, périodes de facturation et fonctionnalités
+              applicables sont ceux présentés sur la page Tarifs et confirmés au
+              moment de l’achat. Les montants sont en dollars canadiens; les
+              taxes applicables peuvent s’ajouter selon votre situation.
             </p>
             <p>
-              Les paiements sont traités par Stripe. Une politique de
-              remboursement générale libre-service n’est pas publiée dans le
-              produit : les remboursements éventuels sont traités au cas par
-              cas. Pour une question de facturation, utilisez{" "}
+              Les paiements sont traités par Stripe. Pour toute demande liée à
+              une facturation, communiquez avec Sebavia à l’adresse{" "}
+              <a
+                href={`mailto:${OFFICIAL_PUBLIC_EMAIL}`}
+                className="text-[#3b6f9c] hover:underline"
+              >
+                {OFFICIAL_PUBLIC_EMAIL}
+              </a>{" "}
+              ou à partir de la{" "}
               <Link href="/contact" className="text-[#3b6f9c] hover:underline">
-                Contact
+                page Contact
               </Link>
-              .
+              . La demande sera analysée selon les circonstances et les droits
+              prévus par les lois applicables.
             </p>
           </LegalSection>
 
@@ -272,8 +269,8 @@ export default function TermsPage() {
               Dans la mesure permise par la loi applicable, Sebavia et ses
               exploitants ne peuvent être tenus responsables des dommages
               indirects, ni des décisions de voyage prises sur la seule base des
-              estimations ou suggestions du service. Cette clause est formulée
-              de façon prudente et devra être validée juridiquement.
+              estimations ou suggestions du service, sous réserve des droits
+              prévus par les lois applicables.
             </p>
           </LegalSection>
 
@@ -295,12 +292,12 @@ export default function TermsPage() {
 
           <LegalSection id="droit" title="Droit applicable">
             <p>
-              Sebavia est une plateforme québécoise. Sous réserve de validation
-              juridique de l’entité exploitante, ces conditions sont destinées à
-              s’interpréter conformément aux lois applicables au Québec et au
-              Canada. En cas de litige, les tribunaux compétents seront
-              déterminés selon le droit applicable et le statut légal de
-              l’exploitant.
+              Sebavia est une plateforme québécoise. Dans la mesure permise par
+              la loi applicable, ces conditions s’interprètent conformément aux
+              lois du Québec et du Canada. En cas de litige, les tribunaux
+              compétents seront déterminés selon le droit applicable et le
+              statut légal de l’exploitant, sous réserve des droits prévus par
+              les lois applicables.
             </p>
           </LegalSection>
 
