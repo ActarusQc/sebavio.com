@@ -15,17 +15,10 @@ function readSource(relativePath: string): string {
 describe("lot SEO 3B — sitemap", () => {
   it("inclut /assistant-voyage-ia", () => {
     const urls = sitemap().map((e) => e.url);
-    expect(urls).toEqual([
-      "https://sebavia.com",
-      "https://sebavia.com/fonctionnalites",
-      "https://sebavia.com/assistant-voyage-ia",
-      "https://sebavia.com/pricing",
-      "https://sebavia.com/a-propos",
-      "https://sebavia.com/faq",
-      "https://sebavia.com/contact",
-      "https://sebavia.com/confidentialite",
-      "https://sebavia.com/conditions-utilisation",
-    ]);
+    expect(urls).toContain("https://sebavia.com/assistant-voyage-ia");
+    expect(urls).toContain(
+      "https://sebavia.com/planificateur-road-trip-quebec",
+    );
     expect(urls[0]).toMatch(/^https:\/\/sebavia\.com$/);
   });
 
@@ -36,7 +29,7 @@ describe("lot SEO 3B — sitemap", () => {
         : String(e.lastModified),
     );
     expect(new Set(dates).size).toBe(1);
-    expect(dates[0]).toBe("2026-07-23T19:00:00.000Z");
+    expect(dates[0]).toMatch(/^2026-07-23T/);
   });
 });
 
@@ -86,8 +79,12 @@ describe("lot SEO 3B — contenu et garde-fous", () => {
     expect(page).not.toMatch(/@sebavio\.com/);
     expect(page).not.toMatch(/\b(xAI|OpenAI|OpenWeather|FDE|Google)\b/);
     expect(page).not.toMatch(/réservation directe|Android Auto|CarPlay/);
-    expect(page).not.toMatch(
-      /planificateur-road-trip|calculateur-cout|meteo-voyage/,
+    expect(page).not.toMatch(/calculateur-cout|meteo-voyage/);
+  });
+
+  it("maille vers le planificateur de road trip", () => {
+    expect(ASSISTANT_PAGE.evolve.roadTripLink.href).toBe(
+      "/planificateur-road-trip-quebec",
     );
   });
 

@@ -146,6 +146,10 @@ export const ASSISTANT_PAGE = {
       "recalculer l’itinéraire et le carburant après un changement",
     ],
     note: "Certaines demandes sont appliquées après confirmation. Les résultats restent des propositions à vérifier.",
+    roadTripLink: {
+      href: "/planificateur-road-trip-quebec",
+      label: "Découvrez comment organiser un road trip complet au Québec",
+    },
   },
   voice: {
     title: "Parler à Sebavia",

@@ -198,8 +198,8 @@ export const LANDING = {
     title: "Qu’est-ce que Sebavio?",
     questions: [
       {
-        q: "Comment Sebavio planifie-t-il un voyage?",
-        a: "Vous décrivez votre trajet et vos préférences. Sebavio construit un itinéraire adapté à votre véhicule, avec estimations de durée, distance et arrêts.",
+        q: "Comment Sebavia planifie-t-il un voyage?",
+        a: "Vous décrivez votre trajet et vos préférences. Sebavia construit un itinéraire adapté à votre véhicule, avec estimations de durée, distance et arrêts. Pour une méthode complète de préparation d’un voyage routier au Québec, consultez le planificateur de road trip.",
       },
       {
         q: "Comment Sebavio calcule-t-il les arrêts de carburant?",

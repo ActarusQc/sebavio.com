@@ -51,3 +51,5 @@ export { FeaturesPlansTeaser } from "./features-plans-teaser";
 export { AssistantPageHero } from "./assistant-page-hero";
 export { AssistantConversationDemo } from "./assistant-conversation-demo";
 export { AssistantFaqSection } from "./assistant-faq-section";
+export { RoadTripPageHero } from "./road-trip-page-hero";
+export { RoadTripFaqSection } from "./road-trip-faq-section";

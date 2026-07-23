@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { FadeIn } from "@/components/common";
 import { LANDING } from "../lib/landing-content";
 import { cn } from "@/lib/utils";
@@ -54,10 +55,18 @@ export function FeatureGrid() {
           ))}
         </div>
 
-        <div className="mt-10 flex justify-center">
+        <div className="mt-10 flex flex-col items-center gap-3">
           <MarketingCtaButton href="/fonctionnalites" variant="soft">
             Voir toutes les fonctionnalités
           </MarketingCtaButton>
+          <p className="text-sm text-[#60758a]">
+            <Link
+              href="/planificateur-road-trip-quebec"
+              className="text-[#3b6f9c] hover:underline"
+            >
+              Planifier un road trip au Québec
+            </Link>
+          </p>
         </div>
       </div>
     </section>

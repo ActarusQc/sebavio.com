@@ -75,6 +75,13 @@ export function PricingAgentSection({
             </Link>
             {" · "}
             <Link
+              href="/planificateur-road-trip-quebec"
+              className="font-medium text-[#3b6f9c] hover:underline"
+            >
+              Planificateur de road trip au Québec
+            </Link>
+            {" · "}
+            <Link
               href="/fonctionnalites"
               className="font-medium text-[#3b6f9c] hover:underline"
             >

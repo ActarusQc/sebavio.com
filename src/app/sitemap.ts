@@ -3,9 +3,9 @@ import { getSiteUrl } from "@/lib/site-url";
 
 /**
  * Date figée : à mettre à jour uniquement quand le contenu public listé change réellement.
- * Lot SEO 3B : ajout de /assistant-voyage-ia.
+ * Lot SEO 3C : ajout de /planificateur-road-trip-quebec.
  */
-const SITEMAP_LAST_MODIFIED = new Date("2026-07-23T19:00:00.000Z");
+const SITEMAP_LAST_MODIFIED = new Date("2026-07-23T20:00:00.000Z");
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const siteUrl = getSiteUrl();
@@ -25,6 +25,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${siteUrl}/assistant-voyage-ia`,
+      lastModified: SITEMAP_LAST_MODIFIED,
+      changeFrequency: "weekly",
+      priority: 0.85,
+    },
+    {
+      url: `${siteUrl}/planificateur-road-trip-quebec`,
       lastModified: SITEMAP_LAST_MODIFIED,
       changeFrequency: "weekly",
       priority: 0.85,

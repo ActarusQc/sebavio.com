@@ -104,7 +104,17 @@ export default function FaqPage() {
             ))}
           </dl>
 
-          <div className="mt-12 flex flex-wrap gap-3">
+          <p className="mt-10 text-sm text-[#60758a]">
+            Pour organiser un voyage routier de bout en bout :{" "}
+            <Link
+              href="/planificateur-road-trip-quebec"
+              className="text-[#3b6f9c] hover:underline"
+            >
+              Planifier un road trip au Québec
+            </Link>
+            .
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
             <MarketingCtaButton href="/register">
               Planifier mon voyage
             </MarketingCtaButton>

@@ -91,6 +91,10 @@ export const FEATURES_PAGE = {
       "Recalcul après modification",
     ],
     note: "Sebavia aide à organiser le trajet ; les conditions routières réelles peuvent changer. Consultez aussi les avis officiels avant de prendre la route.",
+    roadTripLink: {
+      href: "/planificateur-road-trip-quebec",
+      label: "Planifier un road trip au Québec",
+    },
     faqLink: { href: "/faq", label: "Questions fréquentes sur les voyages" },
   },
   activities: {
