@@ -55,3 +55,5 @@ export { RoadTripPageHero } from "./road-trip-page-hero";
 export { RoadTripFaqSection } from "./road-trip-faq-section";
 export { FuelCostPageHero } from "./fuel-cost-page-hero";
 export { FuelCostFaqSection } from "./fuel-cost-faq-section";
+export { FuelStopsPageHero } from "./fuel-stops-page-hero";
+export { FuelStopsFaqSection } from "./fuel-stops-faq-section";

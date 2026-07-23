@@ -73,6 +73,13 @@ export function FeatureGrid() {
             >
               Estimer le coût du carburant
             </Link>
+            {" · "}
+            <Link
+              href="/planifier-arrets-carburant"
+              className="text-[#3b6f9c] hover:underline"
+            >
+              Planifier les arrêts
+            </Link>
           </p>
         </div>
       </div>

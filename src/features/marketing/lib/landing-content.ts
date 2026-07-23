@@ -203,7 +203,7 @@ export const LANDING = {
       },
       {
         q: "Comment Sebavia calcule-t-il les arrêts de carburant?",
-        a: "À partir de la consommation réelle, de la capacité du réservoir et du niveau d’essence au départ, Sebavia propose un plan de ravitaillement sur le parcours. Pour comprendre l’estimation du coût de l’essence selon la distance et le véhicule, consultez le calculateur de coût de carburant.",
+        a: "À partir de la consommation réelle, de la capacité du réservoir et du niveau d’essence au départ, Sebavia propose un plan de ravitaillement sur le parcours. Pour l’autonomie et les arrêts, consultez la page Planifier les arrêts de carburant; pour le budget essence, le calculateur de coût de carburant.",
       },
       {
         q: "À quoi sert l’agent conversationnel?",

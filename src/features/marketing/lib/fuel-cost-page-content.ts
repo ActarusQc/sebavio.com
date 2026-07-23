@@ -112,7 +112,7 @@ export const FUEL_COST_PAGE = {
       {
         term: "Coût estimé",
         definition:
-          "Montant associé aux achats utiles pour réaliser le trajet, selon l’estimation.",
+          "Valeur estimée du carburant consommé sur le parcours. Selon le niveau initial, ce montant peut différer des achats effectués en route.",
       },
       {
         term: "Prix essence",
@@ -198,7 +198,7 @@ export const FUEL_COST_PAGE = {
       {
         term: "Coût estimé",
         definition:
-          "Le montant estimé des achats utiles pendant le trajet (et non un prix à la pompe garanti).",
+          "Valeur estimée du carburant consommé sur le parcours (libellé principal de l’estimation). Ce n’est pas un prix à la pompe garanti, et ce montant peut différer des seuls achats en route.",
       },
       {
         term: "Carburant initial",
@@ -220,6 +220,10 @@ export const FUEL_COST_PAGE = {
       "Achats possibles pendant le trajet",
     ],
     note: "Les arrêts suggérés doivent être confirmés : stations, prix et disponibilités peuvent changer.",
+    stopsLink: {
+      href: "/planifier-arrets-carburant",
+      label: "Découvrez comment planifier vos arrêts de ravitaillement",
+    },
   },
   tips: {
     title: "Conseils pour une estimation plus réaliste",

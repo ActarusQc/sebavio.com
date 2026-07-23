@@ -156,6 +156,10 @@ export default function FeaturesPage() {
           href={fuel.costCalculatorLink.href}
           label={fuel.costCalculatorLink.label}
         />
+        <FeaturesInlineLink
+          href={fuel.stopsPlannerLink.href}
+          label={fuel.stopsPlannerLink.label}
+        />
       </FeaturesCapabilitySection>
 
       <FeaturesCapabilitySection

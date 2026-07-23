@@ -154,6 +154,10 @@ export const ASSISTANT_PAGE = {
       href: "/calculateur-cout-carburant-voyage",
       label: "Comprendre l’estimation du coût de carburant",
     },
+    fuelStopsLink: {
+      href: "/planifier-arrets-carburant",
+      label: "Planifier les arrêts de ravitaillement",
+    },
   },
   voice: {
     title: "Parler à Sebavia",

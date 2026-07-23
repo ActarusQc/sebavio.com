@@ -395,6 +395,14 @@ export default function CalculateurCoutCarburantVoyagePage() {
           ))}
         </ul>
         <p className="mt-5 text-sm text-[#60758a]">{page.stopsSummary.note}</p>
+        <p className="mt-4 text-sm">
+          <Link
+            href={page.stopsSummary.stopsLink.href}
+            className="text-[#3b6f9c] hover:underline"
+          >
+            {page.stopsSummary.stopsLink.label}
+          </Link>
+        </p>
       </SectionShell>
 
       <SectionShell id="conseils" title={page.tips.title} dark>

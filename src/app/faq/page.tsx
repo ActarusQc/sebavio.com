@@ -119,6 +119,13 @@ export default function FaqPage() {
             >
               Calculateur de coût de carburant
             </Link>
+            . Pour les arrêts :{" "}
+            <Link
+              href="/planifier-arrets-carburant"
+              className="text-[#3b6f9c] hover:underline"
+            >
+              Planifier les arrêts de carburant
+            </Link>
             .
           </p>
           <div className="mt-6 flex flex-wrap gap-3">

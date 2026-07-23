@@ -291,6 +291,14 @@ export default function PlanificateurRoadTripQuebecPage() {
         <p className="mt-5 rounded-xl border border-[#d7e0ea] bg-[#f7fafc] px-4 py-3 text-sm text-[#60758a]">
           {page.fuelStops.note}
         </p>
+        <p className="mt-4 text-sm">
+          <Link
+            href={page.fuelStops.stopsLink.href}
+            className="text-[#3b6f9c] hover:underline"
+          >
+            {page.fuelStops.stopsLink.label}
+          </Link>
+        </p>
       </SectionShell>
 
       <SectionShell

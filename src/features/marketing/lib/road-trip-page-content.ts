@@ -147,6 +147,10 @@ export const ROAD_TRIP_PAGE = {
       "Suggestions d’arrêts à confirmer pendant le voyage",
     ],
     note: "Les stations peuvent être fermées et les prix varient. Conservez une marge raisonnable et vérifiez le niveau réel de carburant : l’estimation ne remplace pas cette vérification.",
+    stopsLink: {
+      href: "/planifier-arrets-carburant",
+      label: "Planifier les arrêts de carburant",
+    },
   },
   weather: {
     title: "Consultez la météo du voyage",

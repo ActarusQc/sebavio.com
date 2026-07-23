@@ -89,6 +89,13 @@ export function PricingAgentSection({
             </Link>
             {" · "}
             <Link
+              href="/planifier-arrets-carburant"
+              className="font-medium text-[#3b6f9c] hover:underline"
+            >
+              Arrêts de carburant
+            </Link>
+            {" · "}
+            <Link
               href="/fonctionnalites"
               className="font-medium text-[#3b6f9c] hover:underline"
             >

@@ -133,7 +133,11 @@ export const FEATURES_PAGE = {
     note: "Le plein initial peut être traité séparément. Les prix et disponibilités des stations varient : les estimations ne sont pas des garanties, et les arrêts doivent être confirmés pendant le voyage.",
     costCalculatorLink: {
       href: "/calculateur-cout-carburant-voyage",
-      label: "Comprendre le calcul du coût de carburant",
+      label: "Estimer le coût du carburant",
+    },
+    stopsPlannerLink: {
+      href: "/planifier-arrets-carburant",
+      label: "Planifier les arrêts de ravitaillement",
     },
   },
   personalization: {

@@ -243,6 +243,13 @@ export default function AssistantVoyageIaPage() {
           >
             {page.evolve.fuelCostLink.label}
           </Link>
+          {" · "}
+          <Link
+            href={page.evolve.fuelStopsLink.href}
+            className="text-[#3b6f9c] hover:underline"
+          >
+            {page.evolve.fuelStopsLink.label}
+          </Link>
         </p>
       </SectionShell>
 

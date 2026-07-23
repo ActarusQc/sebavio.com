@@ -3,9 +3,9 @@ import { getSiteUrl } from "@/lib/site-url";
 
 /**
  * Date figée : à mettre à jour uniquement quand le contenu public listé change réellement.
- * Lot SEO 3D : ajout de /calculateur-cout-carburant-voyage.
+ * Lot SEO 3E : ajout de /planifier-arrets-carburant.
  */
-const SITEMAP_LAST_MODIFIED = new Date("2026-07-23T21:00:00.000Z");
+const SITEMAP_LAST_MODIFIED = new Date("2026-07-23T22:00:00.000Z");
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const siteUrl = getSiteUrl();
@@ -37,6 +37,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${siteUrl}/calculateur-cout-carburant-voyage`,
+      lastModified: SITEMAP_LAST_MODIFIED,
+      changeFrequency: "weekly",
+      priority: 0.85,
+    },
+    {
+      url: `${siteUrl}/planifier-arrets-carburant`,
       lastModified: SITEMAP_LAST_MODIFIED,
       changeFrequency: "weekly",
       priority: 0.85,
