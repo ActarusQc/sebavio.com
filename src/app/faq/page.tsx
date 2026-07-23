@@ -112,6 +112,13 @@ export default function FaqPage() {
               Voir les fonctionnalités
             </MarketingCtaButton>
           </div>
+          <p className="mt-6 text-sm text-[#60758a]">
+            Vous ne trouvez pas votre réponse ?{" "}
+            <Link href="/contact" className="text-[#3b6f9c] hover:underline">
+              Contactez-nous
+            </Link>
+            .
+          </p>
         </section>
       </main>
       <SiteFooter />

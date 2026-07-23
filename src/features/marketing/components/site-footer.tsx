@@ -5,48 +5,43 @@ import { LANDING } from "../lib/landing-content";
 
 const FOOTER_COLUMNS = [
   {
-    title: "Produit",
+    title: "Sebavia",
     links: [
-      { href: "/#fonctionnalites", label: "Fonctionnalités" },
-      { href: "/#demo-agent", label: "Agent conversationnel" },
-      { href: "/#fonctionnalites", label: "Plan de carburant" },
-      {
-        href: "/login?callbackUrl=/dashboard/vehicles",
-        label: "Gestion du véhicule",
-      },
+      { href: "/a-propos", label: "À propos" },
       { href: "/pricing", label: "Tarifs" },
+      { href: "/faq", label: "FAQ" },
+      { href: "/#fonctionnalites", label: "Fonctionnalités" },
     ],
   },
   {
-    title: "Ressources",
+    title: "Assistance",
     links: [
-      { href: "/faq", label: "FAQ" },
-      { href: "/#comment-ca-fonctionne", label: "Comment ça fonctionne" },
-      { href: "/#a-propos", label: "À propos" },
+      { href: "/contact", label: "Contact" },
+      { href: "/login", label: "Connexion" },
       { href: "/register", label: "Créer un compte" },
+      { href: "/forgot-password", label: "Mot de passe oublié" },
+    ],
+  },
+  {
+    title: "Légal",
+    links: [
+      { href: "/confidentialite", label: "Confidentialité" },
+      { href: "/conditions-utilisation", label: "Conditions d’utilisation" },
     ],
   },
   {
     title: "Espace membre",
     links: [
-      { href: "/login", label: "Connexion" },
       { href: "/login?callbackUrl=/dashboard/trips", label: "Voyages" },
       { href: "/login?callbackUrl=/dashboard/vehicles", label: "Véhicules" },
       {
         href: "/login?callbackUrl=/dashboard/maintenance",
         label: "Entretien",
       },
-    ],
-  },
-  {
-    title: "Compte",
-    links: [
-      { href: "/forgot-password", label: "Mot de passe oublié" },
       {
         href: "/login?callbackUrl=/dashboard/settings",
         label: "Paramètres",
       },
-      { href: "/pricing", label: "Forfaits" },
     ],
   },
 ] as const;
@@ -75,14 +70,14 @@ export function SiteFooter() {
               </span>
               <span className="flex flex-col">
                 <span className="font-heading text-lg font-bold tracking-wide">
-                  Sebavio
+                  Sebavia
                 </span>
                 <span className="text-xs text-white/55">
                   {LANDING.brandTagline}
                 </span>
               </span>
               <span className="sr-only">
-                Sebavio — L’étoile qui guide votre route
+                Sebavia — L’étoile qui guide votre route
               </span>
             </Link>
             <p className="max-w-sm text-sm leading-relaxed text-white/65">
@@ -113,7 +108,7 @@ export function SiteFooter() {
 
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-center sm:flex-row sm:text-left">
           <p className="text-xs text-white/50">
-            © {year} Sebavio. Tous droits réservés.
+            © {year} Sebavia. Tous droits réservés.
           </p>
           <p className="text-xs text-white/50">{LANDING.footer.crafted}</p>
         </div>

@@ -1,20 +1,18 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { BRAND_ASSETS } from "../lib/brand-assets";
-import { LANDING } from "../lib/landing-content";
 import { MarketingCtaButton } from "./marketing-cta-button";
 
 const NAV_LINKS = [
   { href: "/#fonctionnalites", label: "Fonctionnalités" },
   { href: "/#comment-ca-fonctionne", label: "Comment ça fonctionne" },
   { href: "/pricing", label: "Tarifs" },
-  { href: "/#a-propos", label: "À propos" },
+  { href: "/a-propos", label: "À propos" },
 ] as const;
 
 export type SiteHeaderProps = {
@@ -39,43 +37,22 @@ export function SiteHeader({ variant = "light" }: SiteHeaderProps) {
         <Link
           href="/"
           className={cn(
-            "focus-visible:ring-ring relative flex shrink-0 items-center gap-3 focus-visible:ring-2 focus-visible:outline-none",
-            isDark ? "h-12" : "h-10 w-[11.5rem] sm:h-11 sm:w-[14rem]",
+            "focus-visible:ring-ring relative flex shrink-0 items-center focus-visible:ring-2 focus-visible:outline-none",
+            isDark
+              ? "h-12 w-[13.5rem] sm:h-[3.25rem] sm:w-[16rem]"
+              : "h-10 w-[11.5rem] sm:h-11 sm:w-[14rem]",
           )}
         >
-          {isDark ? (
-            <>
-              <span className="relative size-12 overflow-hidden rounded-full ring-1 ring-white/15 sm:size-[3.25rem]">
-                <Image
-                  src={BRAND_ASSETS.logoBlanc}
-                  alt=""
-                  fill
-                  className="object-cover object-top"
-                  sizes="52px"
-                  priority
-                  aria-hidden
-                />
-              </span>
-              <span className="flex flex-col leading-tight">
-                <span className="font-heading text-lg font-bold tracking-wide text-white sm:text-xl">
-                  Sebavio
-                </span>
-                <span className="hidden text-[0.7rem] text-white/60 sm:block">
-                  {LANDING.brandTagline}
-                </span>
-              </span>
-              <span className="sr-only">Sebavio — {LANDING.brandTagline}</span>
-            </>
-          ) : (
-            <Image
-              src={BRAND_ASSETS.logoHorizontal}
-              alt="Sebavio — L’étoile qui guide votre route"
-              fill
-              className="object-contain object-left"
-              sizes="224px"
-              priority
-            />
-          )}
+          {/* eslint-disable-next-line @next/next/no-img-element -- logo marque, pas d’optimisation Image */}
+          <img
+            src={
+              isDark
+                ? BRAND_ASSETS.logoHorizontalSidebar
+                : BRAND_ASSETS.logoHorizontal
+            }
+            alt="Sebavia — L’étoile qui guide votre route"
+            className="h-full w-full object-contain object-left"
+          />
         </Link>
 
         <nav
