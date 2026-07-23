@@ -7,6 +7,7 @@ import {
   MarketingRouteAdaptMini,
   MarketingVehicleMini,
 } from "./marketing-feature-minis";
+import { MarketingCtaButton } from "./marketing-cta-button";
 
 export function FeatureGrid() {
   const { features } = LANDING;
@@ -51,6 +52,12 @@ export function FeatureGrid() {
               </article>
             </FadeIn>
           ))}
+        </div>
+
+        <div className="mt-10 flex justify-center">
+          <MarketingCtaButton href="/fonctionnalites" variant="soft">
+            Voir toutes les fonctionnalités
+          </MarketingCtaButton>
         </div>
       </div>
     </section>

@@ -43,7 +43,7 @@ const TABS = [
     id: "decouvrir",
     label: "Découvrir",
     shortLabel: "Découvrir",
-    href: "#fonctionnalites",
+    href: "/fonctionnalites",
     icon: BRAND_ASSETS.icons.boussole.teal,
     active: false,
   },

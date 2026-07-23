@@ -1,4 +1,4 @@
-/** Chemins publics des assets d’identité Sebavio. */
+/** Chemins publics des assets d’identité Sebavia. */
 export const BRAND_ASSETS = {
   /** Logo vertical (emblème + wordmark + baseline) pour fonds clairs — PNG transparent. */
   logo: "/assets/branding/sebavio/logo-sebavio-2026-clair.png",
@@ -13,6 +13,14 @@ export const BRAND_ASSETS = {
   logoJpegFondNoir: "/assets/branding/sebavio/logo-sebavio-2026.png",
   /** Logo horizontal (emblème + wordmark) pour header — PNG transparent. */
   logoHorizontal: "/assets/branding/sebavio/logo-sebavio-horizontal-clair.png",
+  /** Logo horizontal Sebavia — version sidebar sombre (PNG lisible sur fond sombre). */
+  logoHorizontalSidebar:
+    "/assets/branding/sebavio/logo-sebavia-horizontal-sidebar.png",
+  /** Master PNG du logo horizontal (fichier source, wordmark sombre). */
+  logoHorizontalSebavia: "/assets/branding/sebavio/logo-sebavia-horizontal.png",
+  /** SVG autonome (PNG embarqué) — alternative à logoHorizontalSidebar. */
+  logoHorizontalSidebarSvg:
+    "/assets/branding/sebavio/logo-sebavia-horizontal.svg",
   fondHero: "/assets/branding/sebavio/fond-hero.png",
   /** Photo principale du Hero (sans dégradé intégré). */
   heroCampingcar: "/assets/branding/sebavio/hero-campingcar.webp",
@@ -20,6 +28,12 @@ export const BRAND_ASSETS = {
   heroNightRoad: "/assets/branding/sebavio/hero-night-road.png",
   /** Paysage seul (sans panneaux UI) pour le hero. */
   heroLandscape: "/assets/branding/sebavio/hero-landscape-night.png",
+  /** Variante WebP du paysage hero (plus légère). */
+  heroLandscapeWebp: "/assets/branding/sebavio/hero-landscape-night.webp",
+  /** Fond bienvenue dashboard — panorama route (thème clair, fade blanc à gauche). */
+  fondBienvenueClair: "/assets/branding/sebavio/fond-bienvenue-clair.png",
+  /** Fond bienvenue dashboard — panorama route (thème sombre, fade navy à gauche). */
+  fondBienvenueSombre: "/assets/branding/sebavio/fond-bienvenue-sombre.png",
   /** Composition desktop + mobile (image complète, ne pas découper). */
   appPreview: "/assets/branding/sebavio/sebavio-mobile-web.png",
   sparkle: "/assets/branding/sebavio/sparkle-dore.png",

@@ -24,7 +24,7 @@ export function FinalCta() {
               {finalCta.primary}
             </MarketingCtaButton>
             <MarketingCtaButton
-              href="/#fonctionnalites"
+              href="/fonctionnalites"
               size="lg"
               variant="secondary"
             >

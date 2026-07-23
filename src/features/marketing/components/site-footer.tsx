@@ -7,10 +7,10 @@ const FOOTER_COLUMNS = [
   {
     title: "Sebavia",
     links: [
+      { href: "/fonctionnalites", label: "Fonctionnalités" },
       { href: "/a-propos", label: "À propos" },
       { href: "/pricing", label: "Tarifs" },
       { href: "/faq", label: "FAQ" },
-      { href: "/#fonctionnalites", label: "Fonctionnalités" },
     ],
   },
   {

@@ -16,6 +16,7 @@ describe("sitemap lot SEO 2", () => {
     const urls = sitemap().map((e) => e.url);
     expect(urls).toEqual([
       "https://sebavia.com",
+      "https://sebavia.com/fonctionnalites",
       "https://sebavia.com/pricing",
       "https://sebavia.com/a-propos",
       "https://sebavia.com/faq",
@@ -33,7 +34,7 @@ describe("sitemap lot SEO 2", () => {
         : String(e.lastModified),
     );
     expect(new Set(dates).size).toBe(1);
-    expect(dates[0]).toBe("2026-07-23T16:00:00.000Z");
+    expect(dates[0]).toBe("2026-07-23T18:00:00.000Z");
   });
 });
 

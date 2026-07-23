@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Mic, MessageSquareText } from "lucide-react";
 import { FadeIn } from "@/components/common";
 import { BRAND_ASSETS } from "../lib/brand-assets";
@@ -21,7 +22,7 @@ export function PricingAgentSection({
       <div className="mx-auto grid max-w-[90rem] items-center gap-10 px-4 sm:px-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-12 lg:px-10">
         <FadeIn>
           <p className="text-[0.8rem] font-semibold tracking-wide text-[#3b82f6] uppercase">
-            Agent Sebavio
+            Agent Sebavia
           </p>
           <h2
             id="pricing-agent-heading"
@@ -64,12 +65,22 @@ export function PricingAgentSection({
             </div>
           </div>
           <p className="mt-5 text-xs text-[#60758a]/80">{agent.footnote}</p>
+          <p className="mt-4 text-sm text-[#60758a]">
+            Découvrez l’ensemble des capacités sur la page{" "}
+            <Link
+              href="/fonctionnalites"
+              className="font-medium text-[#3b6f9c] hover:underline"
+            >
+              Fonctionnalités
+            </Link>
+            .
+          </p>
         </FadeIn>
 
         <FadeIn delay={0.05}>
           <article
             className="mx-auto w-full max-w-md rounded-[1.25rem] border border-[#2a3f5c]/80 bg-[#0c1e38]/95 p-4 shadow-[0_24px_48px_rgba(0,0,0,0.35)]"
-            aria-label="Exemple de conversation avec l’agent Sebavio"
+            aria-label="Exemple de conversation avec l’agent Sebavia"
           >
             <header className="mb-4 flex items-center gap-2.5 border-b border-white/10 pb-3">
               <span className="relative size-8 overflow-hidden rounded-full ring-1 ring-white/15">
@@ -83,7 +94,7 @@ export function PricingAgentSection({
                 />
               </span>
               <div>
-                <p className="text-sm font-semibold text-white">Sebavio</p>
+                <p className="text-sm font-semibold text-white">Sebavia</p>
                 <p className="text-[0.7rem] text-white/50">
                   Copilote · texte{voiceIncluded ? " et voix" : ""}
                 </p>
@@ -118,7 +129,7 @@ export function PricingAgentSection({
                 {agent.demoUser}
               </p>
               <p className="mr-2 rounded-2xl rounded-tl-md bg-gradient-to-br from-[#1a3358] to-[#2a1f4a] px-3 py-2.5 text-[0.8rem] leading-relaxed text-white/95">
-                <span className="sr-only">Sebavio : </span>
+                <span className="sr-only">Sebavia : </span>
                 {agent.demoAssistant}
               </p>
               <div className="rounded-xl border border-white/10 bg-white/[0.04] p-3">

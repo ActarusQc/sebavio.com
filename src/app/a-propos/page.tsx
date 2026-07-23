@@ -173,6 +173,13 @@ export default function AboutPage() {
           </div>
           <p className="mt-6 text-sm text-[#60758a]">
             En savoir plus :{" "}
+            <Link
+              href="/fonctionnalites"
+              className="text-[#3b6f9c] hover:underline"
+            >
+              Fonctionnalités
+            </Link>
+            {" · "}
             <Link href="/faq" className="text-[#3b6f9c] hover:underline">
               FAQ
             </Link>

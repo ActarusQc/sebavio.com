@@ -108,7 +108,7 @@ export default function FaqPage() {
             <MarketingCtaButton href="/register">
               Planifier mon voyage
             </MarketingCtaButton>
-            <MarketingCtaButton href="/#fonctionnalites" variant="soft">
+            <MarketingCtaButton href="/fonctionnalites" variant="soft">
               Voir les fonctionnalités
             </MarketingCtaButton>
           </div>

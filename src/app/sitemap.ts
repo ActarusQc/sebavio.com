@@ -3,8 +3,9 @@ import { getSiteUrl } from "@/lib/site-url";
 
 /**
  * Date figée : à mettre à jour uniquement quand le contenu public listé change réellement.
+ * Lot SEO 3A : ajout de /fonctionnalites.
  */
-const SITEMAP_LAST_MODIFIED = new Date("2026-07-23T16:00:00.000Z");
+const SITEMAP_LAST_MODIFIED = new Date("2026-07-23T18:00:00.000Z");
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const siteUrl = getSiteUrl();
@@ -15,6 +16,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: SITEMAP_LAST_MODIFIED,
       changeFrequency: "weekly",
       priority: 1,
+    },
+    {
+      url: `${siteUrl}/fonctionnalites`,
+      lastModified: SITEMAP_LAST_MODIFIED,
+      changeFrequency: "weekly",
+      priority: 0.9,
     },
     {
       url: `${siteUrl}/pricing`,

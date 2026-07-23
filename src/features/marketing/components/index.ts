@@ -38,3 +38,13 @@ export { InstitutionalFinalCta } from "./institutional-final-cta";
 export { EditorialToc } from "./editorial-toc";
 export { LegalSection } from "./legal-section";
 export { ContactForm } from "./contact-form";
+export { FeaturesPageHero } from "./features-page-hero";
+export { FeaturesCategoryNav } from "./features-category-nav";
+export {
+  FeaturesCapabilitySection,
+  FeaturesExampleList,
+  FeaturesInlineLink,
+} from "./features-capability-section";
+export { FeaturesHowItWorks } from "./features-how-it-works";
+export { FeaturesUseCases } from "./features-use-cases";
+export { FeaturesPlansTeaser } from "./features-plans-teaser";

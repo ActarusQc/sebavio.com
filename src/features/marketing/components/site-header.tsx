@@ -9,7 +9,7 @@ import { BRAND_ASSETS } from "../lib/brand-assets";
 import { MarketingCtaButton } from "./marketing-cta-button";
 
 const NAV_LINKS = [
-  { href: "/#fonctionnalites", label: "Fonctionnalités" },
+  { href: "/fonctionnalites", label: "Fonctionnalités" },
   { href: "/#comment-ca-fonctionne", label: "Comment ça fonctionne" },
   { href: "/pricing", label: "Tarifs" },
   { href: "/a-propos", label: "À propos" },
