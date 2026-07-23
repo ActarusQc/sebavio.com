@@ -96,6 +96,13 @@ export function PricingAgentSection({
             </Link>
             {" · "}
             <Link
+              href="/meteo-voyage"
+              className="font-medium text-[#3b6f9c] hover:underline"
+            >
+              Météo du voyage
+            </Link>
+            {" · "}
+            <Link
               href="/fonctionnalites"
               className="font-medium text-[#3b6f9c] hover:underline"
             >

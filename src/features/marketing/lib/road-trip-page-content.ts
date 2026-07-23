@@ -161,6 +161,10 @@ export const ROAD_TRIP_PAGE = {
       "Aide pour ajuster rythme et activités extérieures",
     ],
     note: "Revérifiez les prévisions à l’approche du départ : elles évoluent.",
+    weatherPageLink: {
+      href: "/meteo-voyage",
+      label: "Voir comment Sebavia présente les prévisions du voyage",
+    },
   },
   group: {
     title: "Adaptez le voyage à votre groupe",

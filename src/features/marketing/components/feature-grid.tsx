@@ -80,6 +80,13 @@ export function FeatureGrid() {
             >
               Planifier les arrêts
             </Link>
+            {" · "}
+            <Link
+              href="/meteo-voyage"
+              className="text-[#3b6f9c] hover:underline"
+            >
+              Météo du voyage
+            </Link>
           </p>
         </div>
       </div>

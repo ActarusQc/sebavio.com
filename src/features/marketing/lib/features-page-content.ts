@@ -117,6 +117,10 @@ export const FEATURES_PAGE = {
       "Aide concrète pour savoir quoi prévoir",
     ],
     note: "Les prévisions météo évoluent : revérifiez-les à l’approche du départ.",
+    weatherPageLink: {
+      href: "/meteo-voyage",
+      label: "Découvrir la météo intégrée au voyage",
+    },
   },
   fuel: {
     title: "Carburant et arrêts de ravitaillement",

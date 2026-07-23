@@ -57,3 +57,5 @@ export { FuelCostPageHero } from "./fuel-cost-page-hero";
 export { FuelCostFaqSection } from "./fuel-cost-faq-section";
 export { FuelStopsPageHero } from "./fuel-stops-page-hero";
 export { FuelStopsFaqSection } from "./fuel-stops-faq-section";
+export { WeatherPageHero } from "./weather-page-hero";
+export { WeatherFaqSection } from "./weather-faq-section";

@@ -211,7 +211,7 @@ export const LANDING = {
       },
       {
         q: "Quelle est la différence entre Sebavia et une application de carte?",
-        a: "Une carte montre la route. Sebavia connaît aussi votre véhicule, le carburant, la météo et les activités, et vous accompagne avant, pendant et après le voyage.",
+        a: "Une carte montre la route. Sebavia connaît aussi votre véhicule, le carburant, la météo et les activités, et vous accompagne avant, pendant et après le voyage. Pour les prévisions liées aux dates du trajet, consultez la page Météo du voyage.",
       },
     ],
   },

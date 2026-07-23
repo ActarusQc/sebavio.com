@@ -158,6 +158,10 @@ export const ASSISTANT_PAGE = {
       href: "/planifier-arrets-carburant",
       label: "Planifier les arrêts de ravitaillement",
     },
+    weatherPageLink: {
+      href: "/meteo-voyage",
+      label: "Découvrir la météo intégrée au voyage",
+    },
   },
   voice: {
     title: "Parler à Sebavia",

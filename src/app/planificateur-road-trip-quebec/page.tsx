@@ -312,6 +312,14 @@ export default function PlanificateurRoadTripQuebecPage() {
           ))}
         </ul>
         <p className="mt-5 text-sm text-[#60758a]">{page.weather.note}</p>
+        <p className="mt-4 text-sm">
+          <Link
+            href={page.weather.weatherPageLink.href}
+            className="text-[#3b6f9c] hover:underline"
+          >
+            {page.weather.weatherPageLink.label}
+          </Link>
+        </p>
       </SectionShell>
 
       <SectionShell id="groupe" title={page.group.title} lead={page.group.lead}>

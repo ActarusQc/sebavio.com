@@ -140,7 +140,12 @@ export default function FeaturesPage() {
         lead={weather.lead}
         items={weather.items}
         note={weather.note}
-      />
+      >
+        <FeaturesInlineLink
+          href={weather.weatherPageLink.href}
+          label={weather.weatherPageLink.label}
+        />
+      </FeaturesCapabilitySection>
 
       <FeaturesCapabilitySection
         id="carburant"

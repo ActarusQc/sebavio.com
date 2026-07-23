@@ -126,6 +126,13 @@ export default function FaqPage() {
             >
               Planifier les arrêts de carburant
             </Link>
+            . Pour les prévisions :{" "}
+            <Link
+              href="/meteo-voyage"
+              className="text-[#3b6f9c] hover:underline"
+            >
+              Météo du voyage
+            </Link>
             .
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
