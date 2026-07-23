@@ -75,6 +75,10 @@ export const FEATURES_PAGE = {
       "Utiliser la conversation écrite ou la voix (selon forfait)",
     ],
     note: "Les propositions (horaires, disponibilités, lieux) peuvent évoluer : vérifiez toujours les renseignements importants avant de partir.",
+    moreLink: {
+      href: "/assistant-voyage-ia",
+      label: "Découvrir l’assistant voyage IA",
+    },
   },
   itinerary: {
     title: "Un itinéraire que vous pouvez adapter",
@@ -184,7 +188,7 @@ export const FEATURES_PAGE = {
     items: [
       {
         name: "Découverte",
-        body: `${PRICING_PAGE.plans.decouverte.subtitle} Aperçu limité pour explorer la plateforme.`,
+        body: `${PRICING_PAGE.plans.decouverte.subtitle} Accès d’aperçu limité.`,
       },
       {
         name: "Pass 30 jours",

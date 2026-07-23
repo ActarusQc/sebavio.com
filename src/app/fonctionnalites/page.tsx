@@ -103,6 +103,10 @@ export default function FeaturesPage() {
         note={assistant.note}
       >
         <FeaturesExampleList examples={assistant.examples} />
+        <FeaturesInlineLink
+          href={assistant.moreLink.href}
+          label={assistant.moreLink.label}
+        />
       </FeaturesCapabilitySection>
 
       <FeaturesCapabilitySection

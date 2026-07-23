@@ -111,6 +111,9 @@ export default function FaqPage() {
             <MarketingCtaButton href="/fonctionnalites" variant="soft">
               Voir les fonctionnalités
             </MarketingCtaButton>
+            <MarketingCtaButton href="/assistant-voyage-ia" variant="soft">
+              Assistant voyage IA
+            </MarketingCtaButton>
           </div>
           <p className="mt-6 text-sm text-[#60758a]">
             Vous ne trouvez pas votre réponse ?{" "}

@@ -15,8 +15,8 @@ export function FeaturesUseCases() {
           Des scénarios concrets
         </h2>
         <p className="mt-3 max-w-2xl text-base text-[#60758a]">
-          Quelques façons d’utiliser Sebavia selon le type de voyage — sans
-          inventer de résultats garantis.
+          Découvrez comment Sebavia peut accompagner différents types de
+          voyages, de l’escapade de fin de semaine au long road trip.
         </p>
         <ul className="mt-8 grid gap-4 sm:grid-cols-2">
           {FEATURES_PAGE.useCases.map((item) => (

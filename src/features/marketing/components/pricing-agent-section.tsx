@@ -66,7 +66,14 @@ export function PricingAgentSection({
           </div>
           <p className="mt-5 text-xs text-[#60758a]/80">{agent.footnote}</p>
           <p className="mt-4 text-sm text-[#60758a]">
-            Découvrez l’ensemble des capacités sur la page{" "}
+            En savoir plus :{" "}
+            <Link
+              href="/assistant-voyage-ia"
+              className="font-medium text-[#3b6f9c] hover:underline"
+            >
+              Assistant voyage IA
+            </Link>
+            {" · "}
             <Link
               href="/fonctionnalites"
               className="font-medium text-[#3b6f9c] hover:underline"

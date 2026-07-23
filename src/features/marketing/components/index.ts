@@ -48,3 +48,6 @@ export {
 export { FeaturesHowItWorks } from "./features-how-it-works";
 export { FeaturesUseCases } from "./features-use-cases";
 export { FeaturesPlansTeaser } from "./features-plans-teaser";
+export { AssistantPageHero } from "./assistant-page-hero";
+export { AssistantConversationDemo } from "./assistant-conversation-demo";
+export { AssistantFaqSection } from "./assistant-faq-section";
