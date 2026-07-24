@@ -39,8 +39,8 @@ describe("lot SEO 4D — registre et hub", () => {
   it("lie le guide couple aux autres", () => {
     const couple = getGuideBySlug("road-trip-couple-quebec")!;
     expect(getRelatedGuides(couple).map((g) => g.slug)).toEqual([
+      "road-trip-gastronomique-quebec",
       "escapade-fin-de-semaine-quebec",
-      "checklist-road-trip-quebec",
       "budget-road-trip-quebec",
     ]);
   });

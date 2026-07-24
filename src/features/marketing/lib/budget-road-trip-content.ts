@@ -207,6 +207,10 @@ export const BUDGET_GUIDE = {
         ],
       },
     ],
+    guideLink: {
+      href: "/guides/road-trip-gastronomique-quebec",
+      label: "Budget d’une escapade gourmande",
+    },
   },
   forgotten: {
     id: "oublis",

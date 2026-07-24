@@ -11,25 +11,25 @@ import { GuideArticleMeta } from "@/features/marketing/components/guide-article-
 import { GuideRelatedGuides } from "@/features/marketing/components/guide-related-guides";
 import { buildTrustPageMetadata } from "@/features/marketing/lib/build-trust-metadata";
 import {
+  GASTRONOMY_DAY_EXAMPLE,
+  GASTRONOMY_GUIDE,
+} from "@/features/marketing/lib/gastronomy-road-trip-content";
+import {
   formatGuideDate,
   getGuideBySlug,
 } from "@/features/marketing/lib/guides-registry";
-import {
-  WEEKEND_DAY_EXAMPLE,
-  WEEKEND_GUIDE,
-} from "@/features/marketing/lib/weekend-road-trip-content";
 import { getSiteUrl } from "@/lib/site-url";
 
-const SLUG = "escapade-fin-de-semaine-quebec";
+const SLUG = "road-trip-gastronomique-quebec";
 const PATH = `/guides/${SLUG}` as const;
 
 export const metadata = buildTrustPageMetadata({
   path: PATH,
-  title: WEEKEND_GUIDE.meta.title,
-  description: WEEKEND_GUIDE.meta.description,
+  title: GASTRONOMY_GUIDE.meta.title,
+  description: GASTRONOMY_GUIDE.meta.description,
 });
 
-function WeekendGuideJsonLd() {
+function GastronomyGuideJsonLd() {
   const siteUrl = getSiteUrl();
   const guide = getGuideBySlug(SLUG);
   if (!guide) return null;
@@ -63,8 +63,8 @@ function WeekendGuideJsonLd() {
         "@type": "WebPage",
         "@id": `${siteUrl}${PATH}#webpage`,
         url: `${siteUrl}${PATH}`,
-        name: WEEKEND_GUIDE.meta.title,
-        description: WEEKEND_GUIDE.meta.description,
+        name: GASTRONOMY_GUIDE.meta.title,
+        description: GASTRONOMY_GUIDE.meta.description,
         isPartOf: { "@id": `${siteUrl}/#website` },
         inLanguage: "fr-CA",
         breadcrumb: { "@id": `${siteUrl}${PATH}#breadcrumb` },
@@ -88,7 +88,7 @@ function WeekendGuideJsonLd() {
           {
             "@type": "ListItem",
             position: 3,
-            name: "Escapade de fin de semaine au Québec",
+            name: "Road trip gastronomique au Québec",
             item: `${siteUrl}${PATH}`,
           },
         ],
@@ -137,14 +137,14 @@ function Section({
   );
 }
 
-export default function WeekendRoadTripGuidePage() {
+export default function GastronomyRoadTripGuidePage() {
   const guide = getGuideBySlug(SLUG);
   if (!guide) notFound();
-  const page = WEEKEND_GUIDE;
+  const page = GASTRONOMY_GUIDE;
 
   return (
     <InstitutionalPageShell>
-      <WeekendGuideJsonLd />
+      <GastronomyGuideJsonLd />
       <div className="guide-print-root">
         <InstitutionalHero
           eyebrow={page.hero.eyebrow}
@@ -153,7 +153,7 @@ export default function WeekendRoadTripGuidePage() {
           breadcrumbs={[
             { href: "/", label: "Accueil" },
             { href: "/guides", label: "Guides" },
-            { label: "Escapade de fin de semaine au Québec" },
+            { label: "Road trip gastronomique au Québec" },
           ]}
           primaryCta={page.hero.primaryCta}
           secondaryCta={page.hero.secondaryCta}
@@ -192,6 +192,30 @@ export default function WeekendRoadTripGuidePage() {
 
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <Section
+            id={page.priorite.id}
+            title={page.priorite.title}
+            lead={page.priorite.lead}
+          >
+            <div className="mt-5 grid gap-4 sm:grid-cols-3">
+              {page.priorite.approaches.map((approach) => (
+                <div
+                  key={approach.title}
+                  className="rounded-xl border border-[#d7e0ea] bg-[#f7fafc] p-4"
+                >
+                  <h3 className="font-heading text-lg font-semibold text-[#082b46]">
+                    {approach.title}
+                  </h3>
+                  <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-[#3d566c]">
+                    {approach.items.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </Section>
+
+          <Section
             id={page.conduite.id}
             title={page.conduite.title}
             lead={page.conduite.lead}
@@ -216,120 +240,68 @@ export default function WeekendRoadTripGuidePage() {
           </Section>
 
           <Section
-            id={page.nuitees.id}
-            title={page.nuitees.title}
-            lead={page.nuitees.lead}
+            id={page.repasItineraire.id}
+            title={page.repasItineraire.title}
+            lead={page.repasItineraire.lead}
           >
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-xl border border-[#d7e0ea] bg-[#f7fafc] p-4">
-                <h3 className="font-heading text-lg font-semibold text-[#082b46]">
-                  {page.nuitees.one.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-[#3d566c]">
-                  {page.nuitees.one.body}
-                </p>
-              </div>
-              <div className="rounded-xl border border-[#d7e0ea] bg-[#f7fafc] p-4">
-                <h3 className="font-heading text-lg font-semibold text-[#082b46]">
-                  {page.nuitees.two.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-[#3d566c]">
-                  {page.nuitees.two.body}
-                </p>
-              </div>
-            </div>
-          </Section>
-
-          <Section id={page.destination.id} title={page.destination.title}>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-xl border border-[#d7e0ea] bg-[#f7fafc] p-4">
-                <h3 className="font-heading text-lg font-semibold text-[#082b46]">
-                  {page.destination.known.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-[#3d566c]">
-                  {page.destination.known.body}
-                </p>
-              </div>
-              <div className="rounded-xl border border-[#d7e0ea] bg-[#f7fafc] p-4">
-                <h3 className="font-heading text-lg font-semibold text-[#082b46]">
-                  {page.destination.open.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-[#3d566c]">
-                  {page.destination.open.body}
-                </p>
-              </div>
-            </div>
-            <p className="mt-4 text-sm text-[#60758a]">
-              {page.destination.note}
-            </p>
-            <p className="guide-no-print mt-2 text-sm">
-              <Link
-                href={page.destination.link.href}
-                className="font-medium text-[#3b6f9c] underline-offset-2 hover:underline"
-              >
-                {page.destination.link.label} →
-              </Link>
-            </p>
-          </Section>
-
-          <Section
-            id={page.dates.id}
-            title={page.dates.title}
-            lead={page.dates.lead}
-          >
-            <ul className="mt-5 list-disc space-y-2 pl-5 text-[#3d566c]">
-              {page.dates.items.map((item) => (
+            <h3 className="font-heading mt-5 text-lg font-semibold text-[#082b46]">
+              Risques d’un repas mal placé
+            </h3>
+            <ul className="mt-3 list-disc space-y-2 pl-5 text-[#3d566c]">
+              {page.repasItineraire.risks.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
             <p className="mt-5 rounded-xl border border-[#d7e0ea] bg-[#f7fafc] px-4 py-3 text-sm leading-relaxed text-[#3d566c]">
               <span className="font-semibold text-[#082b46]">Conseil : </span>
-              {page.dates.tip}
+              {page.repasItineraire.tip}
+            </p>
+            <p className="guide-no-print mt-3 text-sm">
+              <Link
+                href={page.repasItineraire.link.href}
+                className="font-medium text-[#3b6f9c] underline-offset-2 hover:underline"
+              >
+                {page.repasItineraire.link.label} →
+              </Link>
             </p>
           </Section>
 
           <Section
-            id={page.horaire.id}
-            title={page.horaire.title}
-            lead={page.horaire.lead}
+            id={page.trajetDestination.id}
+            title={page.trajetDestination.title}
+            lead={page.trajetDestination.lead}
           >
-            <h3 className="font-heading mt-5 text-lg font-semibold text-[#082b46]">
-              Risques d’un programme trop rempli
-            </h3>
-            <ul className="mt-3 list-disc space-y-2 pl-5 text-[#3d566c]">
-              {page.horaire.risks.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-            <h3 className="font-heading mt-6 text-lg font-semibold text-[#082b46]">
-              Structure simple
-            </h3>
-            <ul className="mt-3 list-disc space-y-2 pl-5 text-[#3d566c]">
-              {page.horaire.structure.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-            <p className="mt-3 text-sm text-[#60758a]">{page.horaire.tip}</p>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-xl border border-[#d7e0ea] bg-[#f7fafc] p-4">
+                <h3 className="font-heading text-lg font-semibold text-[#082b46]">
+                  {page.trajetDestination.route.title}
+                </h3>
+                <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-[#3d566c]">
+                  {page.trajetDestination.route.items.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="rounded-xl border border-[#d7e0ea] bg-[#f7fafc] p-4">
+                <h3 className="font-heading text-lg font-semibold text-[#082b46]">
+                  {page.trajetDestination.destination.title}
+                </h3>
+                <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-[#3d566c]">
+                  {page.trajetDestination.destination.items.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </Section>
 
           <Section
-            id={page.journee.id}
-            title={page.journee.title}
-            lead={page.journee.lead}
-          >
-            <p className="mt-5 rounded-xl border border-[#d7e0ea] bg-[#f7fafc] px-4 py-3 font-mono text-sm text-[#082b46]">
-              {page.journee.formula}
-            </p>
-            <p className="mt-3 text-sm text-[#60758a]">{page.journee.tip}</p>
-          </Section>
-
-          <Section
-            id={page.activites.id}
-            title={page.activites.title}
-            lead={page.activites.lead}
+            id={page.marches.id}
+            title={page.marches.title}
+            lead={page.marches.lead}
           >
             <ul className="mt-5 grid gap-2 sm:grid-cols-2">
-              {page.activites.categories.map((item) => (
+              {page.marches.categories.map((item) => (
                 <li
                   key={item}
                   className="rounded-lg border border-[#e6eef5] px-3 py-2 text-sm text-[#3d566c]"
@@ -338,28 +310,90 @@ export default function WeekendRoadTripGuidePage() {
                 </li>
               ))}
             </ul>
-            <p className="mt-4 text-sm text-[#60758a]">{page.activites.note}</p>
+            <h3 className="font-heading mt-6 text-lg font-semibold text-[#082b46]">
+              À vérifier
+            </h3>
+            <ul className="mt-3 list-disc space-y-2 pl-5 text-[#3d566c]">
+              {page.marches.checks.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+            <p className="mt-4 text-sm text-[#60758a]">{page.marches.tip}</p>
+          </Section>
+
+          <Section
+            id={page.interets.id}
+            title={page.interets.title}
+            lead={page.interets.lead}
+          >
+            <ul className="mt-5 list-disc space-y-2 pl-5 text-[#3d566c]">
+              {page.interets.items.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+            <p className="guide-no-print mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+              {page.interets.links.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="font-medium text-[#3b6f9c] underline-offset-2 hover:underline"
+                >
+                  {link.label} →
+                </Link>
+              ))}
+            </p>
+          </Section>
+
+          <Section
+            id={page.horaire.id}
+            title={page.horaire.title}
+            lead={page.horaire.lead}
+          >
+            <ul className="mt-5 list-disc space-y-2 pl-5 text-[#3d566c]">
+              {page.horaire.structure.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+            <p className="mt-4 text-sm text-[#60758a]">{page.horaire.tip}</p>
+          </Section>
+
+          <Section
+            id={page.reservations.id}
+            title={page.reservations.title}
+            lead={page.reservations.lead}
+          >
+            <ul className="mt-5 list-disc space-y-2 pl-5 text-[#3d566c]">
+              {page.reservations.items.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+            <p className="mt-4 text-sm text-[#60758a]">
+              {page.reservations.note}
+            </p>
             <p className="guide-no-print mt-2 text-sm">
               <Link
-                href={page.activites.guideLink.href}
+                href={page.reservations.link.href}
                 className="font-medium text-[#3b6f9c] underline-offset-2 hover:underline"
               >
-                {page.activites.guideLink.label} →
+                {page.reservations.link.label} →
               </Link>
             </p>
           </Section>
 
           <Section
-            id={page.repas.id}
-            title={page.repas.title}
-            lead={page.repas.lead}
+            id={page.allergens.id}
+            title={page.allergens.title}
+            lead={page.allergens.lead}
           >
             <ul className="mt-5 list-disc space-y-2 pl-5 text-[#3d566c]">
-              {page.repas.items.map((item) => (
+              {page.allergens.items.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
-            <p className="mt-4 text-sm text-[#60758a]">{page.repas.tip}</p>
+            <p className="mt-5 rounded-xl border border-[#d7e0ea] bg-[#f7fafc] px-4 py-3 text-sm leading-relaxed text-[#3d566c]">
+              <span className="font-semibold text-[#082b46]">Important : </span>
+              {page.allergens.tip}
+            </p>
           </Section>
 
           <Section
@@ -374,22 +408,6 @@ export default function WeekendRoadTripGuidePage() {
             </ul>
             <p className="mt-4 text-sm text-[#60758a]">
               {page.hebergement.note}
-            </p>
-          </Section>
-
-          <Section
-            id={page.retour.id}
-            title={page.retour.title}
-            lead={page.retour.lead}
-          >
-            <ul className="mt-5 list-disc space-y-2 pl-5 text-[#3d566c]">
-              {page.retour.items.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-            <p className="mt-5 rounded-xl border border-[#d7e0ea] bg-[#f7fafc] px-4 py-3 text-sm leading-relaxed text-[#3d566c]">
-              <span className="font-semibold text-[#082b46]">Important : </span>
-              {page.retour.tip}
             </p>
           </Section>
 
@@ -418,7 +436,6 @@ export default function WeekendRoadTripGuidePage() {
             title={page.carburant.title}
             lead={page.carburant.lead}
           >
-            <p className="mt-4 text-sm text-[#60758a]">{page.carburant.tip}</p>
             <p className="guide-no-print mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
               {page.carburant.links.map((link) => (
                 <Link
@@ -453,47 +470,15 @@ export default function WeekendRoadTripGuidePage() {
             </p>
           </Section>
 
-          <Section
-            id={page.profils.id}
-            title={page.profils.title}
-            lead={page.profils.lead}
-          >
-            <div className="mt-5 grid gap-4 sm:grid-cols-3">
-              {page.profils.blocks.map((block) => (
-                <div
-                  key={block.title}
-                  className="rounded-xl border border-[#d7e0ea] bg-[#f7fafc] p-4"
-                >
-                  <h3 className="font-heading text-lg font-semibold text-[#082b46]">
-                    {block.title}
-                  </h3>
-                  <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-[#3d566c]">
-                    {block.items.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                  <p className="guide-no-print mt-3 text-sm">
-                    <Link
-                      href={block.link.href}
-                      className="font-medium text-[#3b6f9c] underline-offset-2 hover:underline"
-                    >
-                      {block.link.label} →
-                    </Link>
-                  </p>
-                </div>
-              ))}
-            </div>
-          </Section>
-
-          <Section id="exemple" title={WEEKEND_DAY_EXAMPLE.title}>
+          <Section id="exemple" title={GASTRONOMY_DAY_EXAMPLE.title}>
             <p className="mt-3 text-base leading-relaxed text-[#3d566c]">
-              {WEEKEND_DAY_EXAMPLE.scenario}
+              {GASTRONOMY_DAY_EXAMPLE.scenario}
             </p>
             <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-[#5c4a1f]">
-              {WEEKEND_DAY_EXAMPLE.disclaimer}
+              {GASTRONOMY_DAY_EXAMPLE.disclaimer}
             </p>
             <ol className="mt-6 space-y-4">
-              {WEEKEND_DAY_EXAMPLE.blocks.map((block) => (
+              {GASTRONOMY_DAY_EXAMPLE.blocks.map((block) => (
                 <li
                   key={block.title}
                   className="rounded-xl border border-[#d7e0ea] bg-white p-4"
@@ -514,11 +499,11 @@ export default function WeekendRoadTripGuidePage() {
 
           <section
             id={page.checklist.id}
-            aria-labelledby="checklist-escapade-title"
+            aria-labelledby="checklist-gastro-title"
             className="guide-print-section scroll-mt-28 border-b border-[#e6eef5] py-10 sm:py-12"
           >
             <h2
-              id="checklist-escapade-title"
+              id="checklist-gastro-title"
               className="font-heading text-2xl font-bold text-[#082b46] sm:text-3xl"
             >
               {page.checklist.title}
@@ -553,11 +538,11 @@ export default function WeekendRoadTripGuidePage() {
 
           <section
             id={page.sebavia.id}
-            aria-labelledby="sebavia-weekend-title"
+            aria-labelledby="sebavia-gastro-title"
             className="guide-no-print scroll-mt-28 border-b border-[#e6eef5] py-10 sm:py-12"
           >
             <h2
-              id="sebavia-weekend-title"
+              id="sebavia-gastro-title"
               className="font-heading text-2xl font-bold text-[#082b46] sm:text-3xl"
             >
               {page.sebavia.title}
@@ -595,14 +580,6 @@ export default function WeekendRoadTripGuidePage() {
                 {p}
               </p>
             ))}
-            <p className="guide-no-print mt-4 text-sm">
-              <Link
-                href="/conditions-utilisation"
-                className="font-medium text-[#3b6f9c] underline-offset-2 hover:underline"
-              >
-                Conditions d’utilisation →
-              </Link>
-            </p>
           </Section>
         </div>
       </div>

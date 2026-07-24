@@ -151,6 +151,10 @@ export const COUPLE_GUIDE = {
       "Repas à l’hébergement, si utile",
     ],
     tip: "Les besoins alimentaires particuliers doivent être confirmés directement auprès des établissements.",
+    guideLink: {
+      href: "/guides/road-trip-gastronomique-quebec",
+      label: "Organiser une escapade gourmande",
+    },
   },
   hebergement: {
     id: "hebergement",

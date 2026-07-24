@@ -228,6 +228,10 @@ export const ASSISTANT_PAGE = {
     {
       title: "Voyage gastronomique",
       body: "Orientez la conversation vers restaurants et découvertes complémentaires, avec un hébergement proposé si vous restez la nuit.",
+      guideLink: {
+        href: "/guides/road-trip-gastronomique-quebec",
+        label: "Lire le guide road trip gastronomique",
+      },
     },
     {
       title: "Long voyage routier",

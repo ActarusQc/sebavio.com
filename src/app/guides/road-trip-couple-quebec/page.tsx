@@ -270,6 +270,14 @@ export default function CoupleRoadTripGuidePage() {
               ))}
             </ul>
             <p className="mt-4 text-sm text-[#60758a]">{page.repas.tip}</p>
+            <p className="guide-no-print mt-2 text-sm">
+              <Link
+                href={page.repas.guideLink.href}
+                className="font-medium text-[#3b6f9c] underline-offset-2 hover:underline"
+              >
+                {page.repas.guideLink.label} →
+              </Link>
+            </p>
           </Section>
 
           <Section

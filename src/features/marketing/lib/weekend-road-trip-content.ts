@@ -179,6 +179,10 @@ export const WEEKEND_GUIDE = {
       "Visite locale",
     ],
     note: "Confirmez les horaires, restrictions et disponibilités directement auprès des lieux concernés.",
+    guideLink: {
+      href: "/guides/road-trip-gastronomique-quebec",
+      label: "Préparer une escapade gourmande",
+    },
   },
   repas: {
     id: "repas",

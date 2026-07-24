@@ -21,7 +21,7 @@ export const GUIDES_HUB = {
   },
   intro: {
     title: "Des ressources utiles, pas des pages publicitaires",
-    body: "Ce centre regroupe des contenus informatifs pour vous aider à préparer un voyage en voiture — checklist, budget, voyage en famille, escapade en couple, road trip solo, courte fin de semaine, et d’autres guides à venir. Chaque guide reste distinct des pages qui présentent les outils Sebavia : ici, l’objectif est de répondre à une question pratique, pas de vendre une fonction.",
+    body: "Ce centre regroupe des contenus informatifs pour vous aider à préparer un voyage en voiture — checklist, budget, voyage en famille, escapade en couple, road trip solo, courte fin de semaine, escapade gourmande, et d’autres guides à venir. Chaque guide reste distinct des pages qui présentent les outils Sebavia : ici, l’objectif est de répondre à une question pratique, pas de vendre une fonction.",
   },
   howToUse: {
     title: "Comment utiliser ces guides",

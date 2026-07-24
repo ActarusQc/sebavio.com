@@ -376,6 +376,14 @@ export default function BudgetRoadTripGuidePage() {
                 </div>
               ))}
             </div>
+            <p className="guide-no-print mt-4 text-sm">
+              <Link
+                href={page.styles.guideLink.href}
+                className="font-medium text-[#3b6f9c] underline-offset-2 hover:underline"
+              >
+                {page.styles.guideLink.label} →
+              </Link>
+            </p>
           </Section>
 
           <GuideChecklistSection
