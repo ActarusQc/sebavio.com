@@ -1,7 +1,7 @@
 import { BRAND_ASSETS } from "./brand-assets";
 
 export type GuideCategory =
-  "preparation" | "budget" | "itineraire" | "vehicule" | "quebec";
+  "preparation" | "budget" | "famille" | "itineraire" | "vehicule" | "quebec";
 
 export type GuideRelatedLink = {
   href: string;
@@ -21,6 +21,10 @@ export type GuideMeta = {
    */
   publishedAt: string;
   updatedAt: string;
+  /**
+   * Ordre éditorial (plus élevé = plus haut dans `/guides` à date égale).
+   */
+  editorialOrder: number;
   readingTimeMinutes: number;
   image: string;
   imageAlt: string;
@@ -33,6 +37,7 @@ export type GuideMeta = {
 export const GUIDE_CATEGORY_LABELS: Record<GuideCategory, string> = {
   preparation: "Préparation",
   budget: "Budget",
+  famille: "Famille",
   itineraire: "Itinéraire",
   vehicule: "Véhicule",
   quebec: "Québec",
@@ -49,6 +54,44 @@ const CIVIL_DATE_RE = /^(\d{4})-(\d{2})-(\d{2})/;
  */
 export const GUIDES: readonly GuideMeta[] = [
   {
+    slug: "road-trip-famille-quebec",
+    title: "Road trip en famille au Québec : bien organiser le voyage",
+    description:
+      "Préparez votre road trip en famille au Québec : pauses, activités, repas, hébergement, météo, carburant et checklist avant le départ.",
+    excerpt:
+      "Rythme, pauses, activités adaptées et organisation des journées pour un voyage routier avec enfants — sans parcours trop chargé.",
+    category: "famille",
+    categoryLabel: GUIDE_CATEGORY_LABELS.famille,
+    publishedAt: "2026-07-23",
+    updatedAt: "2026-07-23",
+    editorialOrder: 30,
+    readingTimeMinutes: 12,
+    image: BRAND_ASSETS.heroLandscapeWebp,
+    imageAlt:
+      "Route nocturne sous un ciel étoilé — ambiance de voyage routier Sebavia",
+    relatedLinks: [
+      {
+        href: "/planificateur-road-trip-quebec",
+        label: "Planificateur de road trip au Québec",
+      },
+      {
+        href: "/assistant-voyage-ia",
+        label: "Assistant voyage IA",
+      },
+      { href: "/meteo-voyage", label: "Météo du voyage" },
+      {
+        href: "/calculateur-cout-carburant-voyage",
+        label: "Calculateur de coût de carburant",
+      },
+      { href: "/fonctionnalites", label: "Fonctionnalités Sebavia" },
+    ],
+    relatedGuideSlugs: [
+      "checklist-road-trip-quebec",
+      "budget-road-trip-quebec",
+    ],
+    isPublished: true,
+  },
+  {
     slug: "budget-road-trip-quebec",
     title: "Budget road trip au Québec : les coûts à prévoir",
     description:
@@ -59,6 +102,7 @@ export const GUIDES: readonly GuideMeta[] = [
     categoryLabel: GUIDE_CATEGORY_LABELS.budget,
     publishedAt: "2026-07-23",
     updatedAt: "2026-07-23",
+    editorialOrder: 20,
     readingTimeMinutes: 11,
     image: BRAND_ASSETS.heroLandscapeWebp,
     imageAlt:
@@ -79,7 +123,10 @@ export const GUIDES: readonly GuideMeta[] = [
       { href: "/fonctionnalites", label: "Fonctionnalités Sebavia" },
       { href: "/pricing", label: "Tarifs" },
     ],
-    relatedGuideSlugs: ["checklist-road-trip-quebec"],
+    relatedGuideSlugs: [
+      "road-trip-famille-quebec",
+      "checklist-road-trip-quebec",
+    ],
     isPublished: true,
   },
   {
@@ -94,6 +141,7 @@ export const GUIDES: readonly GuideMeta[] = [
     /** Publication réelle au Québec : 23 juillet 2026. */
     publishedAt: "2026-07-23",
     updatedAt: "2026-07-23",
+    editorialOrder: 10,
     readingTimeMinutes: 9,
     image: BRAND_ASSETS.heroLandscapeWebp,
     imageAlt:
@@ -114,7 +162,7 @@ export const GUIDES: readonly GuideMeta[] = [
       { href: "/meteo-voyage", label: "Météo du voyage" },
       { href: "/fonctionnalites", label: "Fonctionnalités Sebavia" },
     ],
-    relatedGuideSlugs: ["budget-road-trip-quebec"],
+    relatedGuideSlugs: ["road-trip-famille-quebec", "budget-road-trip-quebec"],
     isPublished: true,
   },
 ] as const;
@@ -123,8 +171,7 @@ export function getPublishedGuides(): GuideMeta[] {
   return GUIDES.filter((g) => g.isPublished).sort((a, b) => {
     const byDate = b.publishedAt.localeCompare(a.publishedAt);
     if (byDate !== 0) return byDate;
-    // Ordre éditorial stable : budget avant checklist si même jour.
-    return a.slug.localeCompare(b.slug);
+    return b.editorialOrder - a.editorialOrder;
   });
 }
 

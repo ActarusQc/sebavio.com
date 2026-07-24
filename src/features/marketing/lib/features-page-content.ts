@@ -158,6 +158,10 @@ export const FEATURES_PAGE = {
       "Distance ou durée maximale de déplacement",
       "Véhicule enregistré pour les calculs de carburant",
     ],
+    familyGuideLink: {
+      href: "/guides/road-trip-famille-quebec",
+      label: "Guide : road trip en famille au Québec",
+    },
   },
   howItWorks: {
     title: "Comment ça fonctionne",

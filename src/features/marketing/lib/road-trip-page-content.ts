@@ -186,6 +186,10 @@ export const ROAD_TRIP_PAGE = {
       "Rythme différent pour une escapade en couple",
       "Plusieurs étapes pour un trajet plus long",
     ],
+    familyGuideLink: {
+      href: "/guides/road-trip-famille-quebec",
+      label: "Consulter le guide pour un road trip en famille",
+    },
   },
   method: {
     title: "Planifier un road trip au Québec en cinq étapes",

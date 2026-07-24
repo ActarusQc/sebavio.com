@@ -179,6 +179,14 @@ export default function BudgetRoadTripGuidePage() {
                 {p}
               </p>
             ))}
+            <p className="guide-no-print mt-4 text-sm">
+              <Link
+                href={page.intro.familyGuideLink.href}
+                className="font-medium text-[#3b6f9c] underline-offset-2 hover:underline"
+              >
+                {page.intro.familyGuideLink.label} →
+              </Link>
+            </p>
             <div className="guide-no-print mt-8">
               <EditorialToc items={page.toc} />
             </div>

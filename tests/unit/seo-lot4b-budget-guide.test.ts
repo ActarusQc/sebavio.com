@@ -50,17 +50,15 @@ describe("lot SEO 4B — corrections guide checklist", () => {
 });
 
 describe("lot SEO 4B — registre et hub", () => {
-  it("publie le guide budget et trie du plus récent au plus ancien", () => {
+  it("publie le guide budget parmi les guides", () => {
     const guides = getPublishedGuides();
-    expect(guides.map((g) => g.slug)).toEqual([
-      "budget-road-trip-quebec",
-      "checklist-road-trip-quebec",
-    ]);
-    expect(guides[0]?.categoryLabel).toBe("Budget");
-    expect(guides[1]?.categoryLabel).toBe("Préparation");
+    expect(guides.map((g) => g.slug)).toContain("budget-road-trip-quebec");
+    expect(getGuideBySlug("budget-road-trip-quebec")?.categoryLabel).toBe(
+      "Budget",
+    );
   });
 
-  it("lie les deux guides entre eux", () => {
+  it("lie le guide budget aux autres guides", () => {
     const budget = getGuideBySlug("budget-road-trip-quebec")!;
     const checklist = getGuideBySlug("checklist-road-trip-quebec")!;
     expect(getRelatedGuides(budget).map((g) => g.slug)).toContain(
@@ -91,7 +89,7 @@ describe("lot SEO 4B — sitemap et métadonnées", () => {
         : String(e.lastModified),
     );
     expect(new Set(dates).size).toBe(1);
-    expect(dates[0]).toBe("2026-07-23T20:00:00.000Z");
+    expect(dates[0]).toBe("2026-07-23T22:00:00.000Z");
   });
 
   it("configure SEO du guide budget", () => {

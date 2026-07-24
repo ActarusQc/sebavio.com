@@ -208,6 +208,10 @@ export const ASSISTANT_PAGE = {
     {
       title: "Sortie familiale",
       body: "Précisez le nombre d’enfants et le rythme souhaité pour orienter pauses, activités adaptées, heure de départ et estimation du carburant.",
+      guideLink: {
+        href: "/guides/road-trip-famille-quebec",
+        label: "Lire le guide road trip en famille",
+      },
     },
     {
       title: "Voyage gastronomique",

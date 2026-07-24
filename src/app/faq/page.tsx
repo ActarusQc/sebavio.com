@@ -146,6 +146,13 @@ export default function FaqPage() {
               className="text-[#3b6f9c] hover:underline"
             >
               Budget road trip Québec
+            </Link>
+            . Pour voyager avec des enfants :{" "}
+            <Link
+              href="/guides/road-trip-famille-quebec"
+              className="text-[#3b6f9c] hover:underline"
+            >
+              Road trip en famille
             </Link>{" "}
             (
             <Link href="/guides" className="text-[#3b6f9c] hover:underline">

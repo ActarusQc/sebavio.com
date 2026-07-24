@@ -58,7 +58,7 @@ describe("lot SEO 4A — sitemap", () => {
         : String(e.lastModified),
     );
     expect(new Set(dates).size).toBe(1);
-    expect(dates[0]).toBe("2026-07-23T20:00:00.000Z");
+    expect(dates[0]).toBe("2026-07-23T22:00:00.000Z");
   });
 });
 

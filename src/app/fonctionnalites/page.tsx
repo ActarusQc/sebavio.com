@@ -176,7 +176,12 @@ export default function FeaturesPage() {
         title={personalization.title}
         lead={personalization.lead}
         items={personalization.items}
-      />
+      >
+        <FeaturesInlineLink
+          href={personalization.familyGuideLink.href}
+          label={personalization.familyGuideLink.label}
+        />
+      </FeaturesCapabilitySection>
 
       <FeaturesHowItWorks />
       <FeaturesUseCases />

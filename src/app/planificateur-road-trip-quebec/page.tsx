@@ -345,6 +345,14 @@ export default function PlanificateurRoadTripQuebecPage() {
             <li key={item}>{item}</li>
           ))}
         </ul>
+        <p className="mt-5 text-sm">
+          <Link
+            href={page.group.familyGuideLink.href}
+            className="text-[#3b6f9c] hover:underline"
+          >
+            {page.group.familyGuideLink.label}
+          </Link>
+        </p>
       </SectionShell>
 
       <SectionShell id="methode" title={page.method.title} dark>
