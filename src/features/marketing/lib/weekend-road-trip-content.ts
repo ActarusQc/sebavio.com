@@ -183,6 +183,10 @@ export const WEEKEND_GUIDE = {
       href: "/guides/road-trip-gastronomique-quebec",
       label: "Préparer une escapade gourmande",
     },
+    natureGuideLink: {
+      href: "/guides/road-trip-nature-quebec",
+      label: "Préparer une escapade nature",
+    },
   },
   repas: {
     id: "repas",

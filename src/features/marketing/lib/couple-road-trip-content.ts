@@ -137,6 +137,10 @@ export const COUPLE_GUIDE = {
       "Point de vue ou pause paysage",
     ],
     note: "Vérifiez horaires, disponibilités et conditions auprès du lieu. Sebavia ne garantit ni la disponibilité ni qu’une activité convient à tous les couples.",
+    guideLink: {
+      href: "/guides/road-trip-nature-quebec",
+      label: "Organiser un road trip nature",
+    },
   },
   repas: {
     id: "repas",

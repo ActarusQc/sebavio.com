@@ -15,21 +15,21 @@ import {
   getGuideBySlug,
 } from "@/features/marketing/lib/guides-registry";
 import {
-  SOLO_DAY_EXAMPLE,
-  SOLO_GUIDE,
-} from "@/features/marketing/lib/solo-road-trip-content";
+  NATURE_DAY_EXAMPLE,
+  NATURE_GUIDE,
+} from "@/features/marketing/lib/nature-road-trip-content";
 import { getSiteUrl } from "@/lib/site-url";
 
-const SLUG = "road-trip-solo-quebec";
+const SLUG = "road-trip-nature-quebec";
 const PATH = `/guides/${SLUG}` as const;
 
 export const metadata = buildTrustPageMetadata({
   path: PATH,
-  title: SOLO_GUIDE.meta.title,
-  description: SOLO_GUIDE.meta.description,
+  title: NATURE_GUIDE.meta.title,
+  description: NATURE_GUIDE.meta.description,
 });
 
-function SoloGuideJsonLd() {
+function NatureGuideJsonLd() {
   const siteUrl = getSiteUrl();
   const guide = getGuideBySlug(SLUG);
   if (!guide) return null;
@@ -63,8 +63,8 @@ function SoloGuideJsonLd() {
         "@type": "WebPage",
         "@id": `${siteUrl}${PATH}#webpage`,
         url: `${siteUrl}${PATH}`,
-        name: SOLO_GUIDE.meta.title,
-        description: SOLO_GUIDE.meta.description,
+        name: NATURE_GUIDE.meta.title,
+        description: NATURE_GUIDE.meta.description,
         isPartOf: { "@id": `${siteUrl}/#website` },
         inLanguage: "fr-CA",
         breadcrumb: { "@id": `${siteUrl}${PATH}#breadcrumb` },
@@ -88,7 +88,7 @@ function SoloGuideJsonLd() {
           {
             "@type": "ListItem",
             position: 3,
-            name: "Road trip solo au Québec",
+            name: "Road trip nature au Québec",
             item: `${siteUrl}${PATH}`,
           },
         ],
@@ -137,14 +137,14 @@ function Section({
   );
 }
 
-export default function SoloRoadTripGuidePage() {
+export default function NatureRoadTripGuidePage() {
   const guide = getGuideBySlug(SLUG);
   if (!guide) notFound();
-  const page = SOLO_GUIDE;
+  const page = NATURE_GUIDE;
 
   return (
     <InstitutionalPageShell>
-      <SoloGuideJsonLd />
+      <NatureGuideJsonLd />
       <div className="guide-print-root">
         <InstitutionalHero
           eyebrow={page.hero.eyebrow}
@@ -153,7 +153,7 @@ export default function SoloRoadTripGuidePage() {
           breadcrumbs={[
             { href: "/", label: "Accueil" },
             { href: "/guides", label: "Guides" },
-            { label: "Road trip solo au Québec" },
+            { label: "Road trip nature au Québec" },
           ]}
           primaryCta={page.hero.primaryCta}
           secondaryCta={page.hero.secondaryCta}
@@ -192,62 +192,6 @@ export default function SoloRoadTripGuidePage() {
 
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <Section
-            id={page.cadre.id}
-            title={page.cadre.title}
-            lead={page.cadre.lead}
-          >
-            <ul className="mt-5 list-disc space-y-2 pl-5 text-[#3d566c]">
-              {page.cadre.items.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-            <p className="mt-5 rounded-xl border border-[#d7e0ea] bg-[#f7fafc] px-4 py-3 text-sm leading-relaxed text-[#3d566c]">
-              <span className="font-semibold text-[#082b46]">Conseil : </span>
-              {page.cadre.tip}
-            </p>
-            <p className="guide-no-print mt-3 text-sm">
-              <Link
-                href={page.cadre.link.href}
-                className="font-medium text-[#3b6f9c] underline-offset-2 hover:underline"
-              >
-                {page.cadre.link.label} →
-              </Link>
-            </p>
-          </Section>
-
-          <Section id={page.destination.id} title={page.destination.title}>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-xl border border-[#d7e0ea] bg-[#f7fafc] p-4">
-                <h3 className="font-heading text-lg font-semibold text-[#082b46]">
-                  {page.destination.known.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-[#3d566c]">
-                  {page.destination.known.body}
-                </p>
-              </div>
-              <div className="rounded-xl border border-[#d7e0ea] bg-[#f7fafc] p-4">
-                <h3 className="font-heading text-lg font-semibold text-[#082b46]">
-                  {page.destination.open.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-[#3d566c]">
-                  {page.destination.open.body}
-                </p>
-              </div>
-            </div>
-            <p className="mt-4 text-sm text-[#60758a]">
-              {page.destination.note}
-            </p>
-            <p className="guide-no-print mt-2 text-sm">
-              <Link
-                href={page.destination.link.href}
-                className="font-medium text-[#3b6f9c] underline-offset-2 hover:underline"
-              >
-                {page.destination.link.label} →
-              </Link>
-            </p>
-          </Section>
-
-          <Section
             id={page.rythme.id}
             title={page.rythme.title}
             lead={page.rythme.lead}
@@ -255,144 +199,57 @@ export default function SoloRoadTripGuidePage() {
             <p className="mt-5 rounded-xl border border-[#d7e0ea] bg-[#f7fafc] px-4 py-3 font-mono text-sm text-[#082b46]">
               {page.rythme.formula}
             </p>
-            <ul className="mt-5 list-disc space-y-2 pl-5 text-[#3d566c]">
-              {page.rythme.items.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
             <p className="mt-3 text-sm text-[#60758a]">{page.rythme.tip}</p>
-          </Section>
-
-          <Section
-            id={page.fatigue.id}
-            title={page.fatigue.title}
-            lead={page.fatigue.lead}
-          >
-            <ul className="mt-5 list-disc space-y-2 pl-5 text-[#3d566c]">
-              {page.fatigue.items.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-            <p className="mt-5 rounded-xl border border-[#d7e0ea] bg-[#f7fafc] px-4 py-3 text-sm leading-relaxed text-[#3d566c]">
-              <span className="font-semibold text-[#082b46]">Important : </span>
-              {page.fatigue.tip}
-            </p>
-          </Section>
-
-          <Section
-            id={page.confiance.id}
-            title={page.confiance.title}
-            lead={page.confiance.lead}
-          >
-            <ul className="mt-5 list-disc space-y-2 pl-5 text-[#3d566c]">
-              {page.confiance.items.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-            <p className="mt-5 rounded-xl border border-[#d7e0ea] bg-[#f7fafc] px-4 py-3 text-sm leading-relaxed text-[#3d566c]">
-              <span className="font-semibold text-[#082b46]">Conseil : </span>
-              {page.confiance.tip}
-            </p>
-          </Section>
-
-          <Section
-            id={page.activites.id}
-            title={page.activites.title}
-            lead={page.activites.lead}
-          >
-            <ul className="mt-5 grid gap-2 sm:grid-cols-2">
-              {page.activites.categories.map((item) => (
-                <li
-                  key={item}
-                  className="rounded-lg border border-[#e6eef5] px-3 py-2 text-sm text-[#3d566c]"
-                >
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <p className="mt-4 text-sm text-[#60758a]">{page.activites.note}</p>
-            <p className="guide-no-print mt-2 text-sm">
+            <p className="guide-no-print mt-3 text-sm">
               <Link
-                href={page.activites.guideLink.href}
+                href={page.rythme.link.href}
                 className="font-medium text-[#3b6f9c] underline-offset-2 hover:underline"
               >
-                {page.activites.guideLink.label} →
+                {page.rythme.link.label} →
               </Link>
             </p>
           </Section>
 
           <Section
-            id={page.repas.id}
-            title={page.repas.title}
-            lead={page.repas.lead}
+            id={page.groupe.id}
+            title={page.groupe.title}
+            lead={page.groupe.lead}
           >
-            <ul className="mt-5 list-disc space-y-2 pl-5 text-[#3d566c]">
-              {page.repas.items.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-            <p className="mt-4 text-sm text-[#60758a]">{page.repas.tip}</p>
-          </Section>
-
-          <Section
-            id={page.hebergement.id}
-            title={page.hebergement.title}
-            lead={page.hebergement.lead}
-          >
-            <ul className="mt-5 list-disc space-y-2 pl-5 text-[#3d566c]">
-              {page.hebergement.items.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-            <p className="mt-4 text-sm text-[#60758a]">
-              {page.hebergement.note}
-            </p>
-          </Section>
-
-          <Section
-            id={page.communications.id}
-            title={page.communications.title}
-            lead={page.communications.lead}
-          >
-            <ul className="mt-5 list-disc space-y-2 pl-5 text-[#3d566c]">
-              {page.communications.items.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-            <p className="mt-5 rounded-xl border border-[#d7e0ea] bg-[#f7fafc] px-4 py-3 text-sm leading-relaxed text-[#3d566c]">
-              <span className="font-semibold text-[#082b46]">Conseil : </span>
-              {page.communications.tip}
-            </p>
-          </Section>
-
-          <Section
-            id={page.vehicule.id}
-            title={page.vehicule.title}
-            lead={page.vehicule.lead}
-          >
-            <ul className="mt-5 list-disc space-y-2 pl-5 text-[#3d566c]">
-              {page.vehicule.items.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </Section>
-
-          <Section
-            id={page.carburant.id}
-            title={page.carburant.title}
-            lead={page.carburant.lead}
-          >
-            <p className="mt-4 text-sm text-[#60758a]">{page.carburant.tip}</p>
-            <p className="guide-no-print mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
-              {page.carburant.links.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="font-medium text-[#3b6f9c] underline-offset-2 hover:underline"
+            <div className="mt-5 grid gap-4 sm:grid-cols-3">
+              {page.groupe.blocks.map((block) => (
+                <div
+                  key={block.title}
+                  className="rounded-xl border border-[#d7e0ea] bg-[#f7fafc] p-4"
                 >
-                  {link.label} →
-                </Link>
+                  <h3 className="font-heading text-lg font-semibold text-[#082b46]">
+                    {block.title}
+                  </h3>
+                  <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-[#3d566c]">
+                    {block.items.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                  <p className="guide-no-print mt-3 text-sm">
+                    <Link
+                      href={block.link.href}
+                      className="font-medium text-[#3b6f9c] underline-offset-2 hover:underline"
+                    >
+                      {block.link.label} →
+                    </Link>
+                  </p>
+                </div>
               ))}
+            </div>
+          </Section>
+
+          <Section
+            id={page.acces.id}
+            title={page.acces.title}
+            lead={page.acces.lead}
+          >
+            <p className="mt-5 rounded-xl border border-[#d7e0ea] bg-[#f7fafc] px-4 py-3 text-sm leading-relaxed text-[#3d566c]">
+              <span className="font-semibold text-[#082b46]">Important : </span>
+              {page.acces.tip}
             </p>
           </Section>
 
@@ -418,6 +275,124 @@ export default function SoloRoadTripGuidePage() {
           </Section>
 
           <Section
+            id={page.rechange.id}
+            title={page.rechange.title}
+            lead={page.rechange.lead}
+          >
+            <ul className="mt-5 list-disc space-y-2 pl-5 text-[#3d566c]">
+              {page.rechange.items.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </Section>
+
+          <Section
+            id={page.repas.id}
+            title={page.repas.title}
+            lead={page.repas.lead}
+          >
+            <ul className="mt-5 list-disc space-y-2 pl-5 text-[#3d566c]">
+              {page.repas.items.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+            <p className="mt-4 text-sm text-[#60758a]">{page.repas.tip}</p>
+            <p className="guide-no-print mt-2 text-sm">
+              <Link
+                href={page.repas.link.href}
+                className="font-medium text-[#3b6f9c] underline-offset-2 hover:underline"
+              >
+                {page.repas.link.label} →
+              </Link>
+            </p>
+          </Section>
+
+          <Section
+            id={page.hebergement.id}
+            title={page.hebergement.title}
+            lead={page.hebergement.lead}
+          >
+            <ul className="mt-5 list-disc space-y-2 pl-5 text-[#3d566c]">
+              {page.hebergement.items.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+            <p className="mt-4 text-sm text-[#60758a]">
+              {page.hebergement.note}
+            </p>
+          </Section>
+
+          <Section
+            id={page.vehicule.id}
+            title={page.vehicule.title}
+            lead={page.vehicule.lead}
+          >
+            <ul className="mt-5 list-disc space-y-2 pl-5 text-[#3d566c]">
+              {page.vehicule.items.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </Section>
+
+          <Section
+            id={page.carburant.id}
+            title={page.carburant.title}
+            lead={page.carburant.lead}
+          >
+            <ul className="mt-5 list-disc space-y-2 pl-5 text-[#3d566c]">
+              {page.carburant.items.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+            <p className="guide-no-print mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+              {page.carburant.links.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="font-medium text-[#3b6f9c] underline-offset-2 hover:underline"
+                >
+                  {link.label} →
+                </Link>
+              ))}
+            </p>
+          </Section>
+
+          <Section
+            id={page.respect.id}
+            title={page.respect.title}
+            lead={page.respect.lead}
+          >
+            <ul className="mt-5 list-disc space-y-2 pl-5 text-[#3d566c]">
+              {page.respect.items.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </Section>
+
+          <Section
+            id={page.interets.id}
+            title={page.interets.title}
+            lead={page.interets.lead}
+          >
+            <ul className="mt-5 list-disc space-y-2 pl-5 text-[#3d566c]">
+              {page.interets.items.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+            <p className="guide-no-print mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+              {page.interets.links.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="font-medium text-[#3b6f9c] underline-offset-2 hover:underline"
+                >
+                  {link.label} →
+                </Link>
+              ))}
+            </p>
+          </Section>
+
+          <Section
             id={page.budget.id}
             title={page.budget.title}
             lead={page.budget.lead}
@@ -437,15 +412,15 @@ export default function SoloRoadTripGuidePage() {
             </p>
           </Section>
 
-          <Section id="exemple" title={SOLO_DAY_EXAMPLE.title}>
+          <Section id="exemple" title={NATURE_DAY_EXAMPLE.title}>
             <p className="mt-3 text-base leading-relaxed text-[#3d566c]">
-              {SOLO_DAY_EXAMPLE.scenario}
+              {NATURE_DAY_EXAMPLE.scenario}
             </p>
             <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-[#5c4a1f]">
-              {SOLO_DAY_EXAMPLE.disclaimer}
+              {NATURE_DAY_EXAMPLE.disclaimer}
             </p>
             <ol className="mt-6 space-y-4">
-              {SOLO_DAY_EXAMPLE.blocks.map((block) => (
+              {NATURE_DAY_EXAMPLE.blocks.map((block) => (
                 <li
                   key={block.title}
                   className="rounded-xl border border-[#d7e0ea] bg-white p-4"
@@ -464,25 +439,13 @@ export default function SoloRoadTripGuidePage() {
             </ol>
           </Section>
 
-          <Section
-            id={page.rechange.id}
-            title={page.rechange.title}
-            lead={page.rechange.lead}
-          >
-            <ul className="mt-5 list-disc space-y-2 pl-5 text-[#3d566c]">
-              {page.rechange.items.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </Section>
-
           <section
             id={page.checklist.id}
-            aria-labelledby="checklist-solo-title"
+            aria-labelledby="checklist-nature-title"
             className="guide-print-section scroll-mt-28 border-b border-[#e6eef5] py-10 sm:py-12"
           >
             <h2
-              id="checklist-solo-title"
+              id="checklist-nature-title"
               className="font-heading text-2xl font-bold text-[#082b46] sm:text-3xl"
             >
               {page.checklist.title}
@@ -517,11 +480,11 @@ export default function SoloRoadTripGuidePage() {
 
           <section
             id={page.sebavia.id}
-            aria-labelledby="sebavia-solo-title"
+            aria-labelledby="sebavia-nature-title"
             className="guide-no-print scroll-mt-28 border-b border-[#e6eef5] py-10 sm:py-12"
           >
             <h2
-              id="sebavia-solo-title"
+              id="sebavia-nature-title"
               className="font-heading text-2xl font-bold text-[#082b46] sm:text-3xl"
             >
               {page.sebavia.title}

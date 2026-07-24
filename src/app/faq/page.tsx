@@ -181,6 +181,13 @@ export default function FaqPage() {
               className="text-[#3b6f9c] hover:underline"
             >
               Road trip gastronomique
+            </Link>
+            . Pour une escapade en nature :{" "}
+            <Link
+              href="/guides/road-trip-nature-quebec"
+              className="text-[#3b6f9c] hover:underline"
+            >
+              Road trip nature
             </Link>{" "}
             (
             <Link href="/guides" className="text-[#3b6f9c] hover:underline">

@@ -44,13 +44,13 @@ describe("lot SEO 4E — registre et hub", () => {
   it("lie le guide solo aux guides connexes", () => {
     const solo = getGuideBySlug("road-trip-solo-quebec")!;
     expect(getRelatedGuides(solo).map((g) => g.slug)).toEqual([
+      "road-trip-nature-quebec",
       "escapade-fin-de-semaine-quebec",
       "checklist-road-trip-quebec",
-      "budget-road-trip-quebec",
     ]);
     const couple = getGuideBySlug("road-trip-couple-quebec")!;
     expect(getRelatedGuides(couple).map((g) => g.slug)).toContain(
-      "escapade-fin-de-semaine-quebec",
+      "road-trip-gastronomique-quebec",
     );
   });
 });

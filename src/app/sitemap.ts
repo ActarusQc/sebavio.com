@@ -3,7 +3,7 @@ import { getSiteUrl } from "@/lib/site-url";
 
 /**
  * Date figée : à mettre à jour uniquement quand le contenu public listé change réellement.
- * Lot SEO 4G : ajout de /guides/road-trip-gastronomique-quebec.
+ * Lot SEO 4H : ajout de /guides/road-trip-nature-quebec.
  */
 const SITEMAP_LAST_MODIFIED = new Date("2026-07-24T12:00:00.000Z");
 
@@ -97,6 +97,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${siteUrl}/guides/road-trip-gastronomique-quebec`,
+      lastModified: SITEMAP_LAST_MODIFIED,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: `${siteUrl}/guides/road-trip-nature-quebec`,
       lastModified: SITEMAP_LAST_MODIFIED,
       changeFrequency: "monthly",
       priority: 0.8,

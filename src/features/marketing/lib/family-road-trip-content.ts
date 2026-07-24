@@ -180,6 +180,10 @@ export const FAMILY_GUIDE = {
       "Promenade courte",
     ],
     note: "Vérifiez les restrictions d’âge, les horaires et les conditions auprès du lieu concerné. Sebavia ne garantit pas qu’une activité convient à tous les enfants.",
+    guideLink: {
+      href: "/guides/road-trip-nature-quebec",
+      label: "Organiser un road trip nature",
+    },
   },
   repas: {
     id: "repas",

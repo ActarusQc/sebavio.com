@@ -47,9 +47,9 @@ describe("lot SEO 4F — registre et hub", () => {
   it("lie l’escapade et utilise un hero durable", () => {
     const weekend = getGuideBySlug("escapade-fin-de-semaine-quebec")!;
     expect(getRelatedGuides(weekend).map((g) => g.slug)).toEqual([
+      "road-trip-nature-quebec",
       "road-trip-gastronomique-quebec",
       "budget-road-trip-quebec",
-      "checklist-road-trip-quebec",
     ]);
     expect(GUIDES_HUB.hero.primaryCta.href).toBe("/guides#guides-publies");
     expect(GUIDES_HUB.hero.secondaryCta.href).toBe(

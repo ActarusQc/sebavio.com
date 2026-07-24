@@ -339,12 +339,18 @@ export default function WeekendRoadTripGuidePage() {
               ))}
             </ul>
             <p className="mt-4 text-sm text-[#60758a]">{page.activites.note}</p>
-            <p className="guide-no-print mt-2 text-sm">
+            <p className="guide-no-print mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm">
               <Link
                 href={page.activites.guideLink.href}
                 className="font-medium text-[#3b6f9c] underline-offset-2 hover:underline"
               >
                 {page.activites.guideLink.label} →
+              </Link>
+              <Link
+                href={page.activites.natureGuideLink.href}
+                className="font-medium text-[#3b6f9c] underline-offset-2 hover:underline"
+              >
+                {page.activites.natureGuideLink.label} →
               </Link>
             </p>
           </Section>

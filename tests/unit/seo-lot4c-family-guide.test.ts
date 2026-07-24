@@ -43,7 +43,7 @@ describe("lot SEO 4C — registre et hub", () => {
       "checklist-road-trip-quebec",
     );
     expect(getRelatedGuides(family).map((g) => g.slug)).toContain(
-      "budget-road-trip-quebec",
+      "road-trip-nature-quebec",
     );
   });
 });

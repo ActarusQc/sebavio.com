@@ -8,6 +8,7 @@ export type GuideCategory =
   | "solo"
   | "court_sejour"
   | "gastronomie"
+  | "nature"
   | "itineraire"
   | "vehicule"
   | "quebec";
@@ -51,6 +52,7 @@ export const GUIDE_CATEGORY_LABELS: Record<GuideCategory, string> = {
   solo: "Solo",
   court_sejour: "Court séjour",
   gastronomie: "Gastronomie",
+  nature: "Nature",
   itineraire: "Itinéraire",
   vehicule: "Véhicule",
   quebec: "Québec",
@@ -66,6 +68,42 @@ const CIVIL_DATE_RE = /^(\d{4})-(\d{2})-(\d{2})/;
  * Ajouter un guide ici + sa page de contenu; seuls les `isPublished: true` apparaissent.
  */
 export const GUIDES: readonly GuideMeta[] = [
+  {
+    slug: "road-trip-nature-quebec",
+    title: "Road trip nature au Québec : bien préparer son escapade",
+    description:
+      "Préparez un road trip nature au Québec : activités, météo, accès, hébergement, carburant, plan de rechange et checklist avant le départ.",
+    excerpt:
+      "Organisez un voyage routier axé sur la nature : rythme réaliste, météo, accès, activités et plan de rechange — sans liste de lieux.",
+    category: "nature",
+    categoryLabel: GUIDE_CATEGORY_LABELS.nature,
+    publishedAt: "2026-07-24",
+    updatedAt: "2026-07-24",
+    editorialOrder: 80,
+    readingTimeMinutes: 11,
+    image: BRAND_ASSETS.heroLandscapeWebp,
+    imageAlt:
+      "Route nocturne sous un ciel étoilé — ambiance de voyage routier Sebavia",
+    relatedLinks: [
+      {
+        href: "/planificateur-road-trip-quebec",
+        label: "Planificateur de road trip au Québec",
+      },
+      { href: "/meteo-voyage", label: "Météo du voyage" },
+      { href: "/assistant-voyage-ia", label: "Assistant voyage IA" },
+      {
+        href: "/calculateur-cout-carburant-voyage",
+        label: "Calculateur de coût de carburant",
+      },
+      { href: "/fonctionnalites", label: "Fonctionnalités Sebavia" },
+    ],
+    relatedGuideSlugs: [
+      "escapade-fin-de-semaine-quebec",
+      "road-trip-solo-quebec",
+      "road-trip-famille-quebec",
+    ],
+    isPublished: true,
+  },
   {
     slug: "road-trip-gastronomique-quebec",
     title:
@@ -97,8 +135,8 @@ export const GUIDES: readonly GuideMeta[] = [
       { href: "/fonctionnalites", label: "Fonctionnalités Sebavia" },
     ],
     relatedGuideSlugs: [
+      "road-trip-nature-quebec",
       "escapade-fin-de-semaine-quebec",
-      "road-trip-couple-quebec",
       "budget-road-trip-quebec",
     ],
     isPublished: true,
@@ -133,9 +171,9 @@ export const GUIDES: readonly GuideMeta[] = [
       { href: "/fonctionnalites", label: "Fonctionnalités Sebavia" },
     ],
     relatedGuideSlugs: [
+      "road-trip-nature-quebec",
       "road-trip-gastronomique-quebec",
       "budget-road-trip-quebec",
-      "checklist-road-trip-quebec",
     ],
     isPublished: true,
   },
@@ -169,9 +207,9 @@ export const GUIDES: readonly GuideMeta[] = [
       { href: "/fonctionnalites", label: "Fonctionnalités Sebavia" },
     ],
     relatedGuideSlugs: [
+      "road-trip-nature-quebec",
       "escapade-fin-de-semaine-quebec",
       "checklist-road-trip-quebec",
-      "budget-road-trip-quebec",
     ],
     isPublished: true,
   },
@@ -241,9 +279,9 @@ export const GUIDES: readonly GuideMeta[] = [
       { href: "/fonctionnalites", label: "Fonctionnalités Sebavia" },
     ],
     relatedGuideSlugs: [
+      "road-trip-nature-quebec",
       "escapade-fin-de-semaine-quebec",
       "checklist-road-trip-quebec",
-      "budget-road-trip-quebec",
     ],
     isPublished: true,
   },

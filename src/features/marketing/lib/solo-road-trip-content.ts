@@ -180,6 +180,10 @@ export const SOLO_GUIDE = {
       "Découverte locale",
     ],
     note: "Vérifiez les horaires, les conditions et les exigences directement auprès du lieu concerné. Sebavia ne garantit ni la disponibilité ni l’accessibilité d’une activité.",
+    guideLink: {
+      href: "/guides/road-trip-nature-quebec",
+      label: "Organiser un road trip nature",
+    },
   },
   repas: {
     id: "repas",

@@ -234,6 +234,14 @@ export const ASSISTANT_PAGE = {
       },
     },
     {
+      title: "Escapade nature",
+      body: "Précisez l’intérêt nature, la durée maximale et le rythme souhaité : Sebavia aide à structurer activités, météo et plan de rechange.",
+      guideLink: {
+        href: "/guides/road-trip-nature-quebec",
+        label: "Lire le guide road trip nature",
+      },
+    },
+    {
       title: "Long voyage routier",
       body: "Organisez plusieurs étapes, pauses et recalculs de carburant, avec la météo pour mieux préparer les journées.",
     },

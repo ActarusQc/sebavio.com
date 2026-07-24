@@ -324,6 +324,14 @@ export const ROAD_TRIP_PAGE = {
       title: "Voyage spontané",
       body: "Destination encore ouverte : intérêts, rayon de déplacement et conversation pour construire une première proposition.",
     },
+    {
+      title: "Escapade nature",
+      body: "Intérêt nature, durée maximale, activités extérieures et marge pour la météo — sans surcharger le trajet.",
+      guideLink: {
+        href: "/guides/road-trip-nature-quebec",
+        label: "Consulter le guide pour un road trip nature",
+      },
+    },
   ],
   plans: {
     title: "Quel forfait pour planifier votre voyage?",

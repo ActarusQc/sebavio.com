@@ -206,6 +206,10 @@ export const GASTRONOMY_GUIDE = {
     ],
     links: [
       {
+        href: "/guides/road-trip-nature-quebec",
+        label: "Guide road trip nature",
+      },
+      {
         href: "/guides/road-trip-couple-quebec",
         label: "Guide road trip en couple",
       },

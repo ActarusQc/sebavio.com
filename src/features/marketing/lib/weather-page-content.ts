@@ -218,6 +218,10 @@ export const WEATHER_PAGE = {
     {
       title: "Voyage saisonnier",
       body: "Préparez une activité extérieure et le véhicule selon les conditions variables autour de vos dates.",
+      guideLink: {
+        href: "/guides/road-trip-nature-quebec",
+        label: "Lire le guide road trip nature",
+      },
     },
   ],
   limits: {
