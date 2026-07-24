@@ -3,7 +3,7 @@ import { getSiteUrl } from "@/lib/site-url";
 
 /**
  * Date figée : à mettre à jour uniquement quand le contenu public listé change réellement.
- * Lot SEO 4D : ajout de /guides/road-trip-couple-quebec.
+ * Lot SEO 4E : ajout de /guides/road-trip-solo-quebec.
  */
 const SITEMAP_LAST_MODIFIED = new Date("2026-07-24T12:00:00.000Z");
 
@@ -79,6 +79,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${siteUrl}/guides/road-trip-couple-quebec`,
+      lastModified: SITEMAP_LAST_MODIFIED,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: `${siteUrl}/guides/road-trip-solo-quebec`,
       lastModified: SITEMAP_LAST_MODIFIED,
       changeFrequency: "monthly",
       priority: 0.8,

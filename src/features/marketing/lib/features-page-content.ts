@@ -166,6 +166,10 @@ export const FEATURES_PAGE = {
       href: "/guides/road-trip-couple-quebec",
       label: "Guide : road trip en couple au Québec",
     },
+    soloGuideLink: {
+      href: "/guides/road-trip-solo-quebec",
+      label: "Guide : road trip solo au Québec",
+    },
   },
   howItWorks: {
     title: "Comment ça fonctionne",
@@ -211,6 +215,15 @@ export const FEATURES_PAGE = {
       guideLink: {
         href: "/guides/road-trip-couple-quebec",
         label: "Guide : road trip en couple au Québec",
+      },
+    },
+    {
+      id: "solo",
+      title: "Voyage solo",
+      body: "Rythme personnel, pauses, activités et itinéraire adaptés à une sortie effectuée seul.",
+      guideLink: {
+        href: "/guides/road-trip-solo-quebec",
+        label: "Guide : road trip solo au Québec",
       },
     },
   ],

@@ -178,12 +178,16 @@ export default function FeaturesPage() {
         items={personalization.items}
       >
         <FeaturesInlineLink
-          href={personalization.familyGuideLink.href}
-          label={personalization.familyGuideLink.label}
+          href={personalization.soloGuideLink.href}
+          label={personalization.soloGuideLink.label}
         />
         <FeaturesInlineLink
           href={personalization.coupleGuideLink.href}
           label={personalization.coupleGuideLink.label}
+        />
+        <FeaturesInlineLink
+          href={personalization.familyGuideLink.href}
+          label={personalization.familyGuideLink.label}
         />
       </FeaturesCapabilitySection>
 

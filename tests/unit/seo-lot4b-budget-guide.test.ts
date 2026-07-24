@@ -62,7 +62,7 @@ describe("lot SEO 4B — registre et hub", () => {
     const budget = getGuideBySlug("budget-road-trip-quebec")!;
     const checklist = getGuideBySlug("checklist-road-trip-quebec")!;
     expect(getRelatedGuides(budget).map((g) => g.slug)).toContain(
-      "checklist-road-trip-quebec",
+      "road-trip-solo-quebec",
     );
     expect(getRelatedGuides(checklist).map((g) => g.slug)).toContain(
       "budget-road-trip-quebec",

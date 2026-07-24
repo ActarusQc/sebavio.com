@@ -218,6 +218,14 @@ export const ASSISTANT_PAGE = {
       },
     },
     {
+      title: "Voyage solo",
+      body: "Définissez votre durée maximale, vos intérêts et votre rythme : Sebavia aide à organiser étapes, pauses, activités et météo pour un trajet effectué seul.",
+      guideLink: {
+        href: "/guides/road-trip-solo-quebec",
+        label: "Lire le guide road trip solo",
+      },
+    },
+    {
       title: "Voyage gastronomique",
       body: "Orientez la conversation vers restaurants et découvertes complémentaires, avec un hébergement proposé si vous restez la nuit.",
     },

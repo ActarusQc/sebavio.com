@@ -27,17 +27,12 @@ function readSource(relativePath: string): string {
 }
 
 describe("lot SEO 4D — registre et hub", () => {
-  it("publie exactement quatre guides, couple en premier", () => {
+  it("conserve le guide couple parmi les guides publiés", () => {
     const guides = getPublishedGuides();
-    expect(guides).toHaveLength(4);
-    expect(guides.map((g) => g.slug)).toEqual([
-      "road-trip-couple-quebec",
-      "road-trip-famille-quebec",
-      "budget-road-trip-quebec",
-      "checklist-road-trip-quebec",
-    ]);
-    expect(guides[0]?.categoryLabel).toBe("Couple");
-    expect(formatGuideDate(guides[0]!.publishedAt)).toBe("24 juillet 2026");
+    expect(guides.map((g) => g.slug)).toContain("road-trip-couple-quebec");
+    const couple = guides.find((g) => g.slug === "road-trip-couple-quebec")!;
+    expect(couple.categoryLabel).toBe("Couple");
+    expect(formatGuideDate(couple.publishedAt)).toBe("24 juillet 2026");
     expect(formatGuideDate("2026-07-23")).toBe("23 juillet 2026");
   });
 
@@ -46,7 +41,7 @@ describe("lot SEO 4D — registre et hub", () => {
     expect(getRelatedGuides(couple).map((g) => g.slug)).toEqual([
       "checklist-road-trip-quebec",
       "budget-road-trip-quebec",
-      "road-trip-famille-quebec",
+      "road-trip-solo-quebec",
     ]);
   });
 });

@@ -194,6 +194,10 @@ export const ROAD_TRIP_PAGE = {
       href: "/guides/road-trip-couple-quebec",
       label: "Consulter le guide pour une escapade en couple",
     },
+    soloGuideLink: {
+      href: "/guides/road-trip-solo-quebec",
+      label: "Consulter le guide pour préparer un road trip solo",
+    },
   },
   method: {
     title: "Planifier un road trip au Québec en cinq étapes",

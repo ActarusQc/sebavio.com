@@ -179,7 +179,13 @@ export default function BudgetRoadTripGuidePage() {
                 {p}
               </p>
             ))}
-            <p className="guide-no-print mt-4 text-sm">
+            <p className="guide-no-print mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+              <Link
+                href={page.intro.soloGuideLink.href}
+                className="font-medium text-[#3b6f9c] underline-offset-2 hover:underline"
+              >
+                {page.intro.soloGuideLink.label} →
+              </Link>
               <Link
                 href={page.intro.familyGuideLink.href}
                 className="font-medium text-[#3b6f9c] underline-offset-2 hover:underline"

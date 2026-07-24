@@ -5,6 +5,7 @@ export type GuideCategory =
   | "budget"
   | "famille"
   | "couple"
+  | "solo"
   | "itineraire"
   | "vehicule"
   | "quebec";
@@ -45,6 +46,7 @@ export const GUIDE_CATEGORY_LABELS: Record<GuideCategory, string> = {
   budget: "Budget",
   famille: "Famille",
   couple: "Couple",
+  solo: "Solo",
   itineraire: "Itinéraire",
   vehicule: "Véhicule",
   quebec: "Québec",
@@ -60,6 +62,42 @@ const CIVIL_DATE_RE = /^(\d{4})-(\d{2})-(\d{2})/;
  * Ajouter un guide ici + sa page de contenu; seuls les `isPublished: true` apparaissent.
  */
 export const GUIDES: readonly GuideMeta[] = [
+  {
+    slug: "road-trip-solo-quebec",
+    title: "Road trip solo au Québec : bien préparer son voyage",
+    description:
+      "Préparez votre road trip solo au Québec : itinéraire, pauses, hébergement, météo, carburant, budget et checklist avant le départ.",
+    excerpt:
+      "Organisez un voyage routier seul : rythme personnel, pauses, activités, hébergement, communications et checklist avant le départ.",
+    category: "solo",
+    categoryLabel: GUIDE_CATEGORY_LABELS.solo,
+    publishedAt: "2026-07-24",
+    updatedAt: "2026-07-24",
+    editorialOrder: 50,
+    readingTimeMinutes: 11,
+    image: BRAND_ASSETS.heroLandscapeWebp,
+    imageAlt:
+      "Route nocturne sous un ciel étoilé — ambiance de voyage routier Sebavia",
+    relatedLinks: [
+      {
+        href: "/planificateur-road-trip-quebec",
+        label: "Planificateur de road trip au Québec",
+      },
+      { href: "/assistant-voyage-ia", label: "Assistant voyage IA" },
+      { href: "/meteo-voyage", label: "Météo du voyage" },
+      {
+        href: "/calculateur-cout-carburant-voyage",
+        label: "Calculateur de coût de carburant",
+      },
+      { href: "/fonctionnalites", label: "Fonctionnalités Sebavia" },
+    ],
+    relatedGuideSlugs: [
+      "checklist-road-trip-quebec",
+      "budget-road-trip-quebec",
+      "road-trip-couple-quebec",
+    ],
+    isPublished: true,
+  },
   {
     slug: "road-trip-couple-quebec",
     title: "Road trip en couple au Québec : bien organiser l’escapade",
@@ -92,7 +130,7 @@ export const GUIDES: readonly GuideMeta[] = [
     relatedGuideSlugs: [
       "checklist-road-trip-quebec",
       "budget-road-trip-quebec",
-      "road-trip-famille-quebec",
+      "road-trip-solo-quebec",
     ],
     isPublished: true,
   },
@@ -165,9 +203,9 @@ export const GUIDES: readonly GuideMeta[] = [
       { href: "/pricing", label: "Tarifs" },
     ],
     relatedGuideSlugs: [
+      "road-trip-solo-quebec",
       "road-trip-couple-quebec",
       "road-trip-famille-quebec",
-      "checklist-road-trip-quebec",
     ],
     isPublished: true,
   },
@@ -204,8 +242,8 @@ export const GUIDES: readonly GuideMeta[] = [
       { href: "/fonctionnalites", label: "Fonctionnalités Sebavia" },
     ],
     relatedGuideSlugs: [
+      "road-trip-solo-quebec",
       "road-trip-couple-quebec",
-      "road-trip-famille-quebec",
       "budget-road-trip-quebec",
     ],
     isPublished: true,

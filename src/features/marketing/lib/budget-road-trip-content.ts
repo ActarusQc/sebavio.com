@@ -72,12 +72,16 @@ export const BUDGET_GUIDE = {
   intro: {
     title: "Un budget plus large que l’essence",
     paragraphs: [
-      "Le coût total d’un road trip au Québec dépend autant du style de voyage que de la distance. Camping, pique-niques et activités gratuites ne produisent pas le même budget que hôtels, restaurants et activités payantes. Le nombre de voyageurs — notamment en famille — influence aussi repas, hébergement et activités.",
+      "Le coût total d’un road trip au Québec dépend autant du style de voyage que de la distance. Camping, pique-niques et activités gratuites ne produisent pas le même budget que hôtels, restaurants et activités payantes. Le nombre de voyageurs — notamment en famille — influence aussi repas, hébergement et activités. En solo, certaines dépenses ne sont pas partagées entre plusieurs personnes.",
       "Les catégories principales à considérer peuvent comprendre le carburant, l’hébergement, les repas, les activités, le stationnement, les traversiers ou péages lorsque pertinents, les dépenses quotidiennes et une marge pour les imprévus.",
     ],
     familyGuideLink: {
       href: "/guides/road-trip-famille-quebec",
       label: "Organiser aussi le rythme d’un road trip en famille",
+    },
+    soloGuideLink: {
+      href: "/guides/road-trip-solo-quebec",
+      label: "Préparer aussi l’organisation d’un road trip solo",
     },
   },
   toc: [

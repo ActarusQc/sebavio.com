@@ -347,10 +347,10 @@ export default function PlanificateurRoadTripQuebecPage() {
         </ul>
         <p className="mt-5 text-sm">
           <Link
-            href={page.group.familyGuideLink.href}
+            href={page.group.soloGuideLink.href}
             className="text-[#3b6f9c] hover:underline"
           >
-            {page.group.familyGuideLink.label}
+            {page.group.soloGuideLink.label}
           </Link>
           {" · "}
           <Link
@@ -358,6 +358,13 @@ export default function PlanificateurRoadTripQuebecPage() {
             className="text-[#3b6f9c] hover:underline"
           >
             {page.group.coupleGuideLink.label}
+          </Link>
+          {" · "}
+          <Link
+            href={page.group.familyGuideLink.href}
+            className="text-[#3b6f9c] hover:underline"
+          >
+            {page.group.familyGuideLink.label}
           </Link>
         </p>
       </SectionShell>
