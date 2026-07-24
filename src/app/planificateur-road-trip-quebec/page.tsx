@@ -527,6 +527,16 @@ export default function PlanificateurRoadTripQuebecPage() {
               <p className="mt-2 text-sm leading-relaxed text-[#60758a]">
                 {item.body}
               </p>
+              {"guideLink" in item && item.guideLink ? (
+                <p className="mt-3 text-sm">
+                  <Link
+                    href={item.guideLink.href}
+                    className="text-[#3b6f9c] hover:underline"
+                  >
+                    {item.guideLink.label} →
+                  </Link>
+                </p>
+              ) : null}
             </li>
           ))}
         </ul>

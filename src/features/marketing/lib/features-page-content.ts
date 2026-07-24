@@ -197,6 +197,10 @@ export const FEATURES_PAGE = {
       id: "weekend",
       title: "Escapade de fin de semaine",
       body: "Durée maximale, destination adaptée, activités, hébergement proposé et météo pour préparer deux ou trois jours hors de chez vous.",
+      guideLink: {
+        href: "/guides/escapade-fin-de-semaine-quebec",
+        label: "Guide : escapade de fin de semaine au Québec",
+      },
     },
     {
       id: "famille",

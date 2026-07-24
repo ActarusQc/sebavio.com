@@ -307,6 +307,10 @@ export const ROAD_TRIP_PAGE = {
     {
       title: "Escapade de fin de semaine",
       body: "Durée maximale, une région, activités, repas et nuitée — pour structurer deux ou trois jours hors de chez vous.",
+      guideLink: {
+        href: "/guides/escapade-fin-de-semaine-quebec",
+        label: "Consulter le guide pour une escapade de fin de semaine",
+      },
     },
     {
       title: "Road trip familial",

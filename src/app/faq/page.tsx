@@ -167,6 +167,13 @@ export default function FaqPage() {
               className="text-[#3b6f9c] hover:underline"
             >
               Road trip solo
+            </Link>
+            . Pour une courte fin de semaine :{" "}
+            <Link
+              href="/guides/escapade-fin-de-semaine-quebec"
+              className="text-[#3b6f9c] hover:underline"
+            >
+              Escapade de fin de semaine
             </Link>{" "}
             (
             <Link href="/guides" className="text-[#3b6f9c] hover:underline">

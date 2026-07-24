@@ -27,19 +27,13 @@ function readSource(relativePath: string): string {
 }
 
 describe("lot SEO 4E — registre et hub", () => {
-  it("publie exactement cinq guides, solo en premier", () => {
+  it("conserve le guide solo parmi les guides publiés", () => {
     const guides = getPublishedGuides();
-    expect(guides).toHaveLength(5);
-    expect(guides.map((g) => g.slug)).toEqual([
-      "road-trip-solo-quebec",
-      "road-trip-couple-quebec",
-      "road-trip-famille-quebec",
-      "budget-road-trip-quebec",
-      "checklist-road-trip-quebec",
-    ]);
-    expect(guides[0]?.categoryLabel).toBe("Solo");
+    expect(guides.map((g) => g.slug)).toContain("road-trip-solo-quebec");
+    const solo = guides.find((g) => g.slug === "road-trip-solo-quebec")!;
+    expect(solo.categoryLabel).toBe("Solo");
     expect(guides.some((g) => g.slug === "road-trip-couple-quebec")).toBe(true);
-    expect(formatGuideDate(guides[0]!.publishedAt)).toBe("24 juillet 2026");
+    expect(formatGuideDate(solo.publishedAt)).toBe("24 juillet 2026");
     expect(formatGuideDate("2026-07-23")).toBe("23 juillet 2026");
     for (const guide of guides) {
       expect(guide.publishedAt <= "2026-07-24").toBe(true);
@@ -50,13 +44,13 @@ describe("lot SEO 4E — registre et hub", () => {
   it("lie le guide solo aux guides connexes", () => {
     const solo = getGuideBySlug("road-trip-solo-quebec")!;
     expect(getRelatedGuides(solo).map((g) => g.slug)).toEqual([
+      "escapade-fin-de-semaine-quebec",
       "checklist-road-trip-quebec",
       "budget-road-trip-quebec",
-      "road-trip-couple-quebec",
     ]);
     const couple = getGuideBySlug("road-trip-couple-quebec")!;
     expect(getRelatedGuides(couple).map((g) => g.slug)).toContain(
-      "road-trip-solo-quebec",
+      "escapade-fin-de-semaine-quebec",
     );
   });
 });

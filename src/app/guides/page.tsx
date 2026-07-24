@@ -142,9 +142,9 @@ export default function GuidesHubPage() {
       </section>
 
       <section
-        id="guides"
+        id="guides-publies"
         aria-labelledby="guides-list-title"
-        className="border-b border-[#e6eef5] py-12 sm:py-14"
+        className="scroll-mt-28 border-b border-[#e6eef5] py-12 sm:py-14"
       >
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <h2

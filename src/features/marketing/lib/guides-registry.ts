@@ -6,6 +6,7 @@ export type GuideCategory =
   | "famille"
   | "couple"
   | "solo"
+  | "court_sejour"
   | "itineraire"
   | "vehicule"
   | "quebec";
@@ -47,6 +48,7 @@ export const GUIDE_CATEGORY_LABELS: Record<GuideCategory, string> = {
   famille: "Famille",
   couple: "Couple",
   solo: "Solo",
+  court_sejour: "Court séjour",
   itineraire: "Itinéraire",
   vehicule: "Véhicule",
   quebec: "Québec",
@@ -62,6 +64,42 @@ const CIVIL_DATE_RE = /^(\d{4})-(\d{2})-(\d{2})/;
  * Ajouter un guide ici + sa page de contenu; seuls les `isPublished: true` apparaissent.
  */
 export const GUIDES: readonly GuideMeta[] = [
+  {
+    slug: "escapade-fin-de-semaine-quebec",
+    title: "Escapade de fin de semaine au Québec : bien organiser le séjour",
+    description:
+      "Organisez une escapade de fin de semaine au Québec : durée de route, activités, hébergement, météo, carburant et trajet de retour.",
+    excerpt:
+      "Structurez une courte escapade de deux ou trois jours : temps disponible, distance réaliste, nuitées, activités et retour avec marge.",
+    category: "court_sejour",
+    categoryLabel: GUIDE_CATEGORY_LABELS.court_sejour,
+    publishedAt: "2026-07-24",
+    updatedAt: "2026-07-24",
+    editorialOrder: 60,
+    readingTimeMinutes: 10,
+    image: BRAND_ASSETS.heroLandscapeWebp,
+    imageAlt:
+      "Route nocturne sous un ciel étoilé — ambiance de voyage routier Sebavia",
+    relatedLinks: [
+      {
+        href: "/planificateur-road-trip-quebec",
+        label: "Planificateur de road trip au Québec",
+      },
+      { href: "/assistant-voyage-ia", label: "Assistant voyage IA" },
+      { href: "/meteo-voyage", label: "Météo du voyage" },
+      {
+        href: "/calculateur-cout-carburant-voyage",
+        label: "Calculateur de coût de carburant",
+      },
+      { href: "/fonctionnalites", label: "Fonctionnalités Sebavia" },
+    ],
+    relatedGuideSlugs: [
+      "checklist-road-trip-quebec",
+      "budget-road-trip-quebec",
+      "road-trip-solo-quebec",
+    ],
+    isPublished: true,
+  },
   {
     slug: "road-trip-solo-quebec",
     title: "Road trip solo au Québec : bien préparer son voyage",
@@ -92,9 +130,9 @@ export const GUIDES: readonly GuideMeta[] = [
       { href: "/fonctionnalites", label: "Fonctionnalités Sebavia" },
     ],
     relatedGuideSlugs: [
+      "escapade-fin-de-semaine-quebec",
       "checklist-road-trip-quebec",
       "budget-road-trip-quebec",
-      "road-trip-couple-quebec",
     ],
     isPublished: true,
   },
@@ -128,9 +166,9 @@ export const GUIDES: readonly GuideMeta[] = [
       { href: "/fonctionnalites", label: "Fonctionnalités Sebavia" },
     ],
     relatedGuideSlugs: [
+      "escapade-fin-de-semaine-quebec",
       "checklist-road-trip-quebec",
       "budget-road-trip-quebec",
-      "road-trip-solo-quebec",
     ],
     isPublished: true,
   },
@@ -164,7 +202,7 @@ export const GUIDES: readonly GuideMeta[] = [
       { href: "/fonctionnalites", label: "Fonctionnalités Sebavia" },
     ],
     relatedGuideSlugs: [
-      "road-trip-couple-quebec",
+      "escapade-fin-de-semaine-quebec",
       "checklist-road-trip-quebec",
       "budget-road-trip-quebec",
     ],
@@ -203,9 +241,9 @@ export const GUIDES: readonly GuideMeta[] = [
       { href: "/pricing", label: "Tarifs" },
     ],
     relatedGuideSlugs: [
+      "escapade-fin-de-semaine-quebec",
       "road-trip-solo-quebec",
-      "road-trip-couple-quebec",
-      "road-trip-famille-quebec",
+      "checklist-road-trip-quebec",
     ],
     isPublished: true,
   },
@@ -242,8 +280,8 @@ export const GUIDES: readonly GuideMeta[] = [
       { href: "/fonctionnalites", label: "Fonctionnalités Sebavia" },
     ],
     relatedGuideSlugs: [
+      "escapade-fin-de-semaine-quebec",
       "road-trip-solo-quebec",
-      "road-trip-couple-quebec",
       "budget-road-trip-quebec",
     ],
     isPublished: true,
