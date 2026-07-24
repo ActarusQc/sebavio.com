@@ -282,6 +282,10 @@ export const ROAD_TRIP_PAGE = {
       "Prévoir une marge pour les pauses",
       "Consulter le voyage enregistré dans Sebavia",
     ],
+    guideLink: {
+      href: "/guides/checklist-road-trip-quebec",
+      label: "Checklist complète : préparer un road trip au Québec",
+    },
   },
   useCases: [
     {

@@ -3,9 +3,9 @@ import { getSiteUrl } from "@/lib/site-url";
 
 /**
  * Date figée : à mettre à jour uniquement quand le contenu public listé change réellement.
- * Lot SEO 3F : ajout de /meteo-voyage.
+ * Lot SEO 4A : ajout de /guides et /guides/checklist-road-trip-quebec.
  */
-const SITEMAP_LAST_MODIFIED = new Date("2026-07-23T23:00:00.000Z");
+const SITEMAP_LAST_MODIFIED = new Date("2026-07-24T12:00:00.000Z");
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const siteUrl = getSiteUrl();
@@ -52,6 +52,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: SITEMAP_LAST_MODIFIED,
       changeFrequency: "weekly",
       priority: 0.85,
+    },
+    {
+      url: `${siteUrl}/guides`,
+      lastModified: SITEMAP_LAST_MODIFIED,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      url: `${siteUrl}/guides/checklist-road-trip-quebec`,
+      lastModified: SITEMAP_LAST_MODIFIED,
+      changeFrequency: "monthly",
+      priority: 0.8,
     },
     {
       url: `${siteUrl}/pricing`,

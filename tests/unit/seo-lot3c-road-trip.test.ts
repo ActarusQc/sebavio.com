@@ -32,7 +32,7 @@ describe("lot SEO 3C — sitemap", () => {
         : String(e.lastModified),
     );
     expect(new Set(dates).size).toBe(1);
-    expect(dates[0]).toMatch(/^2026-07-23T/);
+    expect(dates[0]).toMatch(/^2026-07-24T/);
   });
 });
 

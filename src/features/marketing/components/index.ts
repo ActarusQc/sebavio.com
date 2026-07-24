@@ -59,3 +59,5 @@ export { FuelStopsPageHero } from "./fuel-stops-page-hero";
 export { FuelStopsFaqSection } from "./fuel-stops-faq-section";
 export { WeatherPageHero } from "./weather-page-hero";
 export { WeatherFaqSection } from "./weather-faq-section";
+export { GuideArticleMeta } from "./guide-article-meta";
+export { GuideChecklistSection } from "./guide-checklist-section";

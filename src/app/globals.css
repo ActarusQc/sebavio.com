@@ -454,3 +454,35 @@ html:not(.dark) .workspace-shell {
     animation: none;
   }
 }
+
+/* Impression des guides (checklist) */
+@media print {
+  .guide-no-print,
+  header,
+  footer,
+  nav {
+    display: none !important;
+  }
+
+  .guide-print-root {
+    color: #000;
+    background: #fff;
+  }
+
+  .guide-print-section {
+    break-inside: avoid;
+    border-color: #ccc !important;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .guide-check-box {
+    border-color: #333 !important;
+    background: #fff !important;
+  }
+
+  a {
+    text-decoration: none !important;
+    color: inherit !important;
+  }
+}

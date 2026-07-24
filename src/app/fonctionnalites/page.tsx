@@ -121,6 +121,10 @@ export default function FeaturesPage() {
           label={itinerary.roadTripLink.label}
         />
         <FeaturesInlineLink
+          href={itinerary.guidesLink.href}
+          label={itinerary.guidesLink.label}
+        />
+        <FeaturesInlineLink
           href={itinerary.faqLink.href}
           label={itinerary.faqLink.label}
         />

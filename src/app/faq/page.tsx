@@ -133,7 +133,18 @@ export default function FaqPage() {
             >
               Météo du voyage
             </Link>
-            .
+            . Pour la préparation :{" "}
+            <Link
+              href="/guides/checklist-road-trip-quebec"
+              className="text-[#3b6f9c] hover:underline"
+            >
+              Checklist road trip Québec
+            </Link>{" "}
+            (
+            <Link href="/guides" className="text-[#3b6f9c] hover:underline">
+              tous les guides
+            </Link>
+            ).
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <MarketingCtaButton href="/register">

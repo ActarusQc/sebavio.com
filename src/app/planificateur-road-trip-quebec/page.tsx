@@ -473,6 +473,16 @@ export default function PlanificateurRoadTripQuebecPage() {
             </li>
           ))}
         </ul>
+        <p className="mt-5 text-sm text-[#60758a]">
+          Pour une préparation plus large (documents, bagages, jour du départ) :{" "}
+          <Link
+            href={page.checklist.guideLink.href}
+            className="font-medium text-[#3b6f9c] underline-offset-2 hover:underline"
+          >
+            {page.checklist.guideLink.label}
+          </Link>
+          .
+        </p>
       </SectionShell>
 
       <SectionShell id="cas-usage" title="Des scénarios de road trip">

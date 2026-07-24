@@ -95,6 +95,10 @@ export const FEATURES_PAGE = {
       href: "/planificateur-road-trip-quebec",
       label: "Planifier un road trip au Québec",
     },
+    guidesLink: {
+      href: "/guides/checklist-road-trip-quebec",
+      label: "Checklist : préparer un road trip au Québec",
+    },
     faqLink: { href: "/faq", label: "Questions fréquentes sur les voyages" },
   },
   activities: {
