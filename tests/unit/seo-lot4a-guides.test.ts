@@ -34,8 +34,11 @@ describe("lot SEO 4A — registre et hub", () => {
       "src/features/marketing/lib/guides-registry.ts",
     );
     expect(registry).not.toMatch(/Date\.now|new Date\(\)/);
-    expect(GUIDES[0]?.publishedAt).toBe("2026-07-23T20:00:00.000Z");
-    expect(GUIDES[0]?.updatedAt).toBe("2026-07-23T20:00:00.000Z");
+    expect(GUIDES.every((g) => /^\d{4}-\d{2}-\d{2}$/.test(g.publishedAt))).toBe(
+      true,
+    );
+    expect(GUIDES[0]?.publishedAt).toBe("2026-07-23");
+    expect(GUIDES[0]?.updatedAt).toBe("2026-07-23");
   });
 });
 

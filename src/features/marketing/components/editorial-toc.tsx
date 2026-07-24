@@ -1,5 +1,11 @@
 import { cn } from "@/lib/utils";
 
+/**
+ * Table des matières éditoriale.
+ * Numérotation uniquement via `<ol>` (pas de préfixe manuel dans les libellés
+ * ni de span « 1. ») — évite la double numérotation pour les crawlers sans CSS
+ * et pour les lecteurs d’écran.
+ */
 export function EditorialToc({
   items,
   className,
@@ -18,17 +24,13 @@ export function EditorialToc({
       <p className="font-heading text-sm font-semibold text-[#082b46]">
         Sur cette page
       </p>
-      {/* list-none : la numérotation est fournie uniquement par le span (évite le double « 1. 1. »). */}
-      <ol className="mt-3 list-none space-y-2 p-0">
-        {items.map((item, index) => (
-          <li key={item.id}>
+      <ol className="mt-3 list-decimal space-y-2 pl-5 marker:text-[#60758a]">
+        {items.map((item) => (
+          <li key={item.id} className="pl-1">
             <a
               href={`#${item.id}`}
               className="text-sm text-[#3b6f9c] underline-offset-2 hover:underline focus-visible:rounded focus-visible:ring-2 focus-visible:ring-[#3b82f6] focus-visible:outline-none"
             >
-              <span className="mr-2 text-[#60758a]" aria-hidden="true">
-                {index + 1}.
-              </span>
               {item.label}
             </a>
           </li>

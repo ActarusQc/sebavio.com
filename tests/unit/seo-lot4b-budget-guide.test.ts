@@ -27,20 +27,20 @@ function readSource(relativePath: string): string {
 describe("lot SEO 4B — corrections guide checklist", () => {
   it("corrige la date du premier guide au 23 juillet 2026 (Québec)", () => {
     const checklist = getGuideBySlug("checklist-road-trip-quebec");
-    expect(checklist?.publishedAt).toBe("2026-07-23T16:00:00.000Z");
-    expect(checklist?.updatedAt).toBe("2026-07-23T16:00:00.000Z");
+    expect(checklist?.publishedAt).toBe("2026-07-23");
+    expect(checklist?.updatedAt).toBe("2026-07-23");
     expect(formatGuideDate(checklist!.publishedAt)).toBe("23 juillet 2026");
     expect(GUIDE_EDITORIAL_TIMEZONE).toBe("America/Toronto");
-    expect(formatGuideDate("2026-07-24T03:00:00.000Z")).toBe("23 juillet 2026");
+    expect(formatGuideDate("2026-07-23T23:59:59.000Z")).toBe("23 juillet 2026");
   });
 
   it("évite la numérotation doublée dans la table des matières", () => {
     const toc = readSource(
       "src/features/marketing/components/editorial-toc.tsx",
     );
-    expect(toc).toContain("list-none");
-    expect(toc).toContain("aria-hidden");
-    expect((toc.match(/index \+ 1/g) || []).length).toBe(1);
+    expect(toc).toContain("list-decimal");
+    expect(toc).not.toContain("aria-hidden");
+    expect(toc).not.toMatch(/index \+ 1/);
     const checklistToc = readSource(
       "src/features/marketing/lib/checklist-road-trip-content.ts",
     );

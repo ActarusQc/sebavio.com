@@ -15,7 +15,10 @@ export type GuideMeta = {
   excerpt: string;
   category: GuideCategory;
   categoryLabel: string;
-  /** Date ISO figée — ne pas générer à chaque build. */
+  /**
+   * Date éditoriale civile `YYYY-MM-DD` (Québec), figée — ne pas générer à chaque build.
+   * Évite les décalages UTC → « lendemain ».
+   */
   publishedAt: string;
   updatedAt: string;
   readingTimeMinutes: number;
@@ -35,11 +38,10 @@ export const GUIDE_CATEGORY_LABELS: Record<GuideCategory, string> = {
   quebec: "Québec",
 };
 
-/**
- * Fuseau éditorial Québec : les dates affichées suivent America/Toronto,
- * pas le décalage UTC qui peut basculer au lendemain.
- */
+/** Fuseau de référence pour toute conversion horodatée éventuelle. */
 export const GUIDE_EDITORIAL_TIMEZONE = "America/Toronto";
+
+const CIVIL_DATE_RE = /^(\d{4})-(\d{2})-(\d{2})/;
 
 /**
  * Registre typé des guides publics.
@@ -55,8 +57,8 @@ export const GUIDES: readonly GuideMeta[] = [
       "Organisez le budget global d’un voyage routier : catégories de dépenses, coûts fixes et variables, marge et suivi avant le départ.",
     category: "budget",
     categoryLabel: GUIDE_CATEGORY_LABELS.budget,
-    publishedAt: "2026-07-23T20:00:00.000Z",
-    updatedAt: "2026-07-23T20:00:00.000Z",
+    publishedAt: "2026-07-23",
+    updatedAt: "2026-07-23",
     readingTimeMinutes: 11,
     image: BRAND_ASSETS.heroLandscapeWebp,
     imageAlt:
@@ -89,9 +91,9 @@ export const GUIDES: readonly GuideMeta[] = [
       "Une checklist claire pour organiser votre voyage routier : documents, véhicule, étapes, essence, météo et dernières vérifications.",
     category: "preparation",
     categoryLabel: GUIDE_CATEGORY_LABELS.preparation,
-    /** Publication réelle au Québec : 23 juillet 2026 (pas le lendemain UTC). */
-    publishedAt: "2026-07-23T16:00:00.000Z",
-    updatedAt: "2026-07-23T16:00:00.000Z",
+    /** Publication réelle au Québec : 23 juillet 2026. */
+    publishedAt: "2026-07-23",
+    updatedAt: "2026-07-23",
     readingTimeMinutes: 9,
     image: BRAND_ASSETS.heroLandscapeWebp,
     imageAlt:
@@ -118,9 +120,12 @@ export const GUIDES: readonly GuideMeta[] = [
 ] as const;
 
 export function getPublishedGuides(): GuideMeta[] {
-  return GUIDES.filter((g) => g.isPublished).sort((a, b) =>
-    b.publishedAt.localeCompare(a.publishedAt),
-  );
+  return GUIDES.filter((g) => g.isPublished).sort((a, b) => {
+    const byDate = b.publishedAt.localeCompare(a.publishedAt);
+    if (byDate !== 0) return byDate;
+    // Ordre éditorial stable : budget avant checklist si même jour.
+    return a.slug.localeCompare(b.slug);
+  });
 }
 
 export function getGuideBySlug(slug: string): GuideMeta | undefined {
@@ -133,11 +138,27 @@ export function getRelatedGuides(guide: GuideMeta): GuideMeta[] {
     .filter((g): g is GuideMeta => Boolean(g));
 }
 
-export function formatGuideDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("fr-CA", {
+/** Extrait la date civile `YYYY-MM-DD` (ignorant toute heure / fuseau). */
+export function toGuideCivilDate(value: string): string {
+  const match = CIVIL_DATE_RE.exec(value.trim());
+  if (!match) {
+    throw new Error(`Date éditoriale invalide: ${value}`);
+  }
+  return `${match[1]}-${match[2]}-${match[3]}`;
+}
+
+/**
+ * Formatage FR-CA stable : basé sur la date civile, midi UTC,
+ * pour que le jour affiché ne bascule jamais selon le serveur.
+ */
+export function formatGuideDate(value: string): string {
+  const civil = toGuideCivilDate(value);
+  const [year, month, day] = civil.split("-").map(Number);
+  const utcNoon = new Date(Date.UTC(year!, month! - 1, day!, 12, 0, 0));
+  return utcNoon.toLocaleDateString("fr-CA", {
     year: "numeric",
     month: "long",
     day: "numeric",
-    timeZone: GUIDE_EDITORIAL_TIMEZONE,
+    timeZone: "UTC",
   });
 }
