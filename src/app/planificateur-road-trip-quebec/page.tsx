@@ -270,6 +270,13 @@ export default function PlanificateurRoadTripQuebecPage() {
           </Link>
           {" · "}
           <Link
+            href={page.fuel.budgetGuideLink.href}
+            className="text-sky-300 hover:underline"
+          >
+            {page.fuel.budgetGuideLink.label}
+          </Link>
+          {" · "}
+          <Link
             href={page.fuel.featuresLink.href}
             className="text-sky-300 hover:underline"
           >

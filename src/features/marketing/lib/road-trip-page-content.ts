@@ -137,6 +137,10 @@ export const ROAD_TRIP_PAGE = {
       href: "/calculateur-cout-carburant-voyage",
       label: "Voir comment le coût du carburant est calculé",
     },
+    budgetGuideLink: {
+      href: "/guides/budget-road-trip-quebec",
+      label: "Préparer le budget de votre road trip",
+    },
   },
   fuelStops: {
     title: "Anticipez les arrêts de ravitaillement",

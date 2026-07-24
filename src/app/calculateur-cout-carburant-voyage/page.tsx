@@ -334,6 +334,13 @@ export default function CalculateurCoutCarburantVoyagePage() {
           >
             {page.updates.roadTripLink.label}
           </Link>
+          {" · "}
+          <Link
+            href={page.updates.budgetGuideLink.href}
+            className="text-sky-300 hover:underline"
+          >
+            {page.updates.budgetGuideLink.label}
+          </Link>
         </p>
       </SectionShell>
 

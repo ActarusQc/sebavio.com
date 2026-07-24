@@ -18,14 +18,17 @@ export function EditorialToc({
       <p className="font-heading text-sm font-semibold text-[#082b46]">
         Sur cette page
       </p>
-      <ol className="mt-3 space-y-2">
+      {/* list-none : la numérotation est fournie uniquement par le span (évite le double « 1. 1. »). */}
+      <ol className="mt-3 list-none space-y-2 p-0">
         {items.map((item, index) => (
           <li key={item.id}>
             <a
               href={`#${item.id}`}
               className="text-sm text-[#3b6f9c] underline-offset-2 hover:underline focus-visible:rounded focus-visible:ring-2 focus-visible:ring-[#3b82f6] focus-visible:outline-none"
             >
-              <span className="mr-2 text-[#60758a]">{index + 1}.</span>
+              <span className="mr-2 text-[#60758a]" aria-hidden="true">
+                {index + 1}.
+              </span>
               {item.label}
             </a>
           </li>

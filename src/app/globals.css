@@ -481,8 +481,26 @@ html:not(.dark) .workspace-shell {
     background: #fff !important;
   }
 
+  .guide-budget-table {
+    break-inside: avoid;
+    font-size: 11pt;
+  }
+
+  .guide-budget-table th,
+  .guide-budget-table td {
+    border-color: #999 !important;
+  }
+
   a {
     text-decoration: none !important;
     color: inherit !important;
+  }
+
+  .guide-print-root::after {
+    content: "Sebavia — https://sebavia.com";
+    display: block;
+    margin-top: 1.5rem;
+    font-size: 10pt;
+    color: #444;
   }
 }

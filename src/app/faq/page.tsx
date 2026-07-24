@@ -139,6 +139,13 @@ export default function FaqPage() {
               className="text-[#3b6f9c] hover:underline"
             >
               Checklist road trip Québec
+            </Link>
+            . Pour le budget global :{" "}
+            <Link
+              href="/guides/budget-road-trip-quebec"
+              className="text-[#3b6f9c] hover:underline"
+            >
+              Budget road trip Québec
             </Link>{" "}
             (
             <Link href="/guides" className="text-[#3b6f9c] hover:underline">

@@ -3,9 +3,9 @@ import { getSiteUrl } from "@/lib/site-url";
 
 /**
  * Date figée : à mettre à jour uniquement quand le contenu public listé change réellement.
- * Lot SEO 4A : ajout de /guides et /guides/checklist-road-trip-quebec.
+ * Lot SEO 4B : ajout de /guides/budget-road-trip-quebec + corrections dates guides.
  */
-const SITEMAP_LAST_MODIFIED = new Date("2026-07-24T12:00:00.000Z");
+const SITEMAP_LAST_MODIFIED = new Date("2026-07-23T20:00:00.000Z");
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const siteUrl = getSiteUrl();
@@ -61,6 +61,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${siteUrl}/guides/checklist-road-trip-quebec`,
+      lastModified: SITEMAP_LAST_MODIFIED,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: `${siteUrl}/guides/budget-road-trip-quebec`,
       lastModified: SITEMAP_LAST_MODIFIED,
       changeFrequency: "monthly",
       priority: 0.8,

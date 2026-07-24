@@ -164,6 +164,10 @@ export const FUEL_COST_PAGE = {
       href: "/planificateur-road-trip-quebec",
       label: "Voir comment organiser un road trip complet",
     },
+    budgetGuideLink: {
+      href: "/guides/budget-road-trip-quebec",
+      label: "Le carburant n’est qu’une partie du budget total",
+    },
   },
   comparison: {
     title: "Plus qu’une multiplication",

@@ -61,3 +61,4 @@ export { WeatherPageHero } from "./weather-page-hero";
 export { WeatherFaqSection } from "./weather-faq-section";
 export { GuideArticleMeta } from "./guide-article-meta";
 export { GuideChecklistSection } from "./guide-checklist-section";
+export { GuideRelatedGuides } from "./guide-related-guides";

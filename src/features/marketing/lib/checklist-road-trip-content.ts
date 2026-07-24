@@ -54,8 +54,11 @@ export const CHECKLIST_GUIDE = {
         "Budget approximatif (hébergement, repas, activités, carburant)",
         "Rythme souhaité : journées longues au volant ou pauses fréquentes",
       ],
-      tip: "Notez une durée maximale de conduite par jour qui vous convient vraiment — pas seulement celle qui « rentre » sur la carte.",
-      productLink: null,
+      tip: "Notez une durée maximale de conduite par jour qui vous convient vraiment — pas seulement celle qui « rentre » sur la carte. Pour structurer les dépenses, consultez aussi le guide budget.",
+      productLink: {
+        href: "/guides/budget-road-trip-quebec",
+        label: "Préparer le budget de votre road trip",
+      },
     },
     {
       id: "vehicule",

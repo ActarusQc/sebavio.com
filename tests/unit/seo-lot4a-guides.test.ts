@@ -34,8 +34,8 @@ describe("lot SEO 4A — registre et hub", () => {
       "src/features/marketing/lib/guides-registry.ts",
     );
     expect(registry).not.toMatch(/Date\.now|new Date\(\)/);
-    expect(GUIDES[0]?.publishedAt).toBe("2026-07-24T12:00:00.000Z");
-    expect(GUIDES[0]?.updatedAt).toBe("2026-07-24T12:00:00.000Z");
+    expect(GUIDES[0]?.publishedAt).toBe("2026-07-23T20:00:00.000Z");
+    expect(GUIDES[0]?.updatedAt).toBe("2026-07-23T20:00:00.000Z");
   });
 });
 
@@ -55,7 +55,7 @@ describe("lot SEO 4A — sitemap", () => {
         : String(e.lastModified),
     );
     expect(new Set(dates).size).toBe(1);
-    expect(dates[0]).toBe("2026-07-24T12:00:00.000Z");
+    expect(dates[0]).toBe("2026-07-23T20:00:00.000Z");
   });
 });
 

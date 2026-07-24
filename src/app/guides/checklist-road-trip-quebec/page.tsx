@@ -8,6 +8,7 @@ import {
 } from "@/features/marketing";
 import { GuideArticleMeta } from "@/features/marketing/components/guide-article-meta";
 import { GuideChecklistSection } from "@/features/marketing/components/guide-checklist-section";
+import { GuideRelatedGuides } from "@/features/marketing/components/guide-related-guides";
 import { buildTrustPageMetadata } from "@/features/marketing/lib/build-trust-metadata";
 import { CHECKLIST_GUIDE } from "@/features/marketing/lib/checklist-road-trip-content";
 import { getGuideBySlug } from "@/features/marketing/lib/guides-registry";
@@ -195,6 +196,8 @@ export default function ChecklistRoadTripGuidePage() {
               ))}
             </ul>
           </section>
+
+          <GuideRelatedGuides guide={guide} />
 
           <section
             id={CHECKLIST_GUIDE.limits.id}
