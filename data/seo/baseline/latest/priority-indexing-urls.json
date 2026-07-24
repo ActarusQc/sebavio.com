@@ -1,0 +1,178 @@
+[
+  {
+    "rank": 1,
+    "url": "https://sebavia.com",
+    "pageType": "home",
+    "reason": "Page d’entrée — inspection URL + demande d’indexation manuelle unique",
+    "gscAction": "inspect_url",
+    "note": "Ne pas conclure à l’indexation à partir du seul sitemap"
+  },
+  {
+    "rank": 2,
+    "url": "https://sebavia.com/fonctionnalites",
+    "pageType": "product",
+    "reason": "Page produit commerciale prioritaire",
+    "gscAction": "inspect_url",
+    "note": "Ne pas conclure à l’indexation à partir du seul sitemap"
+  },
+  {
+    "rank": 3,
+    "url": "https://sebavia.com/assistant-voyage-ia",
+    "pageType": "product",
+    "reason": "Page produit commerciale prioritaire",
+    "gscAction": "inspect_url",
+    "note": "Ne pas conclure à l’indexation à partir du seul sitemap"
+  },
+  {
+    "rank": 4,
+    "url": "https://sebavia.com/planificateur-road-trip-quebec",
+    "pageType": "product",
+    "reason": "Page produit commerciale prioritaire",
+    "gscAction": "inspect_url",
+    "note": "Ne pas conclure à l’indexation à partir du seul sitemap"
+  },
+  {
+    "rank": 5,
+    "url": "https://sebavia.com/calculateur-cout-carburant-voyage",
+    "pageType": "product",
+    "reason": "Page produit commerciale prioritaire",
+    "gscAction": "inspect_url",
+    "note": "Ne pas conclure à l’indexation à partir du seul sitemap"
+  },
+  {
+    "rank": 6,
+    "url": "https://sebavia.com/planifier-arrets-carburant",
+    "pageType": "product",
+    "reason": "Page produit commerciale prioritaire",
+    "gscAction": "inspect_url",
+    "note": "Ne pas conclure à l’indexation à partir du seul sitemap"
+  },
+  {
+    "rank": 7,
+    "url": "https://sebavia.com/meteo-voyage",
+    "pageType": "product",
+    "reason": "Page produit commerciale prioritaire",
+    "gscAction": "inspect_url",
+    "note": "Ne pas conclure à l’indexation à partir du seul sitemap"
+  },
+  {
+    "rank": 8,
+    "url": "https://sebavia.com/guides",
+    "pageType": "guides_hub",
+    "reason": "Contenu éditorial — surveiller découverte via sitemap",
+    "gscAction": "inspect_url",
+    "note": "Ne pas conclure à l’indexation à partir du seul sitemap"
+  },
+  {
+    "rank": 9,
+    "url": "https://sebavia.com/guides/checklist-road-trip-quebec",
+    "pageType": "guide",
+    "reason": "Contenu éditorial — surveiller découverte via sitemap",
+    "gscAction": "inspect_url",
+    "note": "Ne pas conclure à l’indexation à partir du seul sitemap"
+  },
+  {
+    "rank": 10,
+    "url": "https://sebavia.com/guides/budget-road-trip-quebec",
+    "pageType": "guide",
+    "reason": "Contenu éditorial — surveiller découverte via sitemap",
+    "gscAction": "inspect_url",
+    "note": "Ne pas conclure à l’indexation à partir du seul sitemap"
+  },
+  {
+    "rank": 11,
+    "url": "https://sebavia.com/guides/road-trip-famille-quebec",
+    "pageType": "guide",
+    "reason": "Contenu éditorial — surveiller découverte via sitemap",
+    "gscAction": "inspect_url",
+    "note": "Ne pas conclure à l’indexation à partir du seul sitemap"
+  },
+  {
+    "rank": 12,
+    "url": "https://sebavia.com/guides/road-trip-couple-quebec",
+    "pageType": "guide",
+    "reason": "Contenu éditorial — surveiller découverte via sitemap",
+    "gscAction": "inspect_url",
+    "note": "Ne pas conclure à l’indexation à partir du seul sitemap"
+  },
+  {
+    "rank": 13,
+    "url": "https://sebavia.com/guides/road-trip-solo-quebec",
+    "pageType": "guide",
+    "reason": "Contenu éditorial — surveiller découverte via sitemap",
+    "gscAction": "inspect_url",
+    "note": "Ne pas conclure à l’indexation à partir du seul sitemap"
+  },
+  {
+    "rank": 14,
+    "url": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec",
+    "pageType": "guide",
+    "reason": "Contenu éditorial — surveiller découverte via sitemap",
+    "gscAction": "inspect_url",
+    "note": "Ne pas conclure à l’indexation à partir du seul sitemap"
+  },
+  {
+    "rank": 15,
+    "url": "https://sebavia.com/guides/road-trip-gastronomique-quebec",
+    "pageType": "guide",
+    "reason": "Contenu éditorial — surveiller découverte via sitemap",
+    "gscAction": "inspect_url",
+    "note": "Ne pas conclure à l’indexation à partir du seul sitemap"
+  },
+  {
+    "rank": 16,
+    "url": "https://sebavia.com/guides/road-trip-nature-quebec",
+    "pageType": "guide",
+    "reason": "Contenu éditorial — surveiller découverte via sitemap",
+    "gscAction": "inspect_url",
+    "note": "Ne pas conclure à l’indexation à partir du seul sitemap"
+  },
+  {
+    "rank": 17,
+    "url": "https://sebavia.com/pricing",
+    "pageType": "pricing",
+    "reason": "Page de confiance / conversion",
+    "gscAction": "inspect_url",
+    "note": "Ne pas conclure à l’indexation à partir du seul sitemap"
+  },
+  {
+    "rank": 18,
+    "url": "https://sebavia.com/a-propos",
+    "pageType": "institutional",
+    "reason": "Page de confiance / conversion",
+    "gscAction": "inspect_url",
+    "note": "Ne pas conclure à l’indexation à partir du seul sitemap"
+  },
+  {
+    "rank": 19,
+    "url": "https://sebavia.com/faq",
+    "pageType": "institutional",
+    "reason": "Page de confiance / conversion",
+    "gscAction": "inspect_url",
+    "note": "Ne pas conclure à l’indexation à partir du seul sitemap"
+  },
+  {
+    "rank": 20,
+    "url": "https://sebavia.com/contact",
+    "pageType": "institutional",
+    "reason": "Page de confiance / conversion",
+    "gscAction": "inspect_url",
+    "note": "Ne pas conclure à l’indexation à partir du seul sitemap"
+  },
+  {
+    "rank": 21,
+    "url": "https://sebavia.com/confidentialite",
+    "pageType": "legal",
+    "reason": "Page de confiance / conversion",
+    "gscAction": "inspect_url",
+    "note": "Ne pas conclure à l’indexation à partir du seul sitemap"
+  },
+  {
+    "rank": 22,
+    "url": "https://sebavia.com/conditions-utilisation",
+    "pageType": "legal",
+    "reason": "Page de confiance / conversion",
+    "gscAction": "inspect_url",
+    "note": "Ne pas conclure à l’indexation à partir du seul sitemap"
+  }
+]

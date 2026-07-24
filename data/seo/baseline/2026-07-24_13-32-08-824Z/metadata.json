@@ -1,0 +1,25 @@
+{
+  "executionId": "2026-07-24_13-32-08-824Z",
+  "generatedAt": "2026-07-24T13:32:10.255Z",
+  "site": "https://sebavia.com",
+  "commitHint": "lot-seo-5a",
+  "sourceOfTruth": "src/app/sitemap.ts + crawl live",
+  "urlCount": 22,
+  "counts": {
+    "conforme": 22,
+    "avertissement": 0,
+    "erreur": 0,
+    "verification_manuelle": 0
+  },
+  "gscVerification": {
+    "dnsTxtPresent": true,
+    "dnsMethod": "TXT google-site-verification=… sur apex sebavia.com",
+    "metaEnvSupport": "GOOGLE_SITE_VERIFICATION → metadata.verification.google",
+    "metaCurrentlyEmitted": false,
+    "htmlFilePresent": false,
+    "oldDomainArtifacts": false,
+    "status": "verification_manuelle",
+    "note": "DNS déjà en place. Confirmer la propriété dans Search Console (action manuelle). Ne pas supprimer le TXT existant."
+  },
+  "disclaimer": "Présence dans le sitemap ≠ indexation Google. Aucune donnée Search Console simulée."
+}

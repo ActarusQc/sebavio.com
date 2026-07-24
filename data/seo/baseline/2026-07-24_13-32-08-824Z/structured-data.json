@@ -1,0 +1,112 @@
+[
+  {
+    "url": "https://sebavia.com",
+    "types": ["Organization", "WebApplication", "WebSite"],
+    "status": "conforme"
+  },
+  {
+    "url": "https://sebavia.com/fonctionnalites",
+    "types": ["BreadcrumbList", "CollectionPage", "ItemList"],
+    "status": "conforme"
+  },
+  {
+    "url": "https://sebavia.com/assistant-voyage-ia",
+    "types": ["BreadcrumbList", "FAQPage", "WebPage"],
+    "status": "conforme"
+  },
+  {
+    "url": "https://sebavia.com/planificateur-road-trip-quebec",
+    "types": ["BreadcrumbList", "FAQPage", "WebPage"],
+    "status": "conforme"
+  },
+  {
+    "url": "https://sebavia.com/calculateur-cout-carburant-voyage",
+    "types": ["BreadcrumbList", "FAQPage", "WebPage"],
+    "status": "conforme"
+  },
+  {
+    "url": "https://sebavia.com/planifier-arrets-carburant",
+    "types": ["BreadcrumbList", "FAQPage", "WebPage"],
+    "status": "conforme"
+  },
+  {
+    "url": "https://sebavia.com/meteo-voyage",
+    "types": ["BreadcrumbList", "FAQPage", "WebPage"],
+    "status": "conforme"
+  },
+  {
+    "url": "https://sebavia.com/guides",
+    "types": ["BreadcrumbList", "CollectionPage"],
+    "status": "conforme"
+  },
+  {
+    "url": "https://sebavia.com/guides/checklist-road-trip-quebec",
+    "types": ["Article", "BreadcrumbList", "WebPage"],
+    "status": "conforme"
+  },
+  {
+    "url": "https://sebavia.com/guides/budget-road-trip-quebec",
+    "types": ["Article", "BreadcrumbList", "WebPage"],
+    "status": "conforme"
+  },
+  {
+    "url": "https://sebavia.com/guides/road-trip-famille-quebec",
+    "types": ["Article", "BreadcrumbList", "WebPage"],
+    "status": "conforme"
+  },
+  {
+    "url": "https://sebavia.com/guides/road-trip-couple-quebec",
+    "types": ["Article", "BreadcrumbList", "WebPage"],
+    "status": "conforme"
+  },
+  {
+    "url": "https://sebavia.com/guides/road-trip-solo-quebec",
+    "types": ["Article", "BreadcrumbList", "WebPage"],
+    "status": "conforme"
+  },
+  {
+    "url": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec",
+    "types": ["Article", "BreadcrumbList", "WebPage"],
+    "status": "conforme"
+  },
+  {
+    "url": "https://sebavia.com/guides/road-trip-gastronomique-quebec",
+    "types": ["Article", "BreadcrumbList", "WebPage"],
+    "status": "conforme"
+  },
+  {
+    "url": "https://sebavia.com/guides/road-trip-nature-quebec",
+    "types": ["Article", "BreadcrumbList", "WebPage"],
+    "status": "conforme"
+  },
+  {
+    "url": "https://sebavia.com/pricing",
+    "types": ["Product"],
+    "status": "conforme"
+  },
+  {
+    "url": "https://sebavia.com/a-propos",
+    "types": ["AboutPage", "BreadcrumbList"],
+    "status": "conforme"
+  },
+  {
+    "url": "https://sebavia.com/faq",
+    "types": ["FAQPage"],
+    "status": "conforme"
+  },
+  {
+    "url": "https://sebavia.com/contact",
+    "types": ["BreadcrumbList", "ContactPage"],
+    "status": "conforme"
+  },
+  {
+    "url": "https://sebavia.com/confidentialite",
+    "types": ["BreadcrumbList", "WebPage"],
+    "status": "conforme"
+  },
+  {
+    "url": "https://sebavia.com/conditions-utilisation",
+    "types": ["BreadcrumbList", "WebPage"],
+    "status": "conforme"
+  }
+]

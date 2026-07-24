@@ -1,0 +1,40 @@
+{
+  "url": "https://sebavia.com/robots.txt",
+  "httpStatus": 200,
+  "contentType": "text/plain",
+  "userAgentChecks": {
+    "googlebot": {
+      "status": 200,
+      "contentType": "text/plain",
+      "bodyMatchesChrome": true
+    },
+    "googlebotSmartphone": {
+      "status": 200,
+      "contentType": "text/plain",
+      "bodyMatchesChrome": true
+    },
+    "chrome": {
+      "status": 200,
+      "contentType": "text/plain",
+      "bodyMatchesChrome": true
+    }
+  },
+  "sitemapReference": true,
+  "host": true,
+  "allowsRoot": true,
+  "disallowsPrivate": {
+    "dashboard": true,
+    "admin": true,
+    "api": true
+  },
+  "blocksCssOrJs": false,
+  "mentionsSebavio": false,
+  "body": "User-Agent: *\nAllow: /\nDisallow: /dashboard/\nDisallow: /admin/\nDisallow: /api/\n\nHost: https://sebavia.com\nSitemap: https://sebavia.com/sitemap.xml\n",
+  "findings": [
+    {
+      "severity": "conforme",
+      "code": "ROBOTS_OK",
+      "message": "robots.txt conforme"
+    }
+  ]
+}

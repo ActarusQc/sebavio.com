@@ -1,0 +1,1412 @@
+{
+  "nodes": [
+    "https://sebavia.com",
+    "https://sebavia.com/fonctionnalites",
+    "https://sebavia.com/assistant-voyage-ia",
+    "https://sebavia.com/planificateur-road-trip-quebec",
+    "https://sebavia.com/calculateur-cout-carburant-voyage",
+    "https://sebavia.com/planifier-arrets-carburant",
+    "https://sebavia.com/meteo-voyage",
+    "https://sebavia.com/guides",
+    "https://sebavia.com/guides/checklist-road-trip-quebec",
+    "https://sebavia.com/guides/budget-road-trip-quebec",
+    "https://sebavia.com/guides/road-trip-famille-quebec",
+    "https://sebavia.com/guides/road-trip-couple-quebec",
+    "https://sebavia.com/guides/road-trip-solo-quebec",
+    "https://sebavia.com/guides/escapade-fin-de-semaine-quebec",
+    "https://sebavia.com/guides/road-trip-gastronomique-quebec",
+    "https://sebavia.com/guides/road-trip-nature-quebec",
+    "https://sebavia.com/pricing",
+    "https://sebavia.com/a-propos",
+    "https://sebavia.com/faq",
+    "https://sebavia.com/contact",
+    "https://sebavia.com/confidentialite",
+    "https://sebavia.com/conditions-utilisation"
+  ],
+  "edges": [
+    {
+      "from": "https://sebavia.com",
+      "to": "https://sebavia.com"
+    },
+    {
+      "from": "https://sebavia.com",
+      "to": "https://sebavia.com/fonctionnalites"
+    },
+    {
+      "from": "https://sebavia.com",
+      "to": "https://sebavia.com/pricing"
+    },
+    {
+      "from": "https://sebavia.com",
+      "to": "https://sebavia.com/a-propos"
+    },
+    {
+      "from": "https://sebavia.com",
+      "to": "https://sebavia.com/planificateur-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com",
+      "to": "https://sebavia.com/calculateur-cout-carburant-voyage"
+    },
+    {
+      "from": "https://sebavia.com",
+      "to": "https://sebavia.com/planifier-arrets-carburant"
+    },
+    {
+      "from": "https://sebavia.com",
+      "to": "https://sebavia.com/meteo-voyage"
+    },
+    {
+      "from": "https://sebavia.com",
+      "to": "https://sebavia.com/faq"
+    },
+    {
+      "from": "https://sebavia.com",
+      "to": "https://sebavia.com/guides"
+    },
+    {
+      "from": "https://sebavia.com",
+      "to": "https://sebavia.com/contact"
+    },
+    {
+      "from": "https://sebavia.com",
+      "to": "https://sebavia.com/confidentialite"
+    },
+    {
+      "from": "https://sebavia.com",
+      "to": "https://sebavia.com/conditions-utilisation"
+    },
+    {
+      "from": "https://sebavia.com/fonctionnalites",
+      "to": "https://sebavia.com"
+    },
+    {
+      "from": "https://sebavia.com/fonctionnalites",
+      "to": "https://sebavia.com/fonctionnalites"
+    },
+    {
+      "from": "https://sebavia.com/fonctionnalites",
+      "to": "https://sebavia.com/pricing"
+    },
+    {
+      "from": "https://sebavia.com/fonctionnalites",
+      "to": "https://sebavia.com/a-propos"
+    },
+    {
+      "from": "https://sebavia.com/fonctionnalites",
+      "to": "https://sebavia.com/assistant-voyage-ia"
+    },
+    {
+      "from": "https://sebavia.com/fonctionnalites",
+      "to": "https://sebavia.com/planificateur-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/fonctionnalites",
+      "to": "https://sebavia.com/guides/checklist-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/fonctionnalites",
+      "to": "https://sebavia.com/faq"
+    },
+    {
+      "from": "https://sebavia.com/fonctionnalites",
+      "to": "https://sebavia.com/meteo-voyage"
+    },
+    {
+      "from": "https://sebavia.com/fonctionnalites",
+      "to": "https://sebavia.com/calculateur-cout-carburant-voyage"
+    },
+    {
+      "from": "https://sebavia.com/fonctionnalites",
+      "to": "https://sebavia.com/planifier-arrets-carburant"
+    },
+    {
+      "from": "https://sebavia.com/fonctionnalites",
+      "to": "https://sebavia.com/guides/road-trip-solo-quebec"
+    },
+    {
+      "from": "https://sebavia.com/fonctionnalites",
+      "to": "https://sebavia.com/guides/road-trip-couple-quebec"
+    },
+    {
+      "from": "https://sebavia.com/fonctionnalites",
+      "to": "https://sebavia.com/guides/road-trip-famille-quebec"
+    },
+    {
+      "from": "https://sebavia.com/fonctionnalites",
+      "to": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec"
+    },
+    {
+      "from": "https://sebavia.com/fonctionnalites",
+      "to": "https://sebavia.com/contact"
+    },
+    {
+      "from": "https://sebavia.com/fonctionnalites",
+      "to": "https://sebavia.com/guides"
+    },
+    {
+      "from": "https://sebavia.com/fonctionnalites",
+      "to": "https://sebavia.com/confidentialite"
+    },
+    {
+      "from": "https://sebavia.com/fonctionnalites",
+      "to": "https://sebavia.com/conditions-utilisation"
+    },
+    {
+      "from": "https://sebavia.com/assistant-voyage-ia",
+      "to": "https://sebavia.com"
+    },
+    {
+      "from": "https://sebavia.com/assistant-voyage-ia",
+      "to": "https://sebavia.com/fonctionnalites"
+    },
+    {
+      "from": "https://sebavia.com/assistant-voyage-ia",
+      "to": "https://sebavia.com/pricing"
+    },
+    {
+      "from": "https://sebavia.com/assistant-voyage-ia",
+      "to": "https://sebavia.com/a-propos"
+    },
+    {
+      "from": "https://sebavia.com/assistant-voyage-ia",
+      "to": "https://sebavia.com/planificateur-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/assistant-voyage-ia",
+      "to": "https://sebavia.com/calculateur-cout-carburant-voyage"
+    },
+    {
+      "from": "https://sebavia.com/assistant-voyage-ia",
+      "to": "https://sebavia.com/planifier-arrets-carburant"
+    },
+    {
+      "from": "https://sebavia.com/assistant-voyage-ia",
+      "to": "https://sebavia.com/meteo-voyage"
+    },
+    {
+      "from": "https://sebavia.com/assistant-voyage-ia",
+      "to": "https://sebavia.com/conditions-utilisation"
+    },
+    {
+      "from": "https://sebavia.com/assistant-voyage-ia",
+      "to": "https://sebavia.com/faq"
+    },
+    {
+      "from": "https://sebavia.com/assistant-voyage-ia",
+      "to": "https://sebavia.com/confidentialite"
+    },
+    {
+      "from": "https://sebavia.com/assistant-voyage-ia",
+      "to": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec"
+    },
+    {
+      "from": "https://sebavia.com/assistant-voyage-ia",
+      "to": "https://sebavia.com/guides/road-trip-famille-quebec"
+    },
+    {
+      "from": "https://sebavia.com/assistant-voyage-ia",
+      "to": "https://sebavia.com/guides/road-trip-solo-quebec"
+    },
+    {
+      "from": "https://sebavia.com/assistant-voyage-ia",
+      "to": "https://sebavia.com/guides/road-trip-gastronomique-quebec"
+    },
+    {
+      "from": "https://sebavia.com/assistant-voyage-ia",
+      "to": "https://sebavia.com/guides/road-trip-nature-quebec"
+    },
+    {
+      "from": "https://sebavia.com/assistant-voyage-ia",
+      "to": "https://sebavia.com/contact"
+    },
+    {
+      "from": "https://sebavia.com/assistant-voyage-ia",
+      "to": "https://sebavia.com/guides"
+    },
+    {
+      "from": "https://sebavia.com/planificateur-road-trip-quebec",
+      "to": "https://sebavia.com"
+    },
+    {
+      "from": "https://sebavia.com/planificateur-road-trip-quebec",
+      "to": "https://sebavia.com/fonctionnalites"
+    },
+    {
+      "from": "https://sebavia.com/planificateur-road-trip-quebec",
+      "to": "https://sebavia.com/pricing"
+    },
+    {
+      "from": "https://sebavia.com/planificateur-road-trip-quebec",
+      "to": "https://sebavia.com/a-propos"
+    },
+    {
+      "from": "https://sebavia.com/planificateur-road-trip-quebec",
+      "to": "https://sebavia.com/assistant-voyage-ia"
+    },
+    {
+      "from": "https://sebavia.com/planificateur-road-trip-quebec",
+      "to": "https://sebavia.com/calculateur-cout-carburant-voyage"
+    },
+    {
+      "from": "https://sebavia.com/planificateur-road-trip-quebec",
+      "to": "https://sebavia.com/guides/budget-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/planificateur-road-trip-quebec",
+      "to": "https://sebavia.com/planifier-arrets-carburant"
+    },
+    {
+      "from": "https://sebavia.com/planificateur-road-trip-quebec",
+      "to": "https://sebavia.com/meteo-voyage"
+    },
+    {
+      "from": "https://sebavia.com/planificateur-road-trip-quebec",
+      "to": "https://sebavia.com/guides/road-trip-solo-quebec"
+    },
+    {
+      "from": "https://sebavia.com/planificateur-road-trip-quebec",
+      "to": "https://sebavia.com/guides/road-trip-couple-quebec"
+    },
+    {
+      "from": "https://sebavia.com/planificateur-road-trip-quebec",
+      "to": "https://sebavia.com/guides/road-trip-famille-quebec"
+    },
+    {
+      "from": "https://sebavia.com/planificateur-road-trip-quebec",
+      "to": "https://sebavia.com/guides/checklist-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/planificateur-road-trip-quebec",
+      "to": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec"
+    },
+    {
+      "from": "https://sebavia.com/planificateur-road-trip-quebec",
+      "to": "https://sebavia.com/guides/road-trip-nature-quebec"
+    },
+    {
+      "from": "https://sebavia.com/planificateur-road-trip-quebec",
+      "to": "https://sebavia.com/conditions-utilisation"
+    },
+    {
+      "from": "https://sebavia.com/planificateur-road-trip-quebec",
+      "to": "https://sebavia.com/faq"
+    },
+    {
+      "from": "https://sebavia.com/planificateur-road-trip-quebec",
+      "to": "https://sebavia.com/contact"
+    },
+    {
+      "from": "https://sebavia.com/planificateur-road-trip-quebec",
+      "to": "https://sebavia.com/guides"
+    },
+    {
+      "from": "https://sebavia.com/planificateur-road-trip-quebec",
+      "to": "https://sebavia.com/confidentialite"
+    },
+    {
+      "from": "https://sebavia.com/calculateur-cout-carburant-voyage",
+      "to": "https://sebavia.com"
+    },
+    {
+      "from": "https://sebavia.com/calculateur-cout-carburant-voyage",
+      "to": "https://sebavia.com/fonctionnalites"
+    },
+    {
+      "from": "https://sebavia.com/calculateur-cout-carburant-voyage",
+      "to": "https://sebavia.com/pricing"
+    },
+    {
+      "from": "https://sebavia.com/calculateur-cout-carburant-voyage",
+      "to": "https://sebavia.com/a-propos"
+    },
+    {
+      "from": "https://sebavia.com/calculateur-cout-carburant-voyage",
+      "to": "https://sebavia.com/planificateur-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/calculateur-cout-carburant-voyage",
+      "to": "https://sebavia.com/guides/budget-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/calculateur-cout-carburant-voyage",
+      "to": "https://sebavia.com/planifier-arrets-carburant"
+    },
+    {
+      "from": "https://sebavia.com/calculateur-cout-carburant-voyage",
+      "to": "https://sebavia.com/conditions-utilisation"
+    },
+    {
+      "from": "https://sebavia.com/calculateur-cout-carburant-voyage",
+      "to": "https://sebavia.com/faq"
+    },
+    {
+      "from": "https://sebavia.com/calculateur-cout-carburant-voyage",
+      "to": "https://sebavia.com/contact"
+    },
+    {
+      "from": "https://sebavia.com/calculateur-cout-carburant-voyage",
+      "to": "https://sebavia.com/assistant-voyage-ia"
+    },
+    {
+      "from": "https://sebavia.com/calculateur-cout-carburant-voyage",
+      "to": "https://sebavia.com/guides"
+    },
+    {
+      "from": "https://sebavia.com/calculateur-cout-carburant-voyage",
+      "to": "https://sebavia.com/confidentialite"
+    },
+    {
+      "from": "https://sebavia.com/planifier-arrets-carburant",
+      "to": "https://sebavia.com"
+    },
+    {
+      "from": "https://sebavia.com/planifier-arrets-carburant",
+      "to": "https://sebavia.com/fonctionnalites"
+    },
+    {
+      "from": "https://sebavia.com/planifier-arrets-carburant",
+      "to": "https://sebavia.com/pricing"
+    },
+    {
+      "from": "https://sebavia.com/planifier-arrets-carburant",
+      "to": "https://sebavia.com/a-propos"
+    },
+    {
+      "from": "https://sebavia.com/planifier-arrets-carburant",
+      "to": "https://sebavia.com/calculateur-cout-carburant-voyage"
+    },
+    {
+      "from": "https://sebavia.com/planifier-arrets-carburant",
+      "to": "https://sebavia.com/planificateur-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/planifier-arrets-carburant",
+      "to": "https://sebavia.com/conditions-utilisation"
+    },
+    {
+      "from": "https://sebavia.com/planifier-arrets-carburant",
+      "to": "https://sebavia.com/faq"
+    },
+    {
+      "from": "https://sebavia.com/planifier-arrets-carburant",
+      "to": "https://sebavia.com/contact"
+    },
+    {
+      "from": "https://sebavia.com/planifier-arrets-carburant",
+      "to": "https://sebavia.com/guides"
+    },
+    {
+      "from": "https://sebavia.com/planifier-arrets-carburant",
+      "to": "https://sebavia.com/confidentialite"
+    },
+    {
+      "from": "https://sebavia.com/meteo-voyage",
+      "to": "https://sebavia.com"
+    },
+    {
+      "from": "https://sebavia.com/meteo-voyage",
+      "to": "https://sebavia.com/fonctionnalites"
+    },
+    {
+      "from": "https://sebavia.com/meteo-voyage",
+      "to": "https://sebavia.com/pricing"
+    },
+    {
+      "from": "https://sebavia.com/meteo-voyage",
+      "to": "https://sebavia.com/a-propos"
+    },
+    {
+      "from": "https://sebavia.com/meteo-voyage",
+      "to": "https://sebavia.com/planificateur-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/meteo-voyage",
+      "to": "https://sebavia.com/conditions-utilisation"
+    },
+    {
+      "from": "https://sebavia.com/meteo-voyage",
+      "to": "https://sebavia.com/assistant-voyage-ia"
+    },
+    {
+      "from": "https://sebavia.com/meteo-voyage",
+      "to": "https://sebavia.com/guides/road-trip-nature-quebec"
+    },
+    {
+      "from": "https://sebavia.com/meteo-voyage",
+      "to": "https://sebavia.com/faq"
+    },
+    {
+      "from": "https://sebavia.com/meteo-voyage",
+      "to": "https://sebavia.com/contact"
+    },
+    {
+      "from": "https://sebavia.com/meteo-voyage",
+      "to": "https://sebavia.com/guides"
+    },
+    {
+      "from": "https://sebavia.com/meteo-voyage",
+      "to": "https://sebavia.com/confidentialite"
+    },
+    {
+      "from": "https://sebavia.com/guides",
+      "to": "https://sebavia.com"
+    },
+    {
+      "from": "https://sebavia.com/guides",
+      "to": "https://sebavia.com/fonctionnalites"
+    },
+    {
+      "from": "https://sebavia.com/guides",
+      "to": "https://sebavia.com/pricing"
+    },
+    {
+      "from": "https://sebavia.com/guides",
+      "to": "https://sebavia.com/a-propos"
+    },
+    {
+      "from": "https://sebavia.com/guides",
+      "to": "https://sebavia.com/guides"
+    },
+    {
+      "from": "https://sebavia.com/guides",
+      "to": "https://sebavia.com/guides/checklist-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides",
+      "to": "https://sebavia.com/guides/road-trip-nature-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides",
+      "to": "https://sebavia.com/guides/road-trip-gastronomique-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides",
+      "to": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides",
+      "to": "https://sebavia.com/guides/road-trip-solo-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides",
+      "to": "https://sebavia.com/guides/road-trip-couple-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides",
+      "to": "https://sebavia.com/guides/road-trip-famille-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides",
+      "to": "https://sebavia.com/guides/budget-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides",
+      "to": "https://sebavia.com/planificateur-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides",
+      "to": "https://sebavia.com/faq"
+    },
+    {
+      "from": "https://sebavia.com/guides",
+      "to": "https://sebavia.com/contact"
+    },
+    {
+      "from": "https://sebavia.com/guides",
+      "to": "https://sebavia.com/confidentialite"
+    },
+    {
+      "from": "https://sebavia.com/guides",
+      "to": "https://sebavia.com/conditions-utilisation"
+    },
+    {
+      "from": "https://sebavia.com/guides/checklist-road-trip-quebec",
+      "to": "https://sebavia.com"
+    },
+    {
+      "from": "https://sebavia.com/guides/checklist-road-trip-quebec",
+      "to": "https://sebavia.com/fonctionnalites"
+    },
+    {
+      "from": "https://sebavia.com/guides/checklist-road-trip-quebec",
+      "to": "https://sebavia.com/pricing"
+    },
+    {
+      "from": "https://sebavia.com/guides/checklist-road-trip-quebec",
+      "to": "https://sebavia.com/a-propos"
+    },
+    {
+      "from": "https://sebavia.com/guides/checklist-road-trip-quebec",
+      "to": "https://sebavia.com/guides"
+    },
+    {
+      "from": "https://sebavia.com/guides/checklist-road-trip-quebec",
+      "to": "https://sebavia.com/planificateur-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/checklist-road-trip-quebec",
+      "to": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/checklist-road-trip-quebec",
+      "to": "https://sebavia.com/guides/road-trip-solo-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/checklist-road-trip-quebec",
+      "to": "https://sebavia.com/guides/road-trip-couple-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/checklist-road-trip-quebec",
+      "to": "https://sebavia.com/calculateur-cout-carburant-voyage"
+    },
+    {
+      "from": "https://sebavia.com/guides/checklist-road-trip-quebec",
+      "to": "https://sebavia.com/planifier-arrets-carburant"
+    },
+    {
+      "from": "https://sebavia.com/guides/checklist-road-trip-quebec",
+      "to": "https://sebavia.com/meteo-voyage"
+    },
+    {
+      "from": "https://sebavia.com/guides/checklist-road-trip-quebec",
+      "to": "https://sebavia.com/assistant-voyage-ia"
+    },
+    {
+      "from": "https://sebavia.com/guides/checklist-road-trip-quebec",
+      "to": "https://sebavia.com/guides/budget-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/checklist-road-trip-quebec",
+      "to": "https://sebavia.com/faq"
+    },
+    {
+      "from": "https://sebavia.com/guides/checklist-road-trip-quebec",
+      "to": "https://sebavia.com/contact"
+    },
+    {
+      "from": "https://sebavia.com/guides/checklist-road-trip-quebec",
+      "to": "https://sebavia.com/confidentialite"
+    },
+    {
+      "from": "https://sebavia.com/guides/checklist-road-trip-quebec",
+      "to": "https://sebavia.com/conditions-utilisation"
+    },
+    {
+      "from": "https://sebavia.com/guides/budget-road-trip-quebec",
+      "to": "https://sebavia.com"
+    },
+    {
+      "from": "https://sebavia.com/guides/budget-road-trip-quebec",
+      "to": "https://sebavia.com/fonctionnalites"
+    },
+    {
+      "from": "https://sebavia.com/guides/budget-road-trip-quebec",
+      "to": "https://sebavia.com/pricing"
+    },
+    {
+      "from": "https://sebavia.com/guides/budget-road-trip-quebec",
+      "to": "https://sebavia.com/a-propos"
+    },
+    {
+      "from": "https://sebavia.com/guides/budget-road-trip-quebec",
+      "to": "https://sebavia.com/guides"
+    },
+    {
+      "from": "https://sebavia.com/guides/budget-road-trip-quebec",
+      "to": "https://sebavia.com/calculateur-cout-carburant-voyage"
+    },
+    {
+      "from": "https://sebavia.com/guides/budget-road-trip-quebec",
+      "to": "https://sebavia.com/planificateur-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/budget-road-trip-quebec",
+      "to": "https://sebavia.com/guides/road-trip-solo-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/budget-road-trip-quebec",
+      "to": "https://sebavia.com/guides/road-trip-famille-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/budget-road-trip-quebec",
+      "to": "https://sebavia.com/guides/road-trip-gastronomique-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/budget-road-trip-quebec",
+      "to": "https://sebavia.com/planifier-arrets-carburant"
+    },
+    {
+      "from": "https://sebavia.com/guides/budget-road-trip-quebec",
+      "to": "https://sebavia.com/assistant-voyage-ia"
+    },
+    {
+      "from": "https://sebavia.com/guides/budget-road-trip-quebec",
+      "to": "https://sebavia.com/meteo-voyage"
+    },
+    {
+      "from": "https://sebavia.com/guides/budget-road-trip-quebec",
+      "to": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/budget-road-trip-quebec",
+      "to": "https://sebavia.com/faq"
+    },
+    {
+      "from": "https://sebavia.com/guides/budget-road-trip-quebec",
+      "to": "https://sebavia.com/contact"
+    },
+    {
+      "from": "https://sebavia.com/guides/budget-road-trip-quebec",
+      "to": "https://sebavia.com/confidentialite"
+    },
+    {
+      "from": "https://sebavia.com/guides/budget-road-trip-quebec",
+      "to": "https://sebavia.com/conditions-utilisation"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-famille-quebec",
+      "to": "https://sebavia.com"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-famille-quebec",
+      "to": "https://sebavia.com/fonctionnalites"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-famille-quebec",
+      "to": "https://sebavia.com/pricing"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-famille-quebec",
+      "to": "https://sebavia.com/a-propos"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-famille-quebec",
+      "to": "https://sebavia.com/guides"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-famille-quebec",
+      "to": "https://sebavia.com/planificateur-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-famille-quebec",
+      "to": "https://sebavia.com/assistant-voyage-ia"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-famille-quebec",
+      "to": "https://sebavia.com/planifier-arrets-carburant"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-famille-quebec",
+      "to": "https://sebavia.com/guides/road-trip-nature-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-famille-quebec",
+      "to": "https://sebavia.com/meteo-voyage"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-famille-quebec",
+      "to": "https://sebavia.com/calculateur-cout-carburant-voyage"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-famille-quebec",
+      "to": "https://sebavia.com/guides/budget-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-famille-quebec",
+      "to": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-famille-quebec",
+      "to": "https://sebavia.com/guides/checklist-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-famille-quebec",
+      "to": "https://sebavia.com/faq"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-famille-quebec",
+      "to": "https://sebavia.com/contact"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-famille-quebec",
+      "to": "https://sebavia.com/confidentialite"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-famille-quebec",
+      "to": "https://sebavia.com/conditions-utilisation"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-couple-quebec",
+      "to": "https://sebavia.com"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-couple-quebec",
+      "to": "https://sebavia.com/fonctionnalites"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-couple-quebec",
+      "to": "https://sebavia.com/pricing"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-couple-quebec",
+      "to": "https://sebavia.com/a-propos"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-couple-quebec",
+      "to": "https://sebavia.com/guides"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-couple-quebec",
+      "to": "https://sebavia.com/planificateur-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-couple-quebec",
+      "to": "https://sebavia.com/assistant-voyage-ia"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-couple-quebec",
+      "to": "https://sebavia.com/guides/road-trip-nature-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-couple-quebec",
+      "to": "https://sebavia.com/guides/road-trip-gastronomique-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-couple-quebec",
+      "to": "https://sebavia.com/meteo-voyage"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-couple-quebec",
+      "to": "https://sebavia.com/calculateur-cout-carburant-voyage"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-couple-quebec",
+      "to": "https://sebavia.com/planifier-arrets-carburant"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-couple-quebec",
+      "to": "https://sebavia.com/guides/budget-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-couple-quebec",
+      "to": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-couple-quebec",
+      "to": "https://sebavia.com/faq"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-couple-quebec",
+      "to": "https://sebavia.com/contact"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-couple-quebec",
+      "to": "https://sebavia.com/confidentialite"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-couple-quebec",
+      "to": "https://sebavia.com/conditions-utilisation"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-solo-quebec",
+      "to": "https://sebavia.com"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-solo-quebec",
+      "to": "https://sebavia.com/fonctionnalites"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-solo-quebec",
+      "to": "https://sebavia.com/pricing"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-solo-quebec",
+      "to": "https://sebavia.com/a-propos"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-solo-quebec",
+      "to": "https://sebavia.com/guides"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-solo-quebec",
+      "to": "https://sebavia.com/planificateur-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-solo-quebec",
+      "to": "https://sebavia.com/assistant-voyage-ia"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-solo-quebec",
+      "to": "https://sebavia.com/guides/road-trip-nature-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-solo-quebec",
+      "to": "https://sebavia.com/calculateur-cout-carburant-voyage"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-solo-quebec",
+      "to": "https://sebavia.com/planifier-arrets-carburant"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-solo-quebec",
+      "to": "https://sebavia.com/meteo-voyage"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-solo-quebec",
+      "to": "https://sebavia.com/guides/budget-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-solo-quebec",
+      "to": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-solo-quebec",
+      "to": "https://sebavia.com/guides/checklist-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-solo-quebec",
+      "to": "https://sebavia.com/conditions-utilisation"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-solo-quebec",
+      "to": "https://sebavia.com/faq"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-solo-quebec",
+      "to": "https://sebavia.com/contact"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-solo-quebec",
+      "to": "https://sebavia.com/confidentialite"
+    },
+    {
+      "from": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec",
+      "to": "https://sebavia.com"
+    },
+    {
+      "from": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec",
+      "to": "https://sebavia.com/fonctionnalites"
+    },
+    {
+      "from": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec",
+      "to": "https://sebavia.com/pricing"
+    },
+    {
+      "from": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec",
+      "to": "https://sebavia.com/a-propos"
+    },
+    {
+      "from": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec",
+      "to": "https://sebavia.com/guides"
+    },
+    {
+      "from": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec",
+      "to": "https://sebavia.com/planificateur-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec",
+      "to": "https://sebavia.com/assistant-voyage-ia"
+    },
+    {
+      "from": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec",
+      "to": "https://sebavia.com/guides/road-trip-gastronomique-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec",
+      "to": "https://sebavia.com/guides/road-trip-nature-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec",
+      "to": "https://sebavia.com/guides/budget-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec",
+      "to": "https://sebavia.com/calculateur-cout-carburant-voyage"
+    },
+    {
+      "from": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec",
+      "to": "https://sebavia.com/planifier-arrets-carburant"
+    },
+    {
+      "from": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec",
+      "to": "https://sebavia.com/meteo-voyage"
+    },
+    {
+      "from": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec",
+      "to": "https://sebavia.com/guides/road-trip-solo-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec",
+      "to": "https://sebavia.com/guides/road-trip-couple-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec",
+      "to": "https://sebavia.com/guides/road-trip-famille-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec",
+      "to": "https://sebavia.com/conditions-utilisation"
+    },
+    {
+      "from": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec",
+      "to": "https://sebavia.com/faq"
+    },
+    {
+      "from": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec",
+      "to": "https://sebavia.com/contact"
+    },
+    {
+      "from": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec",
+      "to": "https://sebavia.com/confidentialite"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-gastronomique-quebec",
+      "to": "https://sebavia.com"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-gastronomique-quebec",
+      "to": "https://sebavia.com/fonctionnalites"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-gastronomique-quebec",
+      "to": "https://sebavia.com/pricing"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-gastronomique-quebec",
+      "to": "https://sebavia.com/a-propos"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-gastronomique-quebec",
+      "to": "https://sebavia.com/guides"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-gastronomique-quebec",
+      "to": "https://sebavia.com/assistant-voyage-ia"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-gastronomique-quebec",
+      "to": "https://sebavia.com/planificateur-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-gastronomique-quebec",
+      "to": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-gastronomique-quebec",
+      "to": "https://sebavia.com/guides/road-trip-nature-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-gastronomique-quebec",
+      "to": "https://sebavia.com/guides/road-trip-couple-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-gastronomique-quebec",
+      "to": "https://sebavia.com/guides/road-trip-famille-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-gastronomique-quebec",
+      "to": "https://sebavia.com/guides/road-trip-solo-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-gastronomique-quebec",
+      "to": "https://sebavia.com/conditions-utilisation"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-gastronomique-quebec",
+      "to": "https://sebavia.com/guides/budget-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-gastronomique-quebec",
+      "to": "https://sebavia.com/calculateur-cout-carburant-voyage"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-gastronomique-quebec",
+      "to": "https://sebavia.com/planifier-arrets-carburant"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-gastronomique-quebec",
+      "to": "https://sebavia.com/meteo-voyage"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-gastronomique-quebec",
+      "to": "https://sebavia.com/faq"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-gastronomique-quebec",
+      "to": "https://sebavia.com/contact"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-gastronomique-quebec",
+      "to": "https://sebavia.com/confidentialite"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-nature-quebec",
+      "to": "https://sebavia.com"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-nature-quebec",
+      "to": "https://sebavia.com/fonctionnalites"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-nature-quebec",
+      "to": "https://sebavia.com/pricing"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-nature-quebec",
+      "to": "https://sebavia.com/a-propos"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-nature-quebec",
+      "to": "https://sebavia.com/guides"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-nature-quebec",
+      "to": "https://sebavia.com/planificateur-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-nature-quebec",
+      "to": "https://sebavia.com/meteo-voyage"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-nature-quebec",
+      "to": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-nature-quebec",
+      "to": "https://sebavia.com/guides/road-trip-solo-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-nature-quebec",
+      "to": "https://sebavia.com/guides/road-trip-couple-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-nature-quebec",
+      "to": "https://sebavia.com/guides/road-trip-famille-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-nature-quebec",
+      "to": "https://sebavia.com/guides/road-trip-gastronomique-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-nature-quebec",
+      "to": "https://sebavia.com/calculateur-cout-carburant-voyage"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-nature-quebec",
+      "to": "https://sebavia.com/planifier-arrets-carburant"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-nature-quebec",
+      "to": "https://sebavia.com/guides/budget-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-nature-quebec",
+      "to": "https://sebavia.com/assistant-voyage-ia"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-nature-quebec",
+      "to": "https://sebavia.com/conditions-utilisation"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-nature-quebec",
+      "to": "https://sebavia.com/faq"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-nature-quebec",
+      "to": "https://sebavia.com/contact"
+    },
+    {
+      "from": "https://sebavia.com/guides/road-trip-nature-quebec",
+      "to": "https://sebavia.com/confidentialite"
+    },
+    {
+      "from": "https://sebavia.com/pricing",
+      "to": "https://sebavia.com"
+    },
+    {
+      "from": "https://sebavia.com/pricing",
+      "to": "https://sebavia.com/fonctionnalites"
+    },
+    {
+      "from": "https://sebavia.com/pricing",
+      "to": "https://sebavia.com/pricing"
+    },
+    {
+      "from": "https://sebavia.com/pricing",
+      "to": "https://sebavia.com/a-propos"
+    },
+    {
+      "from": "https://sebavia.com/pricing",
+      "to": "https://sebavia.com/assistant-voyage-ia"
+    },
+    {
+      "from": "https://sebavia.com/pricing",
+      "to": "https://sebavia.com/planificateur-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/pricing",
+      "to": "https://sebavia.com/calculateur-cout-carburant-voyage"
+    },
+    {
+      "from": "https://sebavia.com/pricing",
+      "to": "https://sebavia.com/planifier-arrets-carburant"
+    },
+    {
+      "from": "https://sebavia.com/pricing",
+      "to": "https://sebavia.com/meteo-voyage"
+    },
+    {
+      "from": "https://sebavia.com/pricing",
+      "to": "https://sebavia.com/guides"
+    },
+    {
+      "from": "https://sebavia.com/pricing",
+      "to": "https://sebavia.com/faq"
+    },
+    {
+      "from": "https://sebavia.com/pricing",
+      "to": "https://sebavia.com/contact"
+    },
+    {
+      "from": "https://sebavia.com/pricing",
+      "to": "https://sebavia.com/confidentialite"
+    },
+    {
+      "from": "https://sebavia.com/pricing",
+      "to": "https://sebavia.com/conditions-utilisation"
+    },
+    {
+      "from": "https://sebavia.com/a-propos",
+      "to": "https://sebavia.com"
+    },
+    {
+      "from": "https://sebavia.com/a-propos",
+      "to": "https://sebavia.com/fonctionnalites"
+    },
+    {
+      "from": "https://sebavia.com/a-propos",
+      "to": "https://sebavia.com/pricing"
+    },
+    {
+      "from": "https://sebavia.com/a-propos",
+      "to": "https://sebavia.com/a-propos"
+    },
+    {
+      "from": "https://sebavia.com/a-propos",
+      "to": "https://sebavia.com/faq"
+    },
+    {
+      "from": "https://sebavia.com/a-propos",
+      "to": "https://sebavia.com/contact"
+    },
+    {
+      "from": "https://sebavia.com/a-propos",
+      "to": "https://sebavia.com/guides"
+    },
+    {
+      "from": "https://sebavia.com/a-propos",
+      "to": "https://sebavia.com/confidentialite"
+    },
+    {
+      "from": "https://sebavia.com/a-propos",
+      "to": "https://sebavia.com/conditions-utilisation"
+    },
+    {
+      "from": "https://sebavia.com/faq",
+      "to": "https://sebavia.com"
+    },
+    {
+      "from": "https://sebavia.com/faq",
+      "to": "https://sebavia.com/fonctionnalites"
+    },
+    {
+      "from": "https://sebavia.com/faq",
+      "to": "https://sebavia.com/pricing"
+    },
+    {
+      "from": "https://sebavia.com/faq",
+      "to": "https://sebavia.com/a-propos"
+    },
+    {
+      "from": "https://sebavia.com/faq",
+      "to": "https://sebavia.com/planificateur-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/faq",
+      "to": "https://sebavia.com/calculateur-cout-carburant-voyage"
+    },
+    {
+      "from": "https://sebavia.com/faq",
+      "to": "https://sebavia.com/planifier-arrets-carburant"
+    },
+    {
+      "from": "https://sebavia.com/faq",
+      "to": "https://sebavia.com/meteo-voyage"
+    },
+    {
+      "from": "https://sebavia.com/faq",
+      "to": "https://sebavia.com/guides/checklist-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/faq",
+      "to": "https://sebavia.com/guides/budget-road-trip-quebec"
+    },
+    {
+      "from": "https://sebavia.com/faq",
+      "to": "https://sebavia.com/guides/road-trip-famille-quebec"
+    },
+    {
+      "from": "https://sebavia.com/faq",
+      "to": "https://sebavia.com/guides/road-trip-couple-quebec"
+    },
+    {
+      "from": "https://sebavia.com/faq",
+      "to": "https://sebavia.com/guides/road-trip-solo-quebec"
+    },
+    {
+      "from": "https://sebavia.com/faq",
+      "to": "https://sebavia.com/guides/escapade-fin-de-semaine-quebec"
+    },
+    {
+      "from": "https://sebavia.com/faq",
+      "to": "https://sebavia.com/guides/road-trip-gastronomique-quebec"
+    },
+    {
+      "from": "https://sebavia.com/faq",
+      "to": "https://sebavia.com/guides/road-trip-nature-quebec"
+    },
+    {
+      "from": "https://sebavia.com/faq",
+      "to": "https://sebavia.com/guides"
+    },
+    {
+      "from": "https://sebavia.com/faq",
+      "to": "https://sebavia.com/assistant-voyage-ia"
+    },
+    {
+      "from": "https://sebavia.com/faq",
+      "to": "https://sebavia.com/contact"
+    },
+    {
+      "from": "https://sebavia.com/faq",
+      "to": "https://sebavia.com/faq"
+    },
+    {
+      "from": "https://sebavia.com/faq",
+      "to": "https://sebavia.com/confidentialite"
+    },
+    {
+      "from": "https://sebavia.com/faq",
+      "to": "https://sebavia.com/conditions-utilisation"
+    },
+    {
+      "from": "https://sebavia.com/contact",
+      "to": "https://sebavia.com"
+    },
+    {
+      "from": "https://sebavia.com/contact",
+      "to": "https://sebavia.com/fonctionnalites"
+    },
+    {
+      "from": "https://sebavia.com/contact",
+      "to": "https://sebavia.com/pricing"
+    },
+    {
+      "from": "https://sebavia.com/contact",
+      "to": "https://sebavia.com/a-propos"
+    },
+    {
+      "from": "https://sebavia.com/contact",
+      "to": "https://sebavia.com/faq"
+    },
+    {
+      "from": "https://sebavia.com/contact",
+      "to": "https://sebavia.com/confidentialite"
+    },
+    {
+      "from": "https://sebavia.com/contact",
+      "to": "https://sebavia.com/guides"
+    },
+    {
+      "from": "https://sebavia.com/contact",
+      "to": "https://sebavia.com/contact"
+    },
+    {
+      "from": "https://sebavia.com/contact",
+      "to": "https://sebavia.com/conditions-utilisation"
+    },
+    {
+      "from": "https://sebavia.com/confidentialite",
+      "to": "https://sebavia.com"
+    },
+    {
+      "from": "https://sebavia.com/confidentialite",
+      "to": "https://sebavia.com/fonctionnalites"
+    },
+    {
+      "from": "https://sebavia.com/confidentialite",
+      "to": "https://sebavia.com/pricing"
+    },
+    {
+      "from": "https://sebavia.com/confidentialite",
+      "to": "https://sebavia.com/a-propos"
+    },
+    {
+      "from": "https://sebavia.com/confidentialite",
+      "to": "https://sebavia.com/contact"
+    },
+    {
+      "from": "https://sebavia.com/confidentialite",
+      "to": "https://sebavia.com/conditions-utilisation"
+    },
+    {
+      "from": "https://sebavia.com/confidentialite",
+      "to": "https://sebavia.com/guides"
+    },
+    {
+      "from": "https://sebavia.com/confidentialite",
+      "to": "https://sebavia.com/faq"
+    },
+    {
+      "from": "https://sebavia.com/confidentialite",
+      "to": "https://sebavia.com/confidentialite"
+    },
+    {
+      "from": "https://sebavia.com/conditions-utilisation",
+      "to": "https://sebavia.com"
+    },
+    {
+      "from": "https://sebavia.com/conditions-utilisation",
+      "to": "https://sebavia.com/fonctionnalites"
+    },
+    {
+      "from": "https://sebavia.com/conditions-utilisation",
+      "to": "https://sebavia.com/pricing"
+    },
+    {
+      "from": "https://sebavia.com/conditions-utilisation",
+      "to": "https://sebavia.com/a-propos"
+    },
+    {
+      "from": "https://sebavia.com/conditions-utilisation",
+      "to": "https://sebavia.com/confidentialite"
+    },
+    {
+      "from": "https://sebavia.com/conditions-utilisation",
+      "to": "https://sebavia.com/contact"
+    },
+    {
+      "from": "https://sebavia.com/conditions-utilisation",
+      "to": "https://sebavia.com/guides"
+    },
+    {
+      "from": "https://sebavia.com/conditions-utilisation",
+      "to": "https://sebavia.com/faq"
+    },
+    {
+      "from": "https://sebavia.com/conditions-utilisation",
+      "to": "https://sebavia.com/conditions-utilisation"
+    }
+  ]
+}

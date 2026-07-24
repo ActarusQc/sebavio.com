@@ -1,0 +1,10 @@
+{
+  "dnsTxtPresent": true,
+  "dnsMethod": "TXT google-site-verification=… sur apex sebavia.com",
+  "metaEnvSupport": "GOOGLE_SITE_VERIFICATION → metadata.verification.google",
+  "metaCurrentlyEmitted": false,
+  "htmlFilePresent": false,
+  "oldDomainArtifacts": false,
+  "status": "verification_manuelle",
+  "note": "DNS déjà en place. Confirmer la propriété dans Search Console (action manuelle). Ne pas supprimer le TXT existant."
+}

@@ -31,7 +31,8 @@
     "test:live:maintenance": "tsx scripts/test-live-maintenance.ts",
     "test:live:openweather": "tsx scripts/test-live-openweather.ts",
     "cleanup:trip-locations": "tsx scripts/cleanup-trip-locations.ts",
-    "admin:promote": "tsx scripts/admin-promote.ts"
+    "admin:promote": "tsx scripts/admin-promote.ts",
+    "seo:baseline": "tsx scripts/seo-baseline.ts"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
