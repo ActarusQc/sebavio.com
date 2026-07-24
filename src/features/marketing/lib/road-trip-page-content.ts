@@ -190,6 +190,10 @@ export const ROAD_TRIP_PAGE = {
       href: "/guides/road-trip-famille-quebec",
       label: "Consulter le guide pour un road trip en famille",
     },
+    coupleGuideLink: {
+      href: "/guides/road-trip-couple-quebec",
+      label: "Consulter le guide pour une escapade en couple",
+    },
   },
   method: {
     title: "Planifier un road trip au Québec en cinq étapes",

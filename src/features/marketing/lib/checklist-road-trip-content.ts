@@ -57,6 +57,10 @@ export const CHECKLIST_GUIDE = {
       tip: "Notez une durée maximale de conduite par jour qui vous convient vraiment — pas seulement celle qui « rentre » sur la carte. En famille, le rythme et les pauses comptent autant que la distance.",
       productLinks: [
         {
+          href: "/guides/road-trip-couple-quebec",
+          label: "Organiser une escapade en couple",
+        },
+        {
           href: "/guides/road-trip-famille-quebec",
           label: "Organiser un road trip en famille",
         },

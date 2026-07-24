@@ -3,9 +3,9 @@ import { getSiteUrl } from "@/lib/site-url";
 
 /**
  * Date figée : à mettre à jour uniquement quand le contenu public listé change réellement.
- * Lot SEO 4C : ajout de /guides/road-trip-famille-quebec.
+ * Lot SEO 4D : ajout de /guides/road-trip-couple-quebec.
  */
-const SITEMAP_LAST_MODIFIED = new Date("2026-07-23T22:00:00.000Z");
+const SITEMAP_LAST_MODIFIED = new Date("2026-07-24T12:00:00.000Z");
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const siteUrl = getSiteUrl();
@@ -73,6 +73,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${siteUrl}/guides/road-trip-famille-quebec`,
+      lastModified: SITEMAP_LAST_MODIFIED,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: `${siteUrl}/guides/road-trip-couple-quebec`,
       lastModified: SITEMAP_LAST_MODIFIED,
       changeFrequency: "monthly",
       priority: 0.8,

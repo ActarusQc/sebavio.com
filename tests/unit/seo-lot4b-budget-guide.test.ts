@@ -89,7 +89,7 @@ describe("lot SEO 4B — sitemap et métadonnées", () => {
         : String(e.lastModified),
     );
     expect(new Set(dates).size).toBe(1);
-    expect(dates[0]).toBe("2026-07-23T22:00:00.000Z");
+    expect(dates[0]).toBe("2026-07-24T12:00:00.000Z");
   });
 
   it("configure SEO du guide budget", () => {

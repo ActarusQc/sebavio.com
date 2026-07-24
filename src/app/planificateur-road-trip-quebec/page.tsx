@@ -352,6 +352,13 @@ export default function PlanificateurRoadTripQuebecPage() {
           >
             {page.group.familyGuideLink.label}
           </Link>
+          {" · "}
+          <Link
+            href={page.group.coupleGuideLink.href}
+            className="text-[#3b6f9c] hover:underline"
+          >
+            {page.group.coupleGuideLink.label}
+          </Link>
         </p>
       </SectionShell>
 

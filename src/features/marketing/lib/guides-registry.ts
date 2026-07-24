@@ -1,7 +1,13 @@
 import { BRAND_ASSETS } from "./brand-assets";
 
 export type GuideCategory =
-  "preparation" | "budget" | "famille" | "itineraire" | "vehicule" | "quebec";
+  | "preparation"
+  | "budget"
+  | "famille"
+  | "couple"
+  | "itineraire"
+  | "vehicule"
+  | "quebec";
 
 export type GuideRelatedLink = {
   href: string;
@@ -38,6 +44,7 @@ export const GUIDE_CATEGORY_LABELS: Record<GuideCategory, string> = {
   preparation: "Préparation",
   budget: "Budget",
   famille: "Famille",
+  couple: "Couple",
   itineraire: "Itinéraire",
   vehicule: "Véhicule",
   quebec: "Québec",
@@ -53,6 +60,42 @@ const CIVIL_DATE_RE = /^(\d{4})-(\d{2})-(\d{2})/;
  * Ajouter un guide ici + sa page de contenu; seuls les `isPublished: true` apparaissent.
  */
 export const GUIDES: readonly GuideMeta[] = [
+  {
+    slug: "road-trip-couple-quebec",
+    title: "Road trip en couple au Québec : bien organiser l’escapade",
+    description:
+      "Organisez votre road trip ou escapade en couple au Québec : rythme, activités, repas, hébergement, météo, budget et checklist avant le départ.",
+    excerpt:
+      "Préparez une escapade à deux : style de séjour, rythme, activités communes, repas, hébergement et marge pour la spontanéité.",
+    category: "couple",
+    categoryLabel: GUIDE_CATEGORY_LABELS.couple,
+    publishedAt: "2026-07-24",
+    updatedAt: "2026-07-24",
+    editorialOrder: 40,
+    readingTimeMinutes: 10,
+    image: BRAND_ASSETS.heroLandscapeWebp,
+    imageAlt:
+      "Route nocturne sous un ciel étoilé — ambiance de voyage routier Sebavia",
+    relatedLinks: [
+      {
+        href: "/planificateur-road-trip-quebec",
+        label: "Planificateur de road trip au Québec",
+      },
+      { href: "/assistant-voyage-ia", label: "Assistant voyage IA" },
+      { href: "/meteo-voyage", label: "Météo du voyage" },
+      {
+        href: "/calculateur-cout-carburant-voyage",
+        label: "Calculateur de coût de carburant",
+      },
+      { href: "/fonctionnalites", label: "Fonctionnalités Sebavia" },
+    ],
+    relatedGuideSlugs: [
+      "checklist-road-trip-quebec",
+      "budget-road-trip-quebec",
+      "road-trip-famille-quebec",
+    ],
+    isPublished: true,
+  },
   {
     slug: "road-trip-famille-quebec",
     title: "Road trip en famille au Québec : bien organiser le voyage",
@@ -74,10 +117,7 @@ export const GUIDES: readonly GuideMeta[] = [
         href: "/planificateur-road-trip-quebec",
         label: "Planificateur de road trip au Québec",
       },
-      {
-        href: "/assistant-voyage-ia",
-        label: "Assistant voyage IA",
-      },
+      { href: "/assistant-voyage-ia", label: "Assistant voyage IA" },
       { href: "/meteo-voyage", label: "Météo du voyage" },
       {
         href: "/calculateur-cout-carburant-voyage",
@@ -86,6 +126,7 @@ export const GUIDES: readonly GuideMeta[] = [
       { href: "/fonctionnalites", label: "Fonctionnalités Sebavia" },
     ],
     relatedGuideSlugs: [
+      "road-trip-couple-quebec",
       "checklist-road-trip-quebec",
       "budget-road-trip-quebec",
     ],
@@ -124,6 +165,7 @@ export const GUIDES: readonly GuideMeta[] = [
       { href: "/pricing", label: "Tarifs" },
     ],
     relatedGuideSlugs: [
+      "road-trip-couple-quebec",
       "road-trip-famille-quebec",
       "checklist-road-trip-quebec",
     ],
@@ -138,7 +180,6 @@ export const GUIDES: readonly GuideMeta[] = [
       "Une checklist claire pour organiser votre voyage routier : documents, véhicule, étapes, essence, météo et dernières vérifications.",
     category: "preparation",
     categoryLabel: GUIDE_CATEGORY_LABELS.preparation,
-    /** Publication réelle au Québec : 23 juillet 2026. */
     publishedAt: "2026-07-23",
     updatedAt: "2026-07-23",
     editorialOrder: 10,
@@ -162,7 +203,11 @@ export const GUIDES: readonly GuideMeta[] = [
       { href: "/meteo-voyage", label: "Météo du voyage" },
       { href: "/fonctionnalites", label: "Fonctionnalités Sebavia" },
     ],
-    relatedGuideSlugs: ["road-trip-famille-quebec", "budget-road-trip-quebec"],
+    relatedGuideSlugs: [
+      "road-trip-couple-quebec",
+      "road-trip-famille-quebec",
+      "budget-road-trip-quebec",
+    ],
     isPublished: true,
   },
 ] as const;

@@ -162,6 +162,10 @@ export const FEATURES_PAGE = {
       href: "/guides/road-trip-famille-quebec",
       label: "Guide : road trip en famille au Québec",
     },
+    coupleGuideLink: {
+      href: "/guides/road-trip-couple-quebec",
+      label: "Guide : road trip en couple au Québec",
+    },
   },
   howItWorks: {
     title: "Comment ça fonctionne",
@@ -204,6 +208,10 @@ export const FEATURES_PAGE = {
       id: "couple",
       title: "Sortie en couple",
       body: "Restaurant, activité et ambiance recherchée, avec un itinéraire ajusté à une escapade à deux.",
+      guideLink: {
+        href: "/guides/road-trip-couple-quebec",
+        label: "Guide : road trip en couple au Québec",
+      },
     },
   ],
   plans: {

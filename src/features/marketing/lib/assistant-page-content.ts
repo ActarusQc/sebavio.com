@@ -204,6 +204,10 @@ export const ASSISTANT_PAGE = {
     {
       title: "Escapade de fin de semaine",
       body: "Indiquez un temps de route maximal, vos intérêts et si vous voulez un hébergement : Sebavia aide à structurer destination, activité, repas et météo.",
+      guideLink: {
+        href: "/guides/road-trip-couple-quebec",
+        label: "Lire le guide escapade en couple",
+      },
     },
     {
       title: "Sortie familiale",

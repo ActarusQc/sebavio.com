@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { FEATURES_PAGE } from "../lib/features-page-content";
 
 export function FeaturesUseCases() {
@@ -30,6 +31,16 @@ export function FeaturesUseCases() {
               <p className="mt-2 text-sm leading-relaxed text-[#60758a]">
                 {item.body}
               </p>
+              {"guideLink" in item && item.guideLink ? (
+                <p className="mt-3 text-sm">
+                  <Link
+                    href={item.guideLink.href}
+                    className="font-medium text-[#3b6f9c] underline-offset-2 hover:underline"
+                  >
+                    {item.guideLink.label} →
+                  </Link>
+                </p>
+              ) : null}
             </li>
           ))}
         </ul>

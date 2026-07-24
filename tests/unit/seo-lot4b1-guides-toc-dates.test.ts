@@ -24,8 +24,8 @@ describe("lot SEO 4B.1 — dates civiles stables", () => {
 
   it("n’utilise pas de date future pour les guides publiés", () => {
     for (const guide of getPublishedGuides()) {
-      expect(guide.publishedAt <= "2026-07-23").toBe(true);
-      expect(formatGuideDate(guide.publishedAt)).not.toMatch(/24 juillet 2026/);
+      expect(guide.publishedAt <= "2026-07-24").toBe(true);
+      expect(formatGuideDate(guide.publishedAt)).not.toMatch(/25 juillet 2026/);
     }
   });
 });

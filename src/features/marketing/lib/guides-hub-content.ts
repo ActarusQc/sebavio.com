@@ -11,8 +11,8 @@ export const GUIDES_HUB = {
     title: "Guides pour préparer vos voyages routiers",
     body: "Les guides Sebavia présentent des conseils concrets pour organiser un road trip : ce qu’il faut vérifier, préparer et anticiper avant de prendre la route — sans remplacer les sources officielles.",
     primaryCta: {
-      href: "/guides/road-trip-famille-quebec",
-      label: "Lire le guide famille",
+      href: "/guides/road-trip-couple-quebec",
+      label: "Lire le guide couple",
     },
     secondaryCta: {
       href: "/guides/checklist-road-trip-quebec",
@@ -21,7 +21,7 @@ export const GUIDES_HUB = {
   },
   intro: {
     title: "Des ressources utiles, pas des pages publicitaires",
-    body: "Ce centre regroupe des contenus informatifs pour vous aider à préparer un voyage en voiture — checklist avant le départ, budget global, voyage en famille, et d’autres guides à venir. Chaque guide reste distinct des pages qui présentent les outils Sebavia : ici, l’objectif est de répondre à une question pratique, pas de vendre une fonction.",
+    body: "Ce centre regroupe des contenus informatifs pour vous aider à préparer un voyage en voiture — checklist, budget, voyage en famille, escapade en couple, et d’autres guides à venir. Chaque guide reste distinct des pages qui présentent les outils Sebavia : ici, l’objectif est de répondre à une question pratique, pas de vendre une fonction.",
   },
   howToUse: {
     title: "Comment utiliser ces guides",

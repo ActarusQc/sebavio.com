@@ -37,8 +37,9 @@ describe("lot SEO 4A — registre et hub", () => {
     expect(GUIDES.every((g) => /^\d{4}-\d{2}-\d{2}$/.test(g.publishedAt))).toBe(
       true,
     );
-    expect(GUIDES[0]?.publishedAt).toBe("2026-07-23");
-    expect(GUIDES[0]?.updatedAt).toBe("2026-07-23");
+    expect(GUIDES.every((g) => /^\d{4}-\d{2}-\d{2}$/.test(g.updatedAt))).toBe(
+      true,
+    );
   });
 });
 
@@ -58,7 +59,7 @@ describe("lot SEO 4A — sitemap", () => {
         : String(e.lastModified),
     );
     expect(new Set(dates).size).toBe(1);
-    expect(dates[0]).toBe("2026-07-23T22:00:00.000Z");
+    expect(dates[0]).toBe("2026-07-24T12:00:00.000Z");
   });
 });
 

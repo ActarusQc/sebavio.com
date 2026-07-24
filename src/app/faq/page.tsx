@@ -153,6 +153,13 @@ export default function FaqPage() {
               className="text-[#3b6f9c] hover:underline"
             >
               Road trip en famille
+            </Link>
+            . Pour une escapade à deux :{" "}
+            <Link
+              href="/guides/road-trip-couple-quebec"
+              className="text-[#3b6f9c] hover:underline"
+            >
+              Road trip en couple
             </Link>{" "}
             (
             <Link href="/guides" className="text-[#3b6f9c] hover:underline">
