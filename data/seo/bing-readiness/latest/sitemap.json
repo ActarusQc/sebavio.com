@@ -1,0 +1,13 @@
+{
+  "executionId": "2026-07-24_14-17-40-243Z",
+  "dataKind": "laboratory_http",
+  "url": "https://sebavia.com/sitemap.xml",
+  "httpStatus": 200,
+  "finalUrl": "https://sebavia.com/sitemap.xml",
+  "ok": true,
+  "containsSebavioDomain": false,
+  "locCount": 22,
+  "expectedPublicCount": 22,
+  "missingFromLive": [],
+  "unexpectedLive": []
+}

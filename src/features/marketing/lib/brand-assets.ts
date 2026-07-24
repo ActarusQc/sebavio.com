@@ -24,18 +24,22 @@ export const BRAND_ASSETS = {
   fondHero: "/assets/branding/sebavio/fond-hero.png",
   /** Photo principale du Hero (sans dégradé intégré). */
   heroCampingcar: "/assets/branding/sebavio/hero-campingcar.webp",
-  /** Fond hero nuit — route et ciel étoilé (landing publique). */
-  heroNightRoad: "/assets/branding/sebavio/hero-night-road.png",
-  /** Paysage seul (sans panneaux UI) pour le hero. */
+  /** Fond hero nuit — route et ciel étoilé (WebP léger). */
+  heroNightRoad: "/assets/branding/sebavio/hero-night-road.webp",
+  /** Variante PNG source du fond nuit. */
+  heroNightRoadPng: "/assets/branding/sebavio/hero-night-road.png",
+  /** Paysage seul (sans panneaux UI) pour le hero — PNG (OG / fallback). */
   heroLandscape: "/assets/branding/sebavio/hero-landscape-night.png",
-  /** Variante WebP du paysage hero (plus légère). */
+  /** Variante WebP du paysage hero (LCP / affichage). */
   heroLandscapeWebp: "/assets/branding/sebavio/hero-landscape-night.webp",
   /** Fond bienvenue dashboard — panorama route (thème clair, fade blanc à gauche). */
   fondBienvenueClair: "/assets/branding/sebavio/fond-bienvenue-clair.png",
   /** Fond bienvenue dashboard — panorama route (thème sombre, fade navy à gauche). */
   fondBienvenueSombre: "/assets/branding/sebavio/fond-bienvenue-sombre.png",
-  /** Composition desktop + mobile (image complète, ne pas découper). */
-  appPreview: "/assets/branding/sebavio/sebavio-mobile-web.png",
+  /** Composition desktop + mobile (WebP). */
+  appPreview: "/assets/branding/sebavio/sebavio-mobile-web.webp",
+  /** Variante PNG source (plus lourde). */
+  appPreviewPng: "/assets/branding/sebavio/sebavio-mobile-web.png",
   sparkle: "/assets/branding/sebavio/sparkle-dore.png",
   swoosh: "/assets/branding/sebavio/swoosh-souligne.png",
   vague: "/assets/branding/sebavio/vague-separation.png",

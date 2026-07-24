@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { registerAction, type ActionResult } from "@/features/auth/actions";
 import { FormField } from "@/components/common";
@@ -11,11 +11,31 @@ import {
   authLinkClassName,
   authMutedClassName,
 } from "@/features/auth/lib/auth-ui";
+import { trackEvent } from "@/lib/analytics";
 
 const initial: ActionResult | undefined = undefined;
 
 export function RegisterForm() {
   const [state, formAction, pending] = useActionState(registerAction, initial);
+  const startedRef = useRef(false);
+
+  useEffect(() => {
+    if (state?.ok) {
+      trackEvent("registration_completed", {
+        path: "/register",
+        surface: "form",
+      });
+    }
+  }, [state]);
+
+  function markStarted() {
+    if (startedRef.current) return;
+    startedRef.current = true;
+    trackEvent("registration_started", {
+      path: "/register",
+      surface: "form",
+    });
+  }
 
   return (
     <form action={formAction} className="flex w-full flex-col gap-4">
@@ -27,6 +47,7 @@ export function RegisterForm() {
           required
           autoComplete="email"
           className={authInputClassName}
+          onFocus={markStarted}
         />
       </FormField>
       <FormField
@@ -43,6 +64,7 @@ export function RegisterForm() {
           autoComplete="new-password"
           minLength={8}
           className={authInputClassName}
+          onFocus={markStarted}
         />
       </FormField>
       {state ? (
@@ -59,6 +81,7 @@ export function RegisterForm() {
         type="submit"
         disabled={pending}
         className={`mt-2 ${authButtonClassName}`}
+        onClick={markStarted}
       >
         {pending ? "Création…" : "Créer mon compte"}
       </Button>

@@ -1,0 +1,203 @@
+{
+  "executionId": "2026-07-24_14-17-49-400Z",
+  "assets": [
+    {
+      "path": "/",
+      "formFactor": "mobile",
+      "jsBytes": 337627,
+      "cssBytes": 36072,
+      "imageBytes": 180562,
+      "fontBytes": 73130,
+      "totalByteWeight": 711975,
+      "requestCount": 37,
+      "renderBlockingCount": 0
+    },
+    {
+      "path": "/fonctionnalites",
+      "formFactor": "mobile",
+      "jsBytes": 337636,
+      "cssBytes": 36063,
+      "imageBytes": 172409,
+      "fontBytes": 73139,
+      "totalByteWeight": 688660,
+      "requestCount": 38,
+      "renderBlockingCount": 1
+    },
+    {
+      "path": "/pricing",
+      "formFactor": "mobile",
+      "jsBytes": 342020,
+      "cssBytes": 36054,
+      "imageBytes": 136288,
+      "fontBytes": 73130,
+      "totalByteWeight": 661673,
+      "requestCount": 37,
+      "renderBlockingCount": 0
+    },
+    {
+      "path": "/assistant-voyage-ia",
+      "formFactor": "mobile",
+      "jsBytes": 337627,
+      "cssBytes": 36072,
+      "imageBytes": 170695,
+      "fontBytes": 73139,
+      "totalByteWeight": 688932,
+      "requestCount": 39,
+      "renderBlockingCount": 1
+    },
+    {
+      "path": "/planificateur-road-trip-quebec",
+      "formFactor": "mobile",
+      "jsBytes": 337663,
+      "cssBytes": 36063,
+      "imageBytes": 172408,
+      "fontBytes": 73139,
+      "totalByteWeight": 704920,
+      "requestCount": 41,
+      "renderBlockingCount": 1
+    },
+    {
+      "path": "/guides",
+      "formFactor": "mobile",
+      "jsBytes": 335468,
+      "cssBytes": 36063,
+      "imageBytes": 172408,
+      "fontBytes": 73139,
+      "totalByteWeight": 697466,
+      "requestCount": 38,
+      "renderBlockingCount": 2
+    },
+    {
+      "path": "/guides/road-trip-nature-quebec",
+      "formFactor": "mobile",
+      "jsBytes": 335441,
+      "cssBytes": 36063,
+      "imageBytes": 166873,
+      "fontBytes": 73130,
+      "totalByteWeight": 701589,
+      "requestCount": 38,
+      "renderBlockingCount": 1
+    },
+    {
+      "path": "/guides/road-trip-gastronomique-quebec",
+      "formFactor": "mobile",
+      "jsBytes": 335468,
+      "cssBytes": 36063,
+      "imageBytes": 166882,
+      "fontBytes": 73139,
+      "totalByteWeight": 702162,
+      "requestCount": 38,
+      "renderBlockingCount": 1
+    },
+    {
+      "path": "/register",
+      "formFactor": "mobile",
+      "jsBytes": 326140,
+      "cssBytes": 36063,
+      "imageBytes": 364487,
+      "fontBytes": 73139,
+      "totalByteWeight": 845011,
+      "requestCount": 31,
+      "renderBlockingCount": 1
+    },
+    {
+      "path": "/",
+      "formFactor": "desktop",
+      "jsBytes": 337636,
+      "cssBytes": 36054,
+      "imageBytes": 290873,
+      "fontBytes": 73139,
+      "totalByteWeight": 843760,
+      "requestCount": 58,
+      "renderBlockingCount": 0
+    },
+    {
+      "path": "/fonctionnalites",
+      "formFactor": "desktop",
+      "jsBytes": 337627,
+      "cssBytes": 36063,
+      "imageBytes": 171390,
+      "fontBytes": 73139,
+      "totalByteWeight": 697488,
+      "requestCount": 46,
+      "renderBlockingCount": 1
+    },
+    {
+      "path": "/pricing",
+      "formFactor": "desktop",
+      "jsBytes": 341975,
+      "cssBytes": 36063,
+      "imageBytes": 151262,
+      "fontBytes": 73139,
+      "totalByteWeight": 699875,
+      "requestCount": 50,
+      "renderBlockingCount": 0
+    },
+    {
+      "path": "/assistant-voyage-ia",
+      "formFactor": "desktop",
+      "jsBytes": 337645,
+      "cssBytes": 36063,
+      "imageBytes": 168535,
+      "fontBytes": 73139,
+      "totalByteWeight": 698913,
+      "requestCount": 47,
+      "renderBlockingCount": 1
+    },
+    {
+      "path": "/planificateur-road-trip-quebec",
+      "formFactor": "desktop",
+      "jsBytes": 337636,
+      "cssBytes": 36063,
+      "imageBytes": 190965,
+      "fontBytes": 73139,
+      "totalByteWeight": 735558,
+      "requestCount": 52,
+      "renderBlockingCount": 1
+    },
+    {
+      "path": "/guides",
+      "formFactor": "desktop",
+      "jsBytes": 337654,
+      "cssBytes": 36063,
+      "imageBytes": 175221,
+      "fontBytes": 73139,
+      "totalByteWeight": 741635,
+      "requestCount": 63,
+      "renderBlockingCount": 2
+    },
+    {
+      "path": "/guides/road-trip-nature-quebec",
+      "formFactor": "desktop",
+      "jsBytes": 337636,
+      "cssBytes": 36063,
+      "imageBytes": 166882,
+      "fontBytes": 73139,
+      "totalByteWeight": 729223,
+      "requestCount": 58,
+      "renderBlockingCount": 1
+    },
+    {
+      "path": "/guides/road-trip-gastronomique-quebec",
+      "formFactor": "desktop",
+      "jsBytes": 337627,
+      "cssBytes": 36063,
+      "imageBytes": 166882,
+      "fontBytes": 73139,
+      "totalByteWeight": 732581,
+      "requestCount": 58,
+      "renderBlockingCount": 1
+    },
+    {
+      "path": "/register",
+      "formFactor": "desktop",
+      "jsBytes": 326140,
+      "cssBytes": 36063,
+      "imageBytes": 364487,
+      "fontBytes": 73139,
+      "totalByteWeight": 844866,
+      "requestCount": 31,
+      "renderBlockingCount": 1
+    }
+  ]
+}

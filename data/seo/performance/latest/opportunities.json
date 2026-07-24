@@ -1,0 +1,986 @@
+{
+  "executionId": "2026-07-24_14-50-24-490Z",
+  "opportunities": [
+    {
+      "path": "/",
+      "formFactor": "mobile",
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0,
+      "displayValue": "Est savings of 127 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/",
+      "formFactor": "mobile",
+      "id": "modern-image-formats",
+      "title": "Serve images in next-gen formats",
+      "score": 0,
+      "displayValue": "Est savings of 75 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/",
+      "formFactor": "mobile",
+      "id": "uses-responsive-images",
+      "title": "Properly size images",
+      "score": 0,
+      "displayValue": "Est savings of 94 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/",
+      "formFactor": "mobile",
+      "id": "bootup-time",
+      "title": "Reduce JavaScript execution time",
+      "score": 0,
+      "displayValue": "1.7 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/",
+      "formFactor": "mobile",
+      "id": "mainthread-work-breakdown",
+      "title": "Minimize main-thread work",
+      "score": 0,
+      "displayValue": "6.4 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/",
+      "formFactor": "mobile",
+      "id": "lcp-discovery-insight",
+      "title": "LCP request discovery",
+      "score": 0,
+      "displayValue": null,
+      "severity": "erreur"
+    },
+    {
+      "path": "/fonctionnalites",
+      "formFactor": "mobile",
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0,
+      "displayValue": "Est savings of 142 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/fonctionnalites",
+      "formFactor": "mobile",
+      "id": "render-blocking-resources",
+      "title": "Eliminate render-blocking resources",
+      "score": 0.5,
+      "displayValue": "Est savings of 0 ms",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/fonctionnalites",
+      "formFactor": "mobile",
+      "id": "modern-image-formats",
+      "title": "Serve images in next-gen formats",
+      "score": 0.5,
+      "displayValue": "Est savings of 129 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/fonctionnalites",
+      "formFactor": "mobile",
+      "id": "uses-responsive-images",
+      "title": "Properly size images",
+      "score": 0.5,
+      "displayValue": "Est savings of 148 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/fonctionnalites",
+      "formFactor": "mobile",
+      "id": "bootup-time",
+      "title": "Reduce JavaScript execution time",
+      "score": 0,
+      "displayValue": "1.3 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/fonctionnalites",
+      "formFactor": "mobile",
+      "id": "mainthread-work-breakdown",
+      "title": "Minimize main-thread work",
+      "score": 0,
+      "displayValue": "2.6 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/fonctionnalites",
+      "formFactor": "mobile",
+      "id": "lcp-discovery-insight",
+      "title": "LCP request discovery",
+      "score": 0,
+      "displayValue": null,
+      "severity": "erreur"
+    },
+    {
+      "path": "/pricing",
+      "formFactor": "mobile",
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0,
+      "displayValue": "Est savings of 127 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/pricing",
+      "formFactor": "mobile",
+      "id": "modern-image-formats",
+      "title": "Serve images in next-gen formats",
+      "score": 0.5,
+      "displayValue": "Est savings of 75 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/pricing",
+      "formFactor": "mobile",
+      "id": "uses-responsive-images",
+      "title": "Properly size images",
+      "score": 0.5,
+      "displayValue": "Est savings of 94 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/pricing",
+      "formFactor": "mobile",
+      "id": "bootup-time",
+      "title": "Reduce JavaScript execution time",
+      "score": 0,
+      "displayValue": "1.4 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/pricing",
+      "formFactor": "mobile",
+      "id": "mainthread-work-breakdown",
+      "title": "Minimize main-thread work",
+      "score": 0,
+      "displayValue": "3.1 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/pricing",
+      "formFactor": "mobile",
+      "id": "lcp-discovery-insight",
+      "title": "LCP request discovery",
+      "score": 0,
+      "displayValue": null,
+      "severity": "erreur"
+    },
+    {
+      "path": "/assistant-voyage-ia",
+      "formFactor": "mobile",
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0,
+      "displayValue": "Est savings of 142 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/assistant-voyage-ia",
+      "formFactor": "mobile",
+      "id": "render-blocking-resources",
+      "title": "Eliminate render-blocking resources",
+      "score": 0.5,
+      "displayValue": "Est savings of 0 ms",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/assistant-voyage-ia",
+      "formFactor": "mobile",
+      "id": "modern-image-formats",
+      "title": "Serve images in next-gen formats",
+      "score": 0.5,
+      "displayValue": "Est savings of 129 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/assistant-voyage-ia",
+      "formFactor": "mobile",
+      "id": "uses-responsive-images",
+      "title": "Properly size images",
+      "score": 0.5,
+      "displayValue": "Est savings of 148 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/assistant-voyage-ia",
+      "formFactor": "mobile",
+      "id": "mainthread-work-breakdown",
+      "title": "Minimize main-thread work",
+      "score": 0,
+      "displayValue": "2.1 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/planificateur-road-trip-quebec",
+      "formFactor": "mobile",
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0,
+      "displayValue": "Est savings of 142 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/planificateur-road-trip-quebec",
+      "formFactor": "mobile",
+      "id": "render-blocking-resources",
+      "title": "Eliminate render-blocking resources",
+      "score": 0.5,
+      "displayValue": "Est savings of 0 ms",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/planificateur-road-trip-quebec",
+      "formFactor": "mobile",
+      "id": "modern-image-formats",
+      "title": "Serve images in next-gen formats",
+      "score": 0.5,
+      "displayValue": "Est savings of 129 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/planificateur-road-trip-quebec",
+      "formFactor": "mobile",
+      "id": "uses-responsive-images",
+      "title": "Properly size images",
+      "score": 0.5,
+      "displayValue": "Est savings of 148 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/planificateur-road-trip-quebec",
+      "formFactor": "mobile",
+      "id": "mainthread-work-breakdown",
+      "title": "Minimize main-thread work",
+      "score": 0,
+      "displayValue": "2.5 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/planificateur-road-trip-quebec",
+      "formFactor": "mobile",
+      "id": "lcp-discovery-insight",
+      "title": "LCP request discovery",
+      "score": 0,
+      "displayValue": null,
+      "severity": "erreur"
+    },
+    {
+      "path": "/guides",
+      "formFactor": "mobile",
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0,
+      "displayValue": "Est savings of 142 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/guides",
+      "formFactor": "mobile",
+      "id": "render-blocking-resources",
+      "title": "Eliminate render-blocking resources",
+      "score": 0.5,
+      "displayValue": "Est savings of 0 ms",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/guides",
+      "formFactor": "mobile",
+      "id": "modern-image-formats",
+      "title": "Serve images in next-gen formats",
+      "score": 0.5,
+      "displayValue": "Est savings of 129 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/guides",
+      "formFactor": "mobile",
+      "id": "uses-responsive-images",
+      "title": "Properly size images",
+      "score": 0.5,
+      "displayValue": "Est savings of 148 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/guides",
+      "formFactor": "mobile",
+      "id": "mainthread-work-breakdown",
+      "title": "Minimize main-thread work",
+      "score": 0,
+      "displayValue": "2.1 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/guides/road-trip-nature-quebec",
+      "formFactor": "mobile",
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0,
+      "displayValue": "Est savings of 142 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/guides/road-trip-nature-quebec",
+      "formFactor": "mobile",
+      "id": "render-blocking-resources",
+      "title": "Eliminate render-blocking resources",
+      "score": 0.5,
+      "displayValue": "Est savings of 0 ms",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/guides/road-trip-nature-quebec",
+      "formFactor": "mobile",
+      "id": "modern-image-formats",
+      "title": "Serve images in next-gen formats",
+      "score": 0.5,
+      "displayValue": "Est savings of 129 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/guides/road-trip-nature-quebec",
+      "formFactor": "mobile",
+      "id": "uses-responsive-images",
+      "title": "Properly size images",
+      "score": 0.5,
+      "displayValue": "Est savings of 148 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/guides/road-trip-nature-quebec",
+      "formFactor": "mobile",
+      "id": "bootup-time",
+      "title": "Reduce JavaScript execution time",
+      "score": 0,
+      "displayValue": "1.3 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/guides/road-trip-nature-quebec",
+      "formFactor": "mobile",
+      "id": "mainthread-work-breakdown",
+      "title": "Minimize main-thread work",
+      "score": 0,
+      "displayValue": "2.9 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/guides/road-trip-gastronomique-quebec",
+      "formFactor": "mobile",
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0,
+      "displayValue": "Est savings of 142 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/guides/road-trip-gastronomique-quebec",
+      "formFactor": "mobile",
+      "id": "render-blocking-resources",
+      "title": "Eliminate render-blocking resources",
+      "score": 0.5,
+      "displayValue": "Est savings of 0 ms",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/guides/road-trip-gastronomique-quebec",
+      "formFactor": "mobile",
+      "id": "modern-image-formats",
+      "title": "Serve images in next-gen formats",
+      "score": 0.5,
+      "displayValue": "Est savings of 129 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/guides/road-trip-gastronomique-quebec",
+      "formFactor": "mobile",
+      "id": "uses-responsive-images",
+      "title": "Properly size images",
+      "score": 0.5,
+      "displayValue": "Est savings of 148 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/guides/road-trip-gastronomique-quebec",
+      "formFactor": "mobile",
+      "id": "bootup-time",
+      "title": "Reduce JavaScript execution time",
+      "score": 0,
+      "displayValue": "1.7 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/guides/road-trip-gastronomique-quebec",
+      "formFactor": "mobile",
+      "id": "mainthread-work-breakdown",
+      "title": "Minimize main-thread work",
+      "score": 0,
+      "displayValue": "3.7 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/register",
+      "formFactor": "mobile",
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0,
+      "displayValue": "Est savings of 137 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/register",
+      "formFactor": "mobile",
+      "id": "render-blocking-resources",
+      "title": "Eliminate render-blocking resources",
+      "score": 0.5,
+      "displayValue": "Est savings of 0 ms",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/register",
+      "formFactor": "mobile",
+      "id": "modern-image-formats",
+      "title": "Serve images in next-gen formats",
+      "score": 0,
+      "displayValue": "Est savings of 303 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/register",
+      "formFactor": "mobile",
+      "id": "uses-responsive-images",
+      "title": "Properly size images",
+      "score": 0,
+      "displayValue": "Est savings of 274 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/register",
+      "formFactor": "mobile",
+      "id": "mainthread-work-breakdown",
+      "title": "Minimize main-thread work",
+      "score": 0,
+      "displayValue": "2.1 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/register",
+      "formFactor": "mobile",
+      "id": "lcp-discovery-insight",
+      "title": "LCP request discovery",
+      "score": 0,
+      "displayValue": null,
+      "severity": "erreur"
+    },
+    {
+      "path": "/",
+      "formFactor": "desktop",
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0,
+      "displayValue": "Est savings of 127 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/",
+      "formFactor": "desktop",
+      "id": "modern-image-formats",
+      "title": "Serve images in next-gen formats",
+      "score": 0.5,
+      "displayValue": "Est savings of 75 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/",
+      "formFactor": "desktop",
+      "id": "uses-responsive-images",
+      "title": "Properly size images",
+      "score": 0.5,
+      "displayValue": "Est savings of 115 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/",
+      "formFactor": "desktop",
+      "id": "bootup-time",
+      "title": "Reduce JavaScript execution time",
+      "score": 0,
+      "displayValue": "2.9 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/",
+      "formFactor": "desktop",
+      "id": "mainthread-work-breakdown",
+      "title": "Minimize main-thread work",
+      "score": 0,
+      "displayValue": "11.7 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/",
+      "formFactor": "desktop",
+      "id": "lcp-discovery-insight",
+      "title": "LCP request discovery",
+      "score": 0,
+      "displayValue": null,
+      "severity": "erreur"
+    },
+    {
+      "path": "/fonctionnalites",
+      "formFactor": "desktop",
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0,
+      "displayValue": "Est savings of 142 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/fonctionnalites",
+      "formFactor": "desktop",
+      "id": "render-blocking-resources",
+      "title": "Eliminate render-blocking resources",
+      "score": 0.5,
+      "displayValue": "Est savings of 0 ms",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/fonctionnalites",
+      "formFactor": "desktop",
+      "id": "modern-image-formats",
+      "title": "Serve images in next-gen formats",
+      "score": 0.5,
+      "displayValue": "Est savings of 129 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/fonctionnalites",
+      "formFactor": "desktop",
+      "id": "uses-responsive-images",
+      "title": "Properly size images",
+      "score": 0.5,
+      "displayValue": "Est savings of 156 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/fonctionnalites",
+      "formFactor": "desktop",
+      "id": "bootup-time",
+      "title": "Reduce JavaScript execution time",
+      "score": 0,
+      "displayValue": "1.3 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/fonctionnalites",
+      "formFactor": "desktop",
+      "id": "mainthread-work-breakdown",
+      "title": "Minimize main-thread work",
+      "score": 0,
+      "displayValue": "3.0 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/fonctionnalites",
+      "formFactor": "desktop",
+      "id": "lcp-discovery-insight",
+      "title": "LCP request discovery",
+      "score": 0,
+      "displayValue": null,
+      "severity": "erreur"
+    },
+    {
+      "path": "/pricing",
+      "formFactor": "desktop",
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0,
+      "displayValue": "Est savings of 127 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/pricing",
+      "formFactor": "desktop",
+      "id": "modern-image-formats",
+      "title": "Serve images in next-gen formats",
+      "score": 0.5,
+      "displayValue": "Est savings of 75 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/pricing",
+      "formFactor": "desktop",
+      "id": "uses-responsive-images",
+      "title": "Properly size images",
+      "score": 0.5,
+      "displayValue": "Est savings of 100 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/pricing",
+      "formFactor": "desktop",
+      "id": "bootup-time",
+      "title": "Reduce JavaScript execution time",
+      "score": 0,
+      "displayValue": "1.6 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/pricing",
+      "formFactor": "desktop",
+      "id": "mainthread-work-breakdown",
+      "title": "Minimize main-thread work",
+      "score": 0,
+      "displayValue": "3.7 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/pricing",
+      "formFactor": "desktop",
+      "id": "lcp-discovery-insight",
+      "title": "LCP request discovery",
+      "score": 0,
+      "displayValue": null,
+      "severity": "erreur"
+    },
+    {
+      "path": "/assistant-voyage-ia",
+      "formFactor": "desktop",
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0,
+      "displayValue": "Est savings of 142 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/assistant-voyage-ia",
+      "formFactor": "desktop",
+      "id": "render-blocking-resources",
+      "title": "Eliminate render-blocking resources",
+      "score": 0.5,
+      "displayValue": "Est savings of 0 ms",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/assistant-voyage-ia",
+      "formFactor": "desktop",
+      "id": "modern-image-formats",
+      "title": "Serve images in next-gen formats",
+      "score": 0.5,
+      "displayValue": "Est savings of 129 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/assistant-voyage-ia",
+      "formFactor": "desktop",
+      "id": "uses-responsive-images",
+      "title": "Properly size images",
+      "score": 0.5,
+      "displayValue": "Est savings of 156 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/assistant-voyage-ia",
+      "formFactor": "desktop",
+      "id": "bootup-time",
+      "title": "Reduce JavaScript execution time",
+      "score": 0,
+      "displayValue": "1.3 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/assistant-voyage-ia",
+      "formFactor": "desktop",
+      "id": "mainthread-work-breakdown",
+      "title": "Minimize main-thread work",
+      "score": 0,
+      "displayValue": "2.5 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/planificateur-road-trip-quebec",
+      "formFactor": "desktop",
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0,
+      "displayValue": "Est savings of 142 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/planificateur-road-trip-quebec",
+      "formFactor": "desktop",
+      "id": "render-blocking-resources",
+      "title": "Eliminate render-blocking resources",
+      "score": 0.5,
+      "displayValue": "Est savings of 0 ms",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/planificateur-road-trip-quebec",
+      "formFactor": "desktop",
+      "id": "modern-image-formats",
+      "title": "Serve images in next-gen formats",
+      "score": 0.5,
+      "displayValue": "Est savings of 129 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/planificateur-road-trip-quebec",
+      "formFactor": "desktop",
+      "id": "uses-responsive-images",
+      "title": "Properly size images",
+      "score": 0,
+      "displayValue": "Est savings of 168 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/planificateur-road-trip-quebec",
+      "formFactor": "desktop",
+      "id": "mainthread-work-breakdown",
+      "title": "Minimize main-thread work",
+      "score": 0,
+      "displayValue": "2.6 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/planificateur-road-trip-quebec",
+      "formFactor": "desktop",
+      "id": "lcp-discovery-insight",
+      "title": "LCP request discovery",
+      "score": 0,
+      "displayValue": null,
+      "severity": "erreur"
+    },
+    {
+      "path": "/guides",
+      "formFactor": "desktop",
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0,
+      "displayValue": "Est savings of 142 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/guides",
+      "formFactor": "desktop",
+      "id": "render-blocking-resources",
+      "title": "Eliminate render-blocking resources",
+      "score": 0.5,
+      "displayValue": "Est savings of 0 ms",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/guides",
+      "formFactor": "desktop",
+      "id": "modern-image-formats",
+      "title": "Serve images in next-gen formats",
+      "score": 0.5,
+      "displayValue": "Est savings of 129 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/guides",
+      "formFactor": "desktop",
+      "id": "uses-responsive-images",
+      "title": "Properly size images",
+      "score": 0.5,
+      "displayValue": "Est savings of 156 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/guides",
+      "formFactor": "desktop",
+      "id": "bootup-time",
+      "title": "Reduce JavaScript execution time",
+      "score": 0,
+      "displayValue": "1.5 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/guides",
+      "formFactor": "desktop",
+      "id": "mainthread-work-breakdown",
+      "title": "Minimize main-thread work",
+      "score": 0,
+      "displayValue": "2.9 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/guides/road-trip-nature-quebec",
+      "formFactor": "desktop",
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0,
+      "displayValue": "Est savings of 142 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/guides/road-trip-nature-quebec",
+      "formFactor": "desktop",
+      "id": "render-blocking-resources",
+      "title": "Eliminate render-blocking resources",
+      "score": 0.5,
+      "displayValue": "Est savings of 0 ms",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/guides/road-trip-nature-quebec",
+      "formFactor": "desktop",
+      "id": "modern-image-formats",
+      "title": "Serve images in next-gen formats",
+      "score": 0.5,
+      "displayValue": "Est savings of 129 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/guides/road-trip-nature-quebec",
+      "formFactor": "desktop",
+      "id": "uses-responsive-images",
+      "title": "Properly size images",
+      "score": 0.5,
+      "displayValue": "Est savings of 156 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/guides/road-trip-nature-quebec",
+      "formFactor": "desktop",
+      "id": "bootup-time",
+      "title": "Reduce JavaScript execution time",
+      "score": 0,
+      "displayValue": "1.6 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/guides/road-trip-nature-quebec",
+      "formFactor": "desktop",
+      "id": "mainthread-work-breakdown",
+      "title": "Minimize main-thread work",
+      "score": 0,
+      "displayValue": "4.2 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/guides/road-trip-gastronomique-quebec",
+      "formFactor": "desktop",
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0,
+      "displayValue": "Est savings of 142 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/guides/road-trip-gastronomique-quebec",
+      "formFactor": "desktop",
+      "id": "render-blocking-resources",
+      "title": "Eliminate render-blocking resources",
+      "score": 0.5,
+      "displayValue": "Est savings of 0 ms",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/guides/road-trip-gastronomique-quebec",
+      "formFactor": "desktop",
+      "id": "modern-image-formats",
+      "title": "Serve images in next-gen formats",
+      "score": 0.5,
+      "displayValue": "Est savings of 129 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/guides/road-trip-gastronomique-quebec",
+      "formFactor": "desktop",
+      "id": "uses-responsive-images",
+      "title": "Properly size images",
+      "score": 0.5,
+      "displayValue": "Est savings of 156 KiB",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/guides/road-trip-gastronomique-quebec",
+      "formFactor": "desktop",
+      "id": "bootup-time",
+      "title": "Reduce JavaScript execution time",
+      "score": 0,
+      "displayValue": "1.8 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/guides/road-trip-gastronomique-quebec",
+      "formFactor": "desktop",
+      "id": "mainthread-work-breakdown",
+      "title": "Minimize main-thread work",
+      "score": 0,
+      "displayValue": "3.8 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/register",
+      "formFactor": "desktop",
+      "id": "unused-javascript",
+      "title": "Reduce unused JavaScript",
+      "score": 0,
+      "displayValue": "Est savings of 137 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/register",
+      "formFactor": "desktop",
+      "id": "render-blocking-resources",
+      "title": "Eliminate render-blocking resources",
+      "score": 0.5,
+      "displayValue": "Est savings of 0 ms",
+      "severity": "avertissement"
+    },
+    {
+      "path": "/register",
+      "formFactor": "desktop",
+      "id": "modern-image-formats",
+      "title": "Serve images in next-gen formats",
+      "score": 0,
+      "displayValue": "Est savings of 303 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/register",
+      "formFactor": "desktop",
+      "id": "uses-responsive-images",
+      "title": "Properly size images",
+      "score": 0,
+      "displayValue": "Est savings of 329 KiB",
+      "severity": "erreur"
+    },
+    {
+      "path": "/register",
+      "formFactor": "desktop",
+      "id": "bootup-time",
+      "title": "Reduce JavaScript execution time",
+      "score": 0,
+      "displayValue": "1.3 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/register",
+      "formFactor": "desktop",
+      "id": "mainthread-work-breakdown",
+      "title": "Minimize main-thread work",
+      "score": 0,
+      "displayValue": "2.5 s",
+      "severity": "erreur"
+    },
+    {
+      "path": "/register",
+      "formFactor": "desktop",
+      "id": "lcp-discovery-insight",
+      "title": "LCP request discovery",
+      "score": 0,
+      "displayValue": null,
+      "severity": "erreur"
+    }
+  ]
+}

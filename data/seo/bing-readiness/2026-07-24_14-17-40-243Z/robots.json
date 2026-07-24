@@ -1,0 +1,11 @@
+{
+  "executionId": "2026-07-24_14-17-40-243Z",
+  "dataKind": "laboratory_http",
+  "note": "Lecture HTTP avec User-Agent Bingbot — pas une donnée réelle Bing Webmaster.",
+  "url": "https://sebavia.com/robots.txt",
+  "httpStatus": 200,
+  "finalUrl": "https://sebavia.com/robots.txt",
+  "allowsBingbot": true,
+  "containsSebavioDomain": false,
+  "bodyPreview": "User-Agent: *\nAllow: /\nDisallow: /dashboard/\nDisallow: /admin/\nDisallow: /api/\n\nHost: https://sebavia.com\nSitemap: https://sebavia.com/sitemap.xml\n"
+}

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AITripConversation } from "@/features/ai-trip-planner/components/ai-trip-conversation";
@@ -10,7 +10,9 @@ import { AITripPlannerHero } from "@/features/ai-trip-planner/components/ai-trip
 import { AITripSummary } from "@/features/ai-trip-planner/components/ai-trip-summary";
 import { CreateTripConfirmationDialog } from "@/features/ai-trip-planner/components/create-trip-confirmation-dialog";
 import { RestartPlanningDialog } from "@/features/ai-trip-planner/components/restart-planning-dialog";
+import { CONFIRM_YES } from "@/features/ai-trip-planner/lib/controls-for-step";
 import { useAITripPlanningSession } from "@/features/ai-trip-planner/hooks/use-ai-trip-planning-session";
+import { trackEvent } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 export function AITripPlannerPage() {
@@ -19,6 +21,13 @@ export function AITripPlannerPage() {
   const [restartOpen, setRestartOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
+
+  useEffect(() => {
+    trackEvent("assistant_opened", {
+      surface: "assistant",
+      path: "/dashboard/ai",
+    });
+  }, []);
 
   const {
     session,
@@ -35,6 +44,32 @@ export function AITripPlannerPage() {
     createTrip,
     retry,
   } = useAITripPlanningSession();
+
+  const handleSend = async (content: string) => {
+    const next = await sendMessage(content);
+    if (
+      content.trim() === CONFIRM_YES &&
+      next?.draft.proposalConfirmed &&
+      next.canCreate
+    ) {
+      trackEvent("assistant_trip_action_confirmed", {
+        surface: "assistant",
+        path: "/dashboard/ai",
+      });
+      trackEvent("trip_creation_started", {
+        surface: "assistant",
+        path: "/dashboard/ai",
+      });
+      const tripId = await createTrip(next.id);
+      if (tripId) {
+        trackEvent("trip_created", {
+          surface: "assistant",
+          path: "/dashboard/ai",
+        });
+        router.push(`/dashboard/trips/${tripId}`);
+      }
+    }
+  };
 
   if (loading) {
     return (
@@ -93,8 +128,20 @@ export function AITripPlannerPage() {
   };
 
   const handleCreateConfirm = async () => {
+    trackEvent("assistant_trip_action_confirmed", {
+      surface: "assistant",
+      path: "/dashboard/ai",
+    });
+    trackEvent("trip_creation_started", {
+      surface: "assistant",
+      path: "/dashboard/ai",
+    });
     const tripId = await createTrip();
     if (tripId) {
+      trackEvent("trip_created", {
+        surface: "assistant",
+        path: "/dashboard/ai",
+      });
       setCreateOpen(false);
       router.push(`/dashboard/trips/${tripId}`);
     }
@@ -131,6 +178,7 @@ export function AITripPlannerPage() {
             disabled={session.status === "created" || creating}
             error={error}
             requestedInput={session.requestedInput}
+            knownDurationDays={session.draft.durationDays}
             activeQuickReplies={
               session.currentStep === "preferences" ||
               session.requestedInput?.type === "multi_choice"
@@ -150,7 +198,7 @@ export function AITripPlannerPage() {
             lodgingTypeLabel={session.draft.lodgingType}
             homeCity={session.homeCity}
             originSuggestions={session.originSuggestions}
-            onSend={(content) => void sendMessage(content)}
+            onSend={(content) => void handleSend(content)}
             onSelectAddress={(field, address) =>
               void selectPlace(field, { address })
             }

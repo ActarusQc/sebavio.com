@@ -1,0 +1,79 @@
+{
+  "executionId": "2026-07-24_14-17-40-243Z",
+  "dataKind": "laboratory_http",
+  "userAgent": "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)",
+  "urls": [
+    {
+      "url": "https://sebavia.com/",
+      "path": "/",
+      "httpStatus": 200,
+      "finalUrl": "https://sebavia.com/",
+      "ok": true,
+      "containsSebavioDomain": false,
+      "error": null
+    },
+    {
+      "url": "https://sebavia.com/fonctionnalites",
+      "path": "/fonctionnalites",
+      "httpStatus": 200,
+      "finalUrl": "https://sebavia.com/fonctionnalites",
+      "ok": true,
+      "containsSebavioDomain": false,
+      "error": null
+    },
+    {
+      "url": "https://sebavia.com/pricing",
+      "path": "/pricing",
+      "httpStatus": 200,
+      "finalUrl": "https://sebavia.com/pricing",
+      "ok": true,
+      "containsSebavioDomain": false,
+      "error": null
+    },
+    {
+      "url": "https://sebavia.com/assistant-voyage-ia",
+      "path": "/assistant-voyage-ia",
+      "httpStatus": 200,
+      "finalUrl": "https://sebavia.com/assistant-voyage-ia",
+      "ok": true,
+      "containsSebavioDomain": false,
+      "error": null
+    },
+    {
+      "url": "https://sebavia.com/planificateur-road-trip-quebec",
+      "path": "/planificateur-road-trip-quebec",
+      "httpStatus": 200,
+      "finalUrl": "https://sebavia.com/planificateur-road-trip-quebec",
+      "ok": true,
+      "containsSebavioDomain": false,
+      "error": null
+    },
+    {
+      "url": "https://sebavia.com/guides",
+      "path": "/guides",
+      "httpStatus": 200,
+      "finalUrl": "https://sebavia.com/guides",
+      "ok": true,
+      "containsSebavioDomain": false,
+      "error": null
+    },
+    {
+      "url": "https://sebavia.com/guides/road-trip-nature-quebec",
+      "path": "/guides/road-trip-nature-quebec",
+      "httpStatus": 200,
+      "finalUrl": "https://sebavia.com/guides/road-trip-nature-quebec",
+      "ok": true,
+      "containsSebavioDomain": false,
+      "error": null
+    },
+    {
+      "url": "https://sebavia.com/register",
+      "path": "/register",
+      "httpStatus": 200,
+      "finalUrl": "https://sebavia.com/register",
+      "ok": true,
+      "containsSebavioDomain": false,
+      "error": null
+    }
+  ]
+}

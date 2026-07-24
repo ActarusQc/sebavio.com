@@ -6,6 +6,7 @@ import {
   startPassCheckoutAction,
   startPlusCheckoutAction,
 } from "@/features/subscriptions/actions/checkout";
+import { trackEvent } from "@/lib/analytics";
 
 type CheckoutKind = "pass" | "plus";
 
@@ -17,6 +18,7 @@ type CheckoutButtonProps = {
   className?: string;
   variant?: "default" | "outline" | "secondary" | "ghost";
   size?: "default" | "sm" | "lg";
+  planSlug?: string;
 };
 
 export function CheckoutButton({
@@ -27,12 +29,25 @@ export function CheckoutButton({
   className,
   variant = "default",
   size = "default",
+  planSlug,
 }: CheckoutButtonProps) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   function handleClick() {
     setError(null);
+    const slug =
+      planSlug ?? (kind === "pass" ? "pass_30_jours" : "sebavio_plus");
+    trackEvent("plan_selected", {
+      path: "/pricing",
+      plan_slug: slug,
+      surface: "pricing",
+    });
+    trackEvent("checkout_started", {
+      path: "/pricing",
+      plan_slug: slug,
+      surface: "pricing",
+    });
     startTransition(async () => {
       const result =
         kind === "pass"

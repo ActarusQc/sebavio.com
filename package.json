@@ -32,7 +32,10 @@
     "test:live:openweather": "tsx scripts/test-live-openweather.ts",
     "cleanup:trip-locations": "tsx scripts/cleanup-trip-locations.ts",
     "admin:promote": "tsx scripts/admin-promote.ts",
-    "seo:baseline": "tsx scripts/seo-baseline.ts"
+    "seo:baseline": "tsx scripts/seo-baseline.ts",
+    "seo:bing:readiness": "tsx scripts/seo-bing-readiness.ts",
+    "seo:performance:audit": "tsx scripts/seo-performance-audit.ts",
+    "seo:performance:production": "SEO_PERF_ORIGIN=https://sebavia.com tsx scripts/seo-performance-audit.ts"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
@@ -90,10 +93,12 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.3",
+    "chrome-launcher": "^1.2.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
+    "lighthouse": "^12.8.2",
     "lint-staged": "^17.0.8",
     "prettier": "^3.9.5",
     "prettier-plugin-tailwindcss": "^0.8.0",

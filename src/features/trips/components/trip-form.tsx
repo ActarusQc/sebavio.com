@@ -21,6 +21,7 @@ import type { TripDto } from "@/features/trips/types";
 import { AddressAutocomplete } from "@/components/address-autocomplete";
 import { FormField, FormSection } from "@/components/common";
 import { Button, Input } from "@/components/ui";
+import { trackEvent } from "@/lib/analytics";
 
 const initial: TripsActionResult | undefined = undefined;
 
@@ -94,7 +95,20 @@ export function TripForm({
   const [state, formAction, pending] = useActionState(action, initial);
 
   useEffect(() => {
+    if (!isEdit) {
+      trackEvent("trip_creation_started", {
+        surface: "form",
+        path: "/dashboard/trips/new",
+      });
+    }
+  }, [isEdit]);
+
+  useEffect(() => {
     if (state?.ok && state.id && !isEdit) {
+      trackEvent("trip_created", {
+        surface: "form",
+        path: "/dashboard/trips/new",
+      });
       router.push(`/dashboard/trips/${state.id}`);
     }
   }, [state, isEdit, router]);

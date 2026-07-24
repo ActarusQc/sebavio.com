@@ -6,7 +6,6 @@ import {
   Play,
   Route,
 } from "lucide-react";
-import { FadeIn } from "@/components/common";
 import { BRAND_ASSETS } from "../lib/brand-assets";
 import { LANDING } from "../lib/landing-content";
 import { ConversationPreview } from "./conversation-preview";
@@ -28,7 +27,7 @@ export function HeroSection() {
       {/* Fond paysage uniquement — aucun panneau UI dans l’image */}
       <div className="absolute inset-0 -z-10" aria-hidden>
         <Image
-          src={BRAND_ASSETS.heroLandscape}
+          src={BRAND_ASSETS.heroLandscapeWebp}
           alt=""
           fill
           priority
@@ -50,8 +49,8 @@ export function HeroSection() {
 
       <div className="mx-auto flex min-h-0 max-w-[100rem] flex-col justify-center px-4 pt-8 pb-10 sm:px-6 sm:pt-10 sm:pb-12 lg:min-h-[760px] lg:px-10 lg:pt-6 lg:pb-12 xl:min-h-[820px]">
         <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.15fr)] lg:gap-6 xl:gap-10">
-          {/* Colonne marketing */}
-          <FadeIn className="max-w-[40.5rem] min-w-0">
+          {/* Colonne marketing — pas de FadeIn (évite CLS / retarde LCP) */}
+          <div className="max-w-[40.5rem] min-w-0">
             <h1 className="font-heading max-w-[40.5rem] text-[2rem] leading-[1.08] font-bold tracking-tight sm:text-[2.75rem] md:text-[3.5rem] lg:text-[4rem] xl:text-[4.25rem]">
               Votre voyage commence
               <br />
@@ -108,10 +107,10 @@ export function HeroSection() {
                 </span>
               ))}
             </p>
-          </FadeIn>
+          </div>
 
           {/* Interfaces HTML — ordre mobile : trip puis agent */}
-          <FadeIn delay={0.05} className="min-w-0">
+          <div className="min-w-0">
             <div className="flex flex-col items-center gap-4 md:flex-row md:items-stretch md:justify-center lg:justify-end">
               <div className="w-full max-w-[37.5rem] shrink md:flex-1">
                 <TripPreview />
@@ -120,7 +119,7 @@ export function HeroSection() {
                 <ConversationPreview />
               </div>
             </div>
-          </FadeIn>
+          </div>
         </div>
       </div>
     </section>

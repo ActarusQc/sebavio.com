@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AnalyticsPageView } from "@/components/analytics/analytics-page-view";
 import {
   PricingAgentSection,
   PricingChooser,
@@ -274,6 +275,11 @@ export default async function PricingPage() {
 
   return (
     <div className="flex min-h-full flex-1 flex-col bg-[#f7f9fc]">
+      <AnalyticsPageView
+        eventName="pricing_view"
+        path="/pricing"
+        pageType="pricing"
+      />
       <PricingJsonLd
         plans={
           cards.length > 0

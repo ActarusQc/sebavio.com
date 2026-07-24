@@ -84,18 +84,23 @@ function HomeJsonLd() {
         inLanguage: "fr-CA",
       },
       {
-        "@type": "WebApplication",
+        // SoftwareApplication + WebApplication : propriétés visibles et exactes uniquement.
+        // Pas de notes inventées, faux avis, ni nombre d’utilisateurs.
+        "@type": ["SoftwareApplication", "WebApplication"],
         "@id": `${SITE_URL}/#app`,
         name: "Sebavia",
         url: SITE_URL,
         applicationCategory: "TravelApplication",
         operatingSystem: "Web",
+        browserRequirements: "Requires JavaScript. Requires HTML5.",
         description: LANDING.definition,
+        image: `${SITE_URL}${BRAND_ASSETS.logo}`,
         offers: {
           "@type": "Offer",
           price: "0",
           priceCurrency: "CAD",
           description: "Forfait Découverte gratuit",
+          url: `${SITE_URL}/pricing`,
         },
         provider: { "@id": `${SITE_URL}/#organization` },
       },

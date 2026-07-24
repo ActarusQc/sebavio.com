@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Poppins } from "next/font/google";
+import { CaptureSeoAttribution } from "@/components/analytics/capture-seo-attribution";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { buildGoogleSiteVerificationMetadata } from "@/lib/seo/google-site-verification";
@@ -48,6 +49,7 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col font-sans">
         <ThemeProvider>
+          <CaptureSeoAttribution />
           {children}
           <Toaster position="top-right" richColors closeButton />
         </ThemeProvider>
